@@ -21,4 +21,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "TGram"
 include(":app")
- 
+include(":feature")
+include(":feature:authorization")
+include(":feature:chats")
