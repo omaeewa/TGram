@@ -1,4 +1,4 @@
-package com.miracle.tgram.ui
+package com.miracle.tgram
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier

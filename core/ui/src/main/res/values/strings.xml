@@ -1,0 +1,9 @@
+<resources>
+    <string name="your_phone_number">Your phone number</string>
+    <string name="please_confirm_country_code">Please confirm your country code and enter your phone number.</string>
+    <string name="country">Country</string>
+    <string name="phone_number">Phone number</string>
+    <string name="check_your_email">Check Your Email</string>
+    <string name="code">Code</string>
+    <string name="please_enter_code">Please enter the code we have sent to your email randomEmail@gmail.com</string>
+</resources>

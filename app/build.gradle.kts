@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -68,4 +70,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(project(":feature:authorization"))
     implementation(project(":feature:chats"))
+    implementation(project(":core:ui"))
+
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 }
