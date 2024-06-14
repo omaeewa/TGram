@@ -15,7 +15,7 @@ sdk.dir=C:\\YourPath\\AppData\\Local\\Android\\Sdk
 apiId=12345678
 apiHash=12345d05fdad3cf440b517c462a87866
 ```
-
+  
 ## Contributing
 
 Your participation in this project is highly encouraged! Feel free to share your thoughts, report any issues you encounter, and submit pull requests. 
