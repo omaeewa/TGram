@@ -21,7 +21,7 @@ apiHash=12345d05fdad3cf440b517c462a87866
 Your participation in this project is highly encouraged! Feel free to share your thoughts, report any issues you encounter, and submit pull requests. 
 
 To create a pull request:
-1. Clone the `develop` branch.
+1. Fork the project.
 2. Make your changes.
 3. Push your changes.
 4. Create a pull request.
