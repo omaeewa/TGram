@@ -10,5 +10,4 @@ interface AuthRepository {
     suspend fun setAuthPhoneNumber(phone: String)
     suspend fun setAuthCode(code: String)
     suspend fun checkAuthPassword(password: String)
-    suspend fun checkDatabaseEncryptionKey()
 }

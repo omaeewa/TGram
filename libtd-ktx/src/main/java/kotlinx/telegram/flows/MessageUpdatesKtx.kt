@@ -4,24 +4,35 @@
 //
 package kotlinx.telegram.flows
 
+import kotlin.Long
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.telegram.core.TelegramFlow
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.Message
-import org.drinkless.td.libcore.telegram.TdApi.UpdateAnimatedEmojiMessageClicked
-import org.drinkless.td.libcore.telegram.TdApi.UpdateDeleteMessages
-import org.drinkless.td.libcore.telegram.TdApi.UpdateMessageContent
-import org.drinkless.td.libcore.telegram.TdApi.UpdateMessageContentOpened
-import org.drinkless.td.libcore.telegram.TdApi.UpdateMessageEdited
-import org.drinkless.td.libcore.telegram.TdApi.UpdateMessageInteractionInfo
-import org.drinkless.td.libcore.telegram.TdApi.UpdateMessageIsPinned
-import org.drinkless.td.libcore.telegram.TdApi.UpdateMessageLiveLocationViewed
-import org.drinkless.td.libcore.telegram.TdApi.UpdateMessageMentionRead
-import org.drinkless.td.libcore.telegram.TdApi.UpdateMessageSendAcknowledged
-import org.drinkless.td.libcore.telegram.TdApi.UpdateMessageSendFailed
-import org.drinkless.td.libcore.telegram.TdApi.UpdateMessageSendSucceeded
-import org.drinkless.td.libcore.telegram.TdApi.UpdateUnreadMessageCount
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.Message
+import org.drinkless.tdlib.TdApi.SavedMessagesTopic
+import org.drinkless.tdlib.TdApi.UpdateAnimatedEmojiMessageClicked
+import org.drinkless.tdlib.TdApi.UpdateAvailableMessageEffects
+import org.drinkless.tdlib.TdApi.UpdateBusinessMessageEdited
+import org.drinkless.tdlib.TdApi.UpdateBusinessMessagesDeleted
+import org.drinkless.tdlib.TdApi.UpdateDeleteMessages
+import org.drinkless.tdlib.TdApi.UpdateMessageContent
+import org.drinkless.tdlib.TdApi.UpdateMessageContentOpened
+import org.drinkless.tdlib.TdApi.UpdateMessageEdited
+import org.drinkless.tdlib.TdApi.UpdateMessageFactCheck
+import org.drinkless.tdlib.TdApi.UpdateMessageInteractionInfo
+import org.drinkless.tdlib.TdApi.UpdateMessageIsPinned
+import org.drinkless.tdlib.TdApi.UpdateMessageLiveLocationViewed
+import org.drinkless.tdlib.TdApi.UpdateMessageMentionRead
+import org.drinkless.tdlib.TdApi.UpdateMessageReaction
+import org.drinkless.tdlib.TdApi.UpdateMessageReactions
+import org.drinkless.tdlib.TdApi.UpdateMessageSendAcknowledged
+import org.drinkless.tdlib.TdApi.UpdateMessageSendFailed
+import org.drinkless.tdlib.TdApi.UpdateMessageSendSucceeded
+import org.drinkless.tdlib.TdApi.UpdateMessageUnreadReactions
+import org.drinkless.tdlib.TdApi.UpdateNewBusinessMessage
+import org.drinkless.tdlib.TdApi.UpdateQuickReplyShortcutMessages
+import org.drinkless.tdlib.TdApi.UpdateSavedMessagesTags
 
 /**
  * emits [Message] if a new message was received; can also be an outgoing message.
@@ -32,9 +43,9 @@ fun TelegramFlow.newMessageFlow(): Flow<Message> =
 
 /**
  * emits [UpdateMessageSendAcknowledged] if a request to send a message has reached the Telegram
- * server. This doesn't mean that the message will be sent successfully or even that the send message
- * request will be processed. This update will be sent only if the option &quot;use_quick_ack&quot; is
- * set to true. This update may be sent multiple times for the same message.
+ * server. This doesn't mean that the message will be sent successfully. This update is sent only if
+ * the option &quot;use_quick_ack&quot; is set to true. This update may be sent multiple times for the
+ * same message.
  */
 fun TelegramFlow.messageSendAcknowledgedFlow(): Flow<UpdateMessageSendAcknowledged> =
     this.getUpdatesFlowOfType()
@@ -78,8 +89,8 @@ fun TelegramFlow.messageInteractionInfoFlow(): Flow<UpdateMessageInteractionInfo
 
 /**
  * emits [UpdateMessageContentOpened] if the message content was opened. Updates voice note messages
- * to &quot;listened&quot;, video note messages to &quot;viewed&quot; and starts the TTL timer for
- * self-destructing messages.
+ * to &quot;listened&quot;, video note messages to &quot;viewed&quot; and starts the self-destruct
+ * timer.
  */
 fun TelegramFlow.messageContentOpenedFlow(): Flow<UpdateMessageContentOpened> =
     this.getUpdatesFlowOfType()
@@ -91,10 +102,37 @@ fun TelegramFlow.messageMentionReadFlow(): Flow<UpdateMessageMentionRead> =
     this.getUpdatesFlowOfType()
 
 /**
+ * emits [UpdateMessageUnreadReactions] if the list of unread reactions added to a message was
+ * changed.
+ */
+fun TelegramFlow.messageUnreadReactionsFlow(): Flow<UpdateMessageUnreadReactions> =
+    this.getUpdatesFlowOfType()
+
+/**
+ * emits [UpdateMessageFactCheck] if a fact-check added to a message was changed.
+ */
+fun TelegramFlow.messageFactCheckFlow(): Flow<UpdateMessageFactCheck> = this.getUpdatesFlowOfType()
+
+/**
  * emits [UpdateMessageLiveLocationViewed] if a message with a live location was viewed. When the
  * update is received, the application is supposed to update the live location.
  */
 fun TelegramFlow.messageLiveLocationViewedFlow(): Flow<UpdateMessageLiveLocationViewed> =
+    this.getUpdatesFlowOfType()
+
+/**
+ * emits topic [SavedMessagesTopic] if basic information about a Saved Messages topic has changed.
+ * This update is guaranteed to come before the topic identifier is returned to the application.
+ */
+fun TelegramFlow.savedMessagesTopicFlow(): Flow<SavedMessagesTopic> =
+    this.getUpdatesFlowOfType<TdApi.UpdateSavedMessagesTopic>()
+    .mapNotNull { it.topic }
+
+/**
+ * emits [UpdateQuickReplyShortcutMessages] if the list of quick reply shortcut messages has
+ * changed.
+ */
+fun TelegramFlow.quickReplyShortcutMessagesFlow(): Flow<UpdateQuickReplyShortcutMessages> =
     this.getUpdatesFlowOfType()
 
 /**
@@ -103,10 +141,24 @@ fun TelegramFlow.messageLiveLocationViewedFlow(): Flow<UpdateMessageLiveLocation
 fun TelegramFlow.deleteMessagesFlow(): Flow<UpdateDeleteMessages> = this.getUpdatesFlowOfType()
 
 /**
- * emits [UpdateUnreadMessageCount] if number of unread messages in a chat list has changed. This
- * update is sent only if the message database is used.
+ * emits webAppLaunchId [Long] if a message was sent by an opened Web App, so the Web App needs to
+ * be closed.
  */
-fun TelegramFlow.unreadMessageCountFlow(): Flow<UpdateUnreadMessageCount> =
+fun TelegramFlow.webAppMessageSentFlow(): Flow<Long> =
+    this.getUpdatesFlowOfType<TdApi.UpdateWebAppMessageSent>()
+    .mapNotNull { it.webAppLaunchId }
+
+/**
+ * emits [UpdateAvailableMessageEffects] if the list of available message effects has changed.
+ */
+fun TelegramFlow.availableMessageEffectsFlow(): Flow<UpdateAvailableMessageEffects> =
+    this.getUpdatesFlowOfType()
+
+/**
+ * emits [UpdateSavedMessagesTags] if tags used in Saved Messages or a Saved Messages topic have
+ * changed.
+ */
+fun TelegramFlow.savedMessagesTagsFlow(): Flow<UpdateSavedMessagesTags> =
     this.getUpdatesFlowOfType()
 
 /**
@@ -116,3 +168,34 @@ fun TelegramFlow.unreadMessageCountFlow(): Flow<UpdateUnreadMessageCount> =
  */
 fun TelegramFlow.animatedEmojiMessageClickedFlow(): Flow<UpdateAnimatedEmojiMessageClicked> =
     this.getUpdatesFlowOfType()
+
+/**
+ * emits [UpdateNewBusinessMessage] if a new message was added to a business account; for bots only.
+ */
+fun TelegramFlow.newBusinessMessageFlow(): Flow<UpdateNewBusinessMessage> =
+    this.getUpdatesFlowOfType()
+
+/**
+ * emits [UpdateBusinessMessageEdited] if a message in a business account was edited; for bots only.
+ */
+fun TelegramFlow.businessMessageEditedFlow(): Flow<UpdateBusinessMessageEdited> =
+    this.getUpdatesFlowOfType()
+
+/**
+ * emits [UpdateBusinessMessagesDeleted] if messages in a business account were deleted; for bots
+ * only.
+ */
+fun TelegramFlow.businessMessagesDeletedFlow(): Flow<UpdateBusinessMessagesDeleted> =
+    this.getUpdatesFlowOfType()
+
+/**
+ * emits [UpdateMessageReaction] if user changed its reactions on a message with public reactions;
+ * for bots only.
+ */
+fun TelegramFlow.messageReactionFlow(): Flow<UpdateMessageReaction> = this.getUpdatesFlowOfType()
+
+/**
+ * emits [UpdateMessageReactions] if reactions added to a message with anonymous reactions have
+ * changed; for bots only.
+ */
+fun TelegramFlow.messageReactionsFlow(): Flow<UpdateMessageReactions> = this.getUpdatesFlowOfType()

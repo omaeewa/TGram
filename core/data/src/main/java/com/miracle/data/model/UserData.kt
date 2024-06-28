@@ -1,6 +1,7 @@
 package com.miracle.data.model
 
-import org.drinkless.td.libcore.telegram.TdApi
+import org.drinkless.tdlib.TdApi
+
 
 data class UserData(
     val id: Long = 0,

@@ -1,5 +1,6 @@
 package kotlinx.telegram.core
 
+import android.util.Log
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,9 +13,8 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import org.drinkless.td.libcore.telegram.Client
-import org.drinkless.td.libcore.telegram.TdApi
-import java.io.Closeable
+import org.drinkless.tdlib.Client
+import org.drinkless.tdlib.TdApi
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -24,8 +24,7 @@ import kotlin.coroutines.resumeWithException
 class TelegramFlow(
     val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val flowScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
-) : Closeable {
+)  {
 
     /**
      * Telegram [Client] instance. Null if instance is not attached
@@ -47,7 +46,9 @@ class TelegramFlow(
         if (client != null) return // client is already attached
 
         updateEventsFlow = callbackFlow {
-            val resultHandler = Client.ResultHandler { trySend(it) }
+            val resultHandler = Client.ResultHandler {
+                trySend(it)
+            }
 
             client = existingClient
                 ?: Client.create(
@@ -82,7 +83,7 @@ class TelegramFlow(
      * @throws TelegramException.UnexpectedResult if TdApi request returns an unexpected result
      * @throws TelegramException.ClientNotAttached if TdApi client has not attached yet
      */
-    suspend inline fun <reified ExpectedResult : TdApi.Object> sendFunctionAsync(function: TdApi.Function): ExpectedResult =
+    suspend inline fun <reified ExpectedResult : TdApi.Object> sendFunctionAsync(function: TdApi.Function<*>): ExpectedResult =
         withContext(coroutineDispatcher) {
             suspendCancellableCoroutine { continuation ->
                 val resultHandler: (TdApi.Object) -> Unit = { result ->
@@ -113,14 +114,7 @@ class TelegramFlow(
      * @throws TelegramException.UnexpectedResult if TdApi request returns an unexpected result
      * @throws TelegramException.ClientNotAttached if TdApi client has not attached yet
      */
-    suspend fun sendFunctionLaunch(function: TdApi.Function) {
+    suspend fun sendFunctionLaunch(function: TdApi.Function<*>) {
         sendFunctionAsync<TdApi.Ok>(function)
-    }
-
-    /**
-     * Closes Client.
-     */
-    override fun close() {
-        client?.close()
     }
 }

@@ -8,8 +8,8 @@ import kotlin.IntArray
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.telegram.core.TelegramFlow
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.UpdateAnimationSearchParameters
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.UpdateAnimationSearchParameters
 
 /**
  * emits animationIds [Int[]] if the list of saved animations was updated.
@@ -20,7 +20,7 @@ fun TelegramFlow.savedAnimationsFlow(): Flow<IntArray> =
 
 /**
  * emits [UpdateAnimationSearchParameters] if the parameters of animation search through
- * GetOption(&quot;animation_search_bot_username&quot;) bot has changed.
+ * getOption(&quot;animation_search_bot_username&quot;) bot has changed.
  */
 fun TelegramFlow.animationSearchParametersFlow(): Flow<UpdateAnimationSearchParameters> =
     this.getUpdatesFlowOfType()

@@ -10,24 +10,23 @@ import kotlin.String
 import kotlinx.telegram.core.TelegramFlow
 import kotlinx.telegram.coroutines.deleteProfilePhoto
 import kotlinx.telegram.coroutines.getRemoteFile
-import kotlinx.telegram.coroutines.removeBackground
+import kotlinx.telegram.coroutines.removeInstalledBackground
 import kotlinx.telegram.coroutines.removeNotification
+import kotlinx.telegram.coroutines.searchPublicStoriesByVenue
 import kotlinx.telegram.coroutines.sendPaymentForm
 import kotlinx.telegram.coroutines.setSupergroupStickerSet
-import kotlinx.telegram.coroutines.terminateSession
-import kotlinx.telegram.coroutines.viewSponsoredMessage
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.Background
-import org.drinkless.td.libcore.telegram.TdApi.FileType
-import org.drinkless.td.libcore.telegram.TdApi.InputCredentials
-import org.drinkless.td.libcore.telegram.TdApi.Notification
-import org.drinkless.td.libcore.telegram.TdApi.PaymentForm
-import org.drinkless.td.libcore.telegram.TdApi.ProfilePhoto
-import org.drinkless.td.libcore.telegram.TdApi.RemoteFile
-import org.drinkless.td.libcore.telegram.TdApi.Session
-import org.drinkless.td.libcore.telegram.TdApi.ShippingOption
-import org.drinkless.td.libcore.telegram.TdApi.SponsoredMessage
-import org.drinkless.td.libcore.telegram.TdApi.StickerSet
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.Background
+import org.drinkless.tdlib.TdApi.FileType
+import org.drinkless.tdlib.TdApi.InputCredentials
+import org.drinkless.tdlib.TdApi.InputInvoice
+import org.drinkless.tdlib.TdApi.Notification
+import org.drinkless.tdlib.TdApi.PaymentForm
+import org.drinkless.tdlib.TdApi.ProfilePhoto
+import org.drinkless.tdlib.TdApi.RemoteFile
+import org.drinkless.tdlib.TdApi.ShippingOption
+import org.drinkless.tdlib.TdApi.StickerSet
+import org.drinkless.tdlib.TdApi.Venue
 
 /**
  * Interface for access common
@@ -41,7 +40,7 @@ interface CommonKtx : BaseKtx {
   /**
    * Suspend function, which removes background from the list of installed backgrounds.
    */
-  suspend fun Background.remove() = api.removeBackground(this.id)
+  suspend fun Background.removeInstalled() = api.removeInstalledBackground(this.id)
 
   /**
    * Suspend function, which removes an active notification from notification list. Needs to be
@@ -56,23 +55,22 @@ interface CommonKtx : BaseKtx {
   /**
    * Suspend function, which sends a filled-out payment form to the bot for final verification.
    *
-   * @param chatId Chat identifier of the Invoice message.  
-   * @param messageId Message identifier.  
+   * @param inputInvoice The invoice.  
    * @param orderInfoId Identifier returned by validateOrderInfo, or an empty string.  
    * @param shippingOptionId Identifier of a chosen shipping option, if applicable.  
-   * @param credentials The credentials chosen by user for payment.  
+   * @param credentials The credentials chosen by user for payment; pass null for a payment in
+   * Telegram stars.  
    * @param tipAmount Chosen by the user amount of tip in the smallest units of the currency.
    *
    * @return [TdApi.PaymentResult] Contains the result of a payment request.
    */
   suspend fun PaymentForm.send(
-    chatId: Long,
-    messageId: Long,
+    inputInvoice: InputInvoice?,
     orderInfoId: String?,
     shippingOptionId: String?,
     credentials: InputCredentials?,
     tipAmount: Long
-  ) = api.sendPaymentForm(chatId, messageId, this.id, orderInfoId, shippingOptionId, credentials,
+  ) = api.sendPaymentForm(inputInvoice, this.id, orderInfoId, shippingOptionId, credentials,
       tipAmount)
 
   /**
@@ -81,12 +79,12 @@ interface CommonKtx : BaseKtx {
   suspend fun ProfilePhoto.delete() = api.deleteProfilePhoto(this.id)
 
   /**
-   * Suspend function, which returns information about a file by its remote ID; this is an offline
-   * request. Can be used to register a URL as a file for further uploading, or sending as a message.
-   * Even the request succeeds, the file can be used only if it is still accessible to the user. For
-   * example, if the file is from a message, then the message must be not deleted and accessible to the
-   * user. If the file database is disabled, then the corresponding object with the file must be
-   * preloaded by the application.
+   * Suspend function, which returns information about a file by its remote identifier; this is an
+   * offline request. Can be used to register a URL as a file for further uploading, or sending as a
+   * message. Even the request succeeds, the file can be used only if it is still accessible to the
+   * user. For example, if the file is from a message, then the message must be not deleted and
+   * accessible to the user. If the file database is disabled, then the corresponding object with the
+   * file must be preloaded by the application.
    *
    * @param fileType File type; pass null if unknown.
    *
@@ -95,38 +93,24 @@ interface CommonKtx : BaseKtx {
   suspend fun RemoteFile.get(fileType: FileType?) = api.getRemoteFile(this.id, fileType)
 
   /**
-   * Suspend function, which terminates a session of the current user.
-   */
-  suspend fun Session.terminate() = api.terminateSession(this.id)
-
-  /**
    * Suspend function, which sends a filled-out payment form to the bot for final verification.
    *
-   * @param chatId Chat identifier of the Invoice message.  
-   * @param messageId Message identifier.  
+   * @param inputInvoice The invoice.  
    * @param paymentFormId Payment form identifier returned by getPaymentForm.  
    * @param orderInfoId Identifier returned by validateOrderInfo, or an empty string.  
-   * @param credentials The credentials chosen by user for payment.  
+   * @param credentials The credentials chosen by user for payment; pass null for a payment in
+   * Telegram stars.  
    * @param tipAmount Chosen by the user amount of tip in the smallest units of the currency.
    *
    * @return [TdApi.PaymentResult] Contains the result of a payment request.
    */
   suspend fun ShippingOption.sendPaymentForm(
-    chatId: Long,
-    messageId: Long,
+    inputInvoice: InputInvoice?,
     paymentFormId: Long,
     orderInfoId: String?,
     credentials: InputCredentials?,
     tipAmount: Long
-  ) = api.sendPaymentForm(chatId, messageId, paymentFormId, orderInfoId, this.id, credentials,
-      tipAmount)
-
-  /**
-   * Suspend function, which informs TDLib that a sponsored message was viewed by the user.
-   *
-   * @param chatId Identifier of the chat with the sponsored message.  
-   */
-  suspend fun SponsoredMessage.view(chatId: Long) = api.viewSponsoredMessage(chatId, this.id)
+  ) = api.sendPaymentForm(inputInvoice, paymentFormId, orderInfoId, this.id, credentials, tipAmount)
 
   /**
    * Suspend function, which changes the sticker set of a supergroup; requires canChangeInfo
@@ -136,4 +120,23 @@ interface CommonKtx : BaseKtx {
    */
   suspend fun StickerSet.setSupergroup(supergroupId: Long) =
       api.setSupergroupStickerSet(supergroupId, this.id)
+
+  /**
+   * Suspend function, which searches for public stories from the given venue. For optimal
+   * performance, the number of returned stories is chosen by TDLib and can be smaller than the
+   * specified limit.
+   *
+   * @param venueProvider Provider of the venue.  
+   * @param offset Offset of the first entry to return as received from the previous request; use
+   * empty string to get the first chunk of results.  
+   * @param limit The maximum number of stories to be returned; up to 100. For optimal performance,
+   * the number of returned stories is chosen by TDLib and can be smaller than the specified limit.
+   *
+   * @return [TdApi.FoundStories] Contains a list of stories found by a search.
+   */
+  suspend fun Venue.searchPublicStoriesBy(
+    venueProvider: String?,
+    offset: String?,
+    limit: Int
+  ) = api.searchPublicStoriesByVenue(venueProvider, this.id, offset, limit)
 }

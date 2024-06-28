@@ -7,19 +7,18 @@ package kotlinx.telegram.coroutines
 import kotlin.Array
 import kotlin.String
 import kotlinx.telegram.core.TelegramFlow
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.LanguagePackInfo
-import org.drinkless.td.libcore.telegram.TdApi.LanguagePackString
-import org.drinkless.td.libcore.telegram.TdApi.LanguagePackStringValue
-import org.drinkless.td.libcore.telegram.TdApi.LanguagePackStrings
-import org.drinkless.td.libcore.telegram.TdApi.Text
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.LanguagePackInfo
+import org.drinkless.tdlib.TdApi.LanguagePackString
+import org.drinkless.tdlib.TdApi.LanguagePackStringValue
+import org.drinkless.tdlib.TdApi.LanguagePackStrings
+import org.drinkless.tdlib.TdApi.Text
 
 /**
  * Suspend function, which adds a custom server language pack to the list of installed language
  * packs in current localization target. Can be called before authorization.
  *
- * @param languagePackId Identifier of a language pack to be added; may be different from a name
- * that is used in an &quot;https://t.me/setlanguage/&quot; link.
+ * @param languagePackId Identifier of a language pack to be added.
  */
 suspend fun TelegramFlow.addCustomServerLanguagePack(languagePackId: String?) =
     this.sendFunctionLaunch(TdApi.AddCustomServerLanguagePack(languagePackId))
@@ -104,9 +103,9 @@ suspend fun TelegramFlow.getPreferredCountryLanguage(countryCode: String?): Text
  * Suspend function, which adds or changes a custom local language pack to the current localization
  * target.
  *
- * @param info Information about the language pack. Language pack ID must start with 'X', consist
- * only of English letters, digits and hyphens, and must not exceed 64 characters. Can be called before
- * authorization.  
+ * @param info Information about the language pack. Language pack identifier must start with 'X',
+ * consist only of English letters, digits and hyphens, and must not exceed 64 characters. Can be
+ * called before authorization.  
  * @param strings Strings of the new language pack.
  */
 suspend fun TelegramFlow.setCustomLanguagePack(info: LanguagePackInfo?,

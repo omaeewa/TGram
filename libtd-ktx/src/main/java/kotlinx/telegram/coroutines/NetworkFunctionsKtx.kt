@@ -6,10 +6,10 @@ package kotlinx.telegram.coroutines
 
 import kotlin.Boolean
 import kotlinx.telegram.core.TelegramFlow
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.NetworkStatistics
-import org.drinkless.td.libcore.telegram.TdApi.NetworkStatisticsEntry
-import org.drinkless.td.libcore.telegram.TdApi.NetworkType
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.NetworkStatistics
+import org.drinkless.tdlib.TdApi.NetworkStatisticsEntry
+import org.drinkless.tdlib.TdApi.NetworkType
 
 /**
  * Suspend function, which adds the specified data to data usage statistics. Can be called before
@@ -24,7 +24,7 @@ suspend fun TelegramFlow.addNetworkStatistics(entry: NetworkStatisticsEntry?) =
  * Suspend function, which returns network data usage statistics. Can be called before
  * authorization.
  *
- * @param onlyCurrent If true, returns only data for the current library launch.
+ * @param onlyCurrent Pass true to get statistics only for the current library launch.
  *
  * @return [NetworkStatistics] A full list of available network statistic entries.
  */

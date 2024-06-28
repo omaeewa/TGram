@@ -5,12 +5,15 @@
 package kotlinx.telegram.extensions
 
 import kotlinx.telegram.core.TelegramFlow
+import org.drinkless.tdlib.TdApi
 
 /**
- * Interface for access all Telegram objects extension functions. Contains 255 extensions
+ * Interface for access all Telegram objects extension functions. Contains 421 extensions
  */
-interface TelegramKtx : BasicGroupKtx, CallKtx, ChatKtx, FileKtx, GroupCallKtx, MessageKtx,
-    NotificationGroupKtx, ProxyKtx, SecretChatKtx, SupergroupKtx, UserKtx, CommonKtx {
+interface TelegramKtx : AccentColorKtx, BasicGroupKtx, BusinessConnectionKtx, CallKtx, ChatKtx,
+    FileKtx, GroupCallKtx, MessageKtx, NotificationGroupKtx, NotificationSoundKtx,
+    ProfileAccentColorKtx, ProxyKtx, SavedMessagesTopicKtx, SecretChatKtx, SessionKtx, StoryKtx,
+    SupergroupKtx, UserKtx, CommonKtx {
   /**
    * Instance of the [TelegramFlow] connecting extensions to the Telegram Client
    */

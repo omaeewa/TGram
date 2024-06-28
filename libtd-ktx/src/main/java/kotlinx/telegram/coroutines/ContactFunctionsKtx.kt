@@ -10,21 +10,21 @@ import kotlin.Int
 import kotlin.LongArray
 import kotlin.String
 import kotlinx.telegram.core.TelegramFlow
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.Contact
-import org.drinkless.td.libcore.telegram.TdApi.ImportedContacts
-import org.drinkless.td.libcore.telegram.TdApi.Users
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.Contact
+import org.drinkless.tdlib.TdApi.ImportedContacts
+import org.drinkless.tdlib.TdApi.Users
 
 /**
  * Suspend function, which adds a user to the contact list or edits an existing contact by their
  * user identifier.
  *
- * @param contact The contact to add or edit; phone number can be empty and needs to be specified
+ * @param contact The contact to add or edit; phone number may be empty and needs to be specified
  * only if known, vCard is ignored.  
- * @param sharePhoneNumber True, if the new contact needs to be allowed to see current user's phone
- * number. A corresponding rule to userPrivacySettingShowPhoneNumber will be added if needed. Use the
- * field userFullInfo.needPhoneNumberPrivacyException to check whether the current user needs to be
- * asked to share their phone number.
+ * @param sharePhoneNumber Pass true to share the current user's phone number with the new contact.
+ * A corresponding rule to userPrivacySettingShowPhoneNumber will be added if needed. Use the field
+ * userFullInfo.needPhoneNumberPrivacyException to check whether the current user needs to be asked to
+ * share their phone number.
  */
 suspend fun TelegramFlow.addContact(contact: Contact?, sharePhoneNumber: Boolean) =
     this.sendFunctionLaunch(TdApi.AddContact(contact, sharePhoneNumber))
@@ -37,7 +37,7 @@ suspend fun TelegramFlow.addContact(contact: Contact?, sharePhoneNumber: Boolean
  *
  * @param contacts The new list of contacts, contact's vCard are ignored and are not imported.
  *
- * @return [ImportedContacts] Represents the result of an ImportContacts request.
+ * @return [ImportedContacts] Represents the result of an importContacts request.
  */
 suspend fun TelegramFlow.changeImportedContacts(contacts: Array<Contact>?): ImportedContacts =
     this.sendFunctionAsync(TdApi.ChangeImportedContacts(contacts))
@@ -49,11 +49,17 @@ suspend fun TelegramFlow.clearImportedContacts() =
     this.sendFunctionLaunch(TdApi.ClearImportedContacts())
 
 /**
- * Suspend function, which returns all user contacts.
+ * Suspend function, which returns all contacts of the user.
  *
  * @return [Users] Represents a list of users.
  */
 suspend fun TelegramFlow.getContacts(): Users = this.sendFunctionAsync(TdApi.GetContacts())
+
+/**
+ * Suspend function, which hides the list of contacts that have close birthdays for 24 hours.
+ */
+suspend fun TelegramFlow.hideContactCloseBirthdays() =
+    this.sendFunctionLaunch(TdApi.HideContactCloseBirthdays())
 
 /**
  * Suspend function, which adds new contacts or edits existing contacts by their phone numbers;
@@ -62,7 +68,7 @@ suspend fun TelegramFlow.getContacts(): Users = this.sendFunctionAsync(TdApi.Get
  * @param contacts The list of contacts to import or edit; contacts' vCard are ignored and are not
  * imported.
  *
- * @return [ImportedContacts] Represents the result of an ImportContacts request.
+ * @return [ImportedContacts] Represents the result of an importContacts request.
  */
 suspend fun TelegramFlow.importContacts(contacts: Array<Contact>?): ImportedContacts =
     this.sendFunctionAsync(TdApi.ImportContacts(contacts))

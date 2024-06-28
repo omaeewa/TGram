@@ -6,8 +6,8 @@ package kotlinx.telegram.coroutines
 
 import kotlin.String
 import kotlinx.telegram.core.TelegramFlow
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.AccountTtl
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.AccountTtl
 
 /**
  * Suspend function, which deletes the account of the current user, deleting all information
@@ -15,10 +15,12 @@ import org.drinkless.td.libcore.telegram.TdApi.AccountTtl
  * new account. Can be called before authorization when the current authorization state is
  * authorizationStateWaitPassword.
  *
- * @param reason The reason why the account was deleted; optional.
+ * @param reason The reason why the account was deleted; optional.  
+ * @param password The 2-step verification password of the current user. If the current user isn't
+ * authorized, then an empty string can be passed and account deletion can be canceled within one week.
  */
-suspend fun TelegramFlow.deleteAccount(reason: String?) =
-    this.sendFunctionLaunch(TdApi.DeleteAccount(reason))
+suspend fun TelegramFlow.deleteAccount(reason: String?, password: String?) =
+    this.sendFunctionLaunch(TdApi.DeleteAccount(reason, password))
 
 /**
  * Suspend function, which returns the period of inactivity after which the account of the current

@@ -51,4 +51,6 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     implementation(project(":libtd-ktx"))
+    implementation(project(":core:common"))
+    api(project(":core:model"))
 }

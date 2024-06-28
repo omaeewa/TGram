@@ -7,17 +7,18 @@ package kotlinx.telegram.coroutines
 import kotlin.Boolean
 import kotlin.String
 import kotlinx.telegram.core.TelegramFlow
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.FormattedText
-import org.drinkless.td.libcore.telegram.TdApi.WebPage
-import org.drinkless.td.libcore.telegram.TdApi.WebPageInstantView
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.FormattedText
+import org.drinkless.tdlib.TdApi.LinkPreviewOptions
+import org.drinkless.tdlib.TdApi.WebPage
+import org.drinkless.tdlib.TdApi.WebPageInstantView
 
 /**
  * Suspend function, which returns an instant view version of a web page if available. Returns a 404
  * error if the web page has no instant view page.
  *
  * @param url The web page URL.  
- * @param forceFull If true, the full instant view for the web page will be returned.
+ * @param forceFull Pass true to get full instant view for the web page.
  *
  * @return [WebPageInstantView] Describes an instant view page for a web page.
  */
@@ -25,12 +26,15 @@ suspend fun TelegramFlow.getWebPageInstantView(url: String?, forceFull: Boolean)
     = this.sendFunctionAsync(TdApi.GetWebPageInstantView(url, forceFull))
 
 /**
- * Suspend function, which returns a web page preview by the text of the message. Do not call this
- * function too often. Returns a 404 error if the web page has no preview.
+ * Suspend function, which returns a link preview by the text of a message. Do not call this
+ * function too often. Returns a 404 error if the text has no link preview.
  *
- * @param text Message text with formatting.
+ * @param text Message text with formatting.  
+ * @param linkPreviewOptions Options to be used for generation of the link preview; pass null to use
+ * default link preview options.
  *
- * @return [WebPage] Describes a web page preview.
+ * @return [WebPage] Describes a link preview.
  */
-suspend fun TelegramFlow.getWebPagePreview(text: FormattedText?): WebPage =
-    this.sendFunctionAsync(TdApi.GetWebPagePreview(text))
+suspend fun TelegramFlow.getWebPagePreview(text: FormattedText?,
+    linkPreviewOptions: LinkPreviewOptions?): WebPage =
+    this.sendFunctionAsync(TdApi.GetWebPagePreview(text, linkPreviewOptions))

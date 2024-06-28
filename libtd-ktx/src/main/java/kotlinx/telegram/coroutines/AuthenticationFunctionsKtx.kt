@@ -4,11 +4,10 @@
 //
 package kotlinx.telegram.coroutines
 
-import kotlin.LongArray
-import kotlin.String
 import kotlinx.telegram.core.TelegramFlow
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.Session
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.ResendCodeReason
+import org.drinkless.tdlib.TdApi.Session
 
 /**
  * Suspend function, which checks the authentication token of a bot; to log in as a bot. Works only
@@ -24,7 +23,7 @@ suspend fun TelegramFlow.checkAuthenticationBotToken(token: String?) =
  * Suspend function, which checks the authentication code. Works only when the current authorization
  * state is authorizationStateWaitCode.
  *
- * @param code The verification code received via SMS, Telegram message, phone call, or flash call.
+ * @param code Authentication code to check.
  */
 suspend fun TelegramFlow.checkAuthenticationCode(code: String?) =
     this.sendFunctionLaunch(TdApi.CheckAuthenticationCode(code))
@@ -42,10 +41,21 @@ suspend fun TelegramFlow.confirmQrCodeAuthentication(link: String?): Session =
     this.sendFunctionAsync(TdApi.ConfirmQrCodeAuthentication(link))
 
 /**
+ * Suspend function, which reports that authentication code wasn't delivered via SMS; for official
+ * mobile applications only. Works only when the current authorization state is
+ * authorizationStateWaitCode.
+ *
+ * @param mobileNetworkCode Current mobile network code.
+ */
+suspend fun TelegramFlow.reportAuthenticationCodeMissing(mobileNetworkCode: String?) =
+    this.sendFunctionLaunch(TdApi.ReportAuthenticationCodeMissing(mobileNetworkCode))
+
+/**
  * Suspend function, which requests QR code authentication by scanning a QR code on another logged
  * in device. Works only when the current authorization state is authorizationStateWaitPhoneNumber, or
  * if there is no pending authentication query and the current authorization state is
- * authorizationStateWaitCode, authorizationStateWaitRegistration, or authorizationStateWaitPassword.
+ * authorizationStateWaitEmailAddress, authorizationStateWaitEmailCode, authorizationStateWaitCode,
+ * authorizationStateWaitRegistration, or authorizationStateWaitPassword.
  *
  * @param otherUserIds List of user identifiers of other users currently using the application.
  */
@@ -53,9 +63,23 @@ suspend fun TelegramFlow.requestQrCodeAuthentication(otherUserIds: LongArray?) =
     this.sendFunctionLaunch(TdApi.RequestQrCodeAuthentication(otherUserIds))
 
 /**
- * Suspend function, which re-sends an authentication code to the user. Works only when the current
+ * Suspend function, which resends an authentication code to the user. Works only when the current
  * authorization state is authorizationStateWaitCode, the nextCodeType of the result is not null and
- * the server-specified timeout has passed.
+ * the server-specified timeout has passed, or when the current authorization state is
+ * authorizationStateWaitEmailCode.
+ *
+ * @param reason Reason of code resending; pass null if unknown.
  */
-suspend fun TelegramFlow.resendAuthenticationCode() =
-    this.sendFunctionLaunch(TdApi.ResendAuthenticationCode())
+suspend fun TelegramFlow.resendAuthenticationCode(reason: ResendCodeReason?) =
+    this.sendFunctionLaunch(TdApi.ResendAuthenticationCode(reason))
+
+/**
+ * Suspend function, which sends Firebase Authentication SMS to the phone number of the user. Works
+ * only when the current authorization state is authorizationStateWaitCode and the server returned code
+ * of the type authenticationCodeTypeFirebaseAndroid or authenticationCodeTypeFirebaseIos.
+ *
+ * @param token Play Integrity API or SafetyNet Attestation API token for the Android application,
+ * or secret from push notification for the iOS application.
+ */
+suspend fun TelegramFlow.sendAuthenticationFirebaseSms(token: String?) =
+    this.sendFunctionLaunch(TdApi.SendAuthenticationFirebaseSms(token))

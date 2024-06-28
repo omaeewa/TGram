@@ -14,12 +14,14 @@ import kotlinx.telegram.core.TelegramFlow
 import kotlinx.telegram.coroutines.acceptCall
 import kotlinx.telegram.coroutines.discardCall
 import kotlinx.telegram.coroutines.sendCallDebugInformation
+import kotlinx.telegram.coroutines.sendCallLog
 import kotlinx.telegram.coroutines.sendCallRating
 import kotlinx.telegram.coroutines.sendCallSignalingData
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.Call
-import org.drinkless.td.libcore.telegram.TdApi.CallProblem
-import org.drinkless.td.libcore.telegram.TdApi.CallProtocol
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.Call
+import org.drinkless.tdlib.TdApi.CallProblem
+import org.drinkless.tdlib.TdApi.CallProtocol
+import org.drinkless.tdlib.TdApi.InputFile
 
 /**
  * Interface for access [TdApi.Call] extension functions. Can be used alongside with other extension
@@ -41,9 +43,9 @@ interface CallKtx : BaseKtx {
   /**
    * Suspend function, which discards a call.
    *
-   * @param isDisconnected True, if the user was disconnected.  
+   * @param isDisconnected Pass true if the user was disconnected.  
    * @param duration The call duration, in seconds.  
-   * @param isVideo True, if the call was a video call.  
+   * @param isVideo Pass true if the call was a video call.  
    * @param connectionId Identifier of the connection used during the call.
    */
   suspend fun Call.discard(
@@ -54,12 +56,19 @@ interface CallKtx : BaseKtx {
   ) = api.discardCall(this.id, isDisconnected, duration, isVideo, connectionId)
 
   /**
-   * Suspend function, which sends debug information for a call.
+   * Suspend function, which sends debug information for a call to Telegram servers.
    *
    * @param debugInformation Debug information in application-specific format.
    */
   suspend fun Call.sendDebugInformation(debugInformation: String?) =
       api.sendCallDebugInformation(this.id, debugInformation)
+
+  /**
+   * Suspend function, which sends log file for a call to Telegram servers.
+   *
+   * @param logFile Call log file. Only inputFileLocal and inputFileGenerated are supported.
+   */
+  suspend fun Call.sendLog(logFile: InputFile?) = api.sendCallLog(this.id, logFile)
 
   /**
    * Suspend function, which sends a call rating.

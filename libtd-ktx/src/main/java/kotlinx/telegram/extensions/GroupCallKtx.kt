@@ -10,12 +10,13 @@ import kotlin.Long
 import kotlin.LongArray
 import kotlin.String
 import kotlinx.telegram.core.TelegramFlow
-import kotlinx.telegram.coroutines.discardGroupCall
+import kotlinx.telegram.coroutines.endGroupCall
 import kotlinx.telegram.coroutines.endGroupCallRecording
 import kotlinx.telegram.coroutines.endGroupCallScreenSharing
 import kotlinx.telegram.coroutines.getGroupCall
 import kotlinx.telegram.coroutines.getGroupCallInviteLink
 import kotlinx.telegram.coroutines.getGroupCallStreamSegment
+import kotlinx.telegram.coroutines.getGroupCallStreams
 import kotlinx.telegram.coroutines.inviteGroupCallParticipants
 import kotlinx.telegram.coroutines.joinGroupCall
 import kotlinx.telegram.coroutines.leaveGroupCall
@@ -34,10 +35,10 @@ import kotlinx.telegram.coroutines.toggleGroupCallMuteNewParticipants
 import kotlinx.telegram.coroutines.toggleGroupCallParticipantIsHandRaised
 import kotlinx.telegram.coroutines.toggleGroupCallParticipantIsMuted
 import kotlinx.telegram.coroutines.toggleGroupCallScreenSharingIsPaused
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.GroupCall
-import org.drinkless.td.libcore.telegram.TdApi.GroupCallVideoQuality
-import org.drinkless.td.libcore.telegram.TdApi.MessageSender
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.GroupCall
+import org.drinkless.tdlib.TdApi.GroupCallVideoQuality
+import org.drinkless.tdlib.TdApi.MessageSender
 
 /**
  * Interface for access [TdApi.GroupCall] extension functions. Can be used alongside with other
@@ -51,9 +52,9 @@ interface GroupCallKtx : BaseKtx {
   override val api: TelegramFlow
 
   /**
-   * Suspend function, which discards a group call. Requires groupCall.canBeManaged.
+   * Suspend function, which ends a group call. Requires groupCall.canBeManaged.
    */
-  suspend fun GroupCall.discard() = api.discardGroupCall(this.id)
+  suspend fun GroupCall.end() = api.endGroupCall(this.id)
 
   /**
    * Suspend function, which ends recording of an active group call. Requires groupCall.canBeManaged
@@ -107,8 +108,16 @@ interface GroupCallKtx : BaseKtx {
   ) = api.getGroupCallStreamSegment(this.id, timeOffset, scale, channelId, videoQuality)
 
   /**
+   * Suspend function, which returns information about available group call streams.
+   *
+   *
+   * @return [TdApi.GroupCallStreams] Represents a list of group call streams.
+   */
+  suspend fun GroupCall.getStreams() = api.getGroupCallStreams(this.id)
+
+  /**
    * Suspend function, which invites users to an active group call. Sends a service message of type
-   * messageInviteToGroupCall for video chats.
+   * messageInviteVideoChatParticipants for video chats.
    *
    * @param userIds User identifiers. At most 10 users can be invited simultaneously.
    */
@@ -123,8 +132,8 @@ interface GroupCallKtx : BaseKtx {
    * @param audioSourceId Caller audio channel synchronization source identifier; received from
    * tgcalls.  
    * @param payload Group call join payload; received from tgcalls.  
-   * @param isMuted True, if the user's microphone is muted.  
-   * @param isMyVideoEnabled True, if the user's video is enabled.  
+   * @param isMuted Pass true to join the call with muted microphone.  
+   * @param isMyVideoEnabled Pass true if the user's video is enabled.  
    * @param inviteHash If non-empty, invite hash to be used to join the group call without being
    * muted by administrators.
    *
@@ -148,7 +157,7 @@ interface GroupCallKtx : BaseKtx {
   /**
    * Suspend function, which loads more participants of a group call. The loaded participants will
    * be received through updates. Use the field groupCall.loadedAllParticipants to check whether all
-   * participants has already been loaded.
+   * participants have already been loaded.
    *
    * @param limit The maximum number of participants to load; up to 100.
    */
@@ -166,7 +175,7 @@ interface GroupCallKtx : BaseKtx {
    *
    * @param audioSource Group call participant's synchronization audio source identifier, or 0 for
    * the current user.  
-   * @param isSpeaking True, if the user is speaking.
+   * @param isSpeaking Pass true if the user is speaking.
    */
   suspend fun GroupCall.setParticipantIsSpeaking(audioSource: Int, isSpeaking: Boolean) =
       api.setGroupCallParticipantIsSpeaking(this.id, audioSource, isSpeaking)
@@ -224,7 +233,7 @@ interface GroupCallKtx : BaseKtx {
 
   /**
    * Suspend function, which toggles whether the current user will receive a notification when the
-   * group call will start; scheduled group calls only.
+   * group call starts; scheduled group calls only.
    *
    * @param enabledStartNotification New value of the enabledStartNotification setting.
    */
@@ -272,7 +281,7 @@ interface GroupCallKtx : BaseKtx {
    * unmuted, or allowed to unmute themselves.
    *
    * @param participantId Participant identifier.  
-   * @param isMuted Pass true if the user must be muted and false otherwise.
+   * @param isMuted Pass true to mute the user; pass false to unmute them.
    */
   suspend fun GroupCall.toggleParticipantIsMuted(participantId: MessageSender?, isMuted: Boolean) =
       api.toggleGroupCallParticipantIsMuted(this.id, participantId, isMuted)
@@ -280,7 +289,7 @@ interface GroupCallKtx : BaseKtx {
   /**
    * Suspend function, which pauses or unpauses screen sharing in a joined group call.
    *
-   * @param isPaused True if screen sharing is paused.
+   * @param isPaused Pass true to pause screen sharing; pass false to unpause it.
    */
   suspend fun GroupCall.toggleScreenSharingIsPaused(isPaused: Boolean) =
       api.toggleGroupCallScreenSharingIsPaused(this.id, isPaused)

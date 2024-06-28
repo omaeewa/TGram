@@ -10,15 +10,16 @@ import kotlin.Long
 import kotlin.LongArray
 import kotlin.String
 import kotlinx.telegram.core.TelegramFlow
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.ChatEventLogFilters
-import org.drinkless.td.libcore.telegram.TdApi.ChatEvents
-import org.drinkless.td.libcore.telegram.TdApi.HttpUrl
-import org.drinkless.td.libcore.telegram.TdApi.JsonValue
-import org.drinkless.td.libcore.telegram.TdApi.LogStream
-import org.drinkless.td.libcore.telegram.TdApi.LogTags
-import org.drinkless.td.libcore.telegram.TdApi.LogVerbosityLevel
-import org.drinkless.td.libcore.telegram.TdApi.LoginUrlInfo
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.ChatEventLogFilters
+import org.drinkless.tdlib.TdApi.ChatEvents
+import org.drinkless.tdlib.TdApi.HttpUrl
+import org.drinkless.tdlib.TdApi.InputFile
+import org.drinkless.tdlib.TdApi.JsonValue
+import org.drinkless.tdlib.TdApi.LogStream
+import org.drinkless.tdlib.TdApi.LogTags
+import org.drinkless.tdlib.TdApi.LogVerbosityLevel
+import org.drinkless.tdlib.TdApi.LoginUrlInfo
 
 /**
  * Suspend function, which adds a message to TDLib internal log. Can be called synchronously.
@@ -32,7 +33,7 @@ suspend fun TelegramFlow.addLogMessage(verbosityLevel: Int, text: String?) =
 /**
  * Suspend function, which returns a list of service actions taken by chat members and
  * administrators in the last 48 hours. Available only for supergroups and channels. Requires
- * administrator rights. Returns results in reverse chronological order (i. e., in order of decreasing
+ * administrator rights. Returns results in reverse chronological order (i.e., in order of decreasing
  * eventId).
  *
  * @param chatId Chat identifier.  
@@ -76,7 +77,7 @@ suspend fun TelegramFlow.getLogTagVerbosityLevel(tag: String?): LogVerbosityLeve
     this.sendFunctionAsync(TdApi.GetLogTagVerbosityLevel(tag))
 
 /**
- * Suspend function, which returns list of available TDLib internal log tags, for example,
+ * Suspend function, which returns the list of available TDLib internal log tags, for example,
  * [&quot;actor&quot;, &quot;binlog&quot;, &quot;connections&quot;, &quot;notifications&quot;,
  * &quot;proxy&quot;]. Can be called synchronously.
  *
@@ -102,7 +103,7 @@ suspend fun TelegramFlow.getLogVerbosityLevel(): LogVerbosityLevel =
  * @param chatId Chat identifier of the message with the button.  
  * @param messageId Message identifier of the message with the button.  
  * @param buttonId Button identifier.  
- * @param allowWriteAccess True, if the user allowed the bot to send them messages.
+ * @param allowWriteAccess Pass true to allow the bot to send messages to the current user.
  *
  * @return [HttpUrl] Contains an HTTP URL.
  */
@@ -143,6 +144,15 @@ suspend fun TelegramFlow.saveApplicationLogEvent(
   chatId: Long,
   data: JsonValue?
 ) = this.sendFunctionLaunch(TdApi.SaveApplicationLogEvent(type, chatId, data))
+
+/**
+ * Suspend function, which sends log file for a call to Telegram servers.
+ *
+ * @param callId Call identifier.  
+ * @param logFile Call log file. Only inputFileLocal and inputFileGenerated are supported.
+ */
+suspend fun TelegramFlow.sendCallLog(callId: Int, logFile: InputFile?) =
+    this.sendFunctionLaunch(TdApi.SendCallLog(callId, logFile))
 
 /**
  * Suspend function, which sets new log stream for internal logging of TDLib. Can be called

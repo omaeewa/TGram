@@ -10,17 +10,41 @@ import kotlin.Int
 import kotlin.Long
 import kotlin.String
 import kotlinx.telegram.core.TelegramFlow
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.Count
-import org.drinkless.td.libcore.telegram.TdApi.Error
-import org.drinkless.td.libcore.telegram.TdApi.File
-import org.drinkless.td.libcore.telegram.TdApi.FilePart
-import org.drinkless.td.libcore.telegram.TdApi.FileType
-import org.drinkless.td.libcore.telegram.TdApi.InputFile
-import org.drinkless.td.libcore.telegram.TdApi.InputSticker
-import org.drinkless.td.libcore.telegram.TdApi.Location
-import org.drinkless.td.libcore.telegram.TdApi.MessageFileType
-import org.drinkless.td.libcore.telegram.TdApi.Text
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.Error
+import org.drinkless.tdlib.TdApi.File
+import org.drinkless.tdlib.TdApi.FileDownloadedPrefixSize
+import org.drinkless.tdlib.TdApi.FilePart
+import org.drinkless.tdlib.TdApi.FileType
+import org.drinkless.tdlib.TdApi.FoundFileDownloads
+import org.drinkless.tdlib.TdApi.InputFile
+import org.drinkless.tdlib.TdApi.Location
+import org.drinkless.tdlib.TdApi.MessageFileType
+import org.drinkless.tdlib.TdApi.StickerFormat
+import org.drinkless.tdlib.TdApi.Text
+
+/**
+ * Suspend function, which adds a file from a message to the list of file downloads. Download
+ * progress and completion of the download will be notified through updateFile updates. If message
+ * database is used, the list of file downloads is persistent across application restarts. The
+ * downloading is independent of download using downloadFile, i.e. it continues if downloadFile is
+ * canceled or is used to download a part of the file.
+ *
+ * @param fileId Identifier of the file to download.  
+ * @param chatId Chat identifier of the message with the file.  
+ * @param messageId Message identifier.  
+ * @param priority Priority of the download (1-32). The higher the priority, the earlier the file
+ * will be downloaded. If the priorities of two files are equal, then the last one for which
+ * downloadFile/addFileToDownloads was called will be downloaded first.
+ *
+ * @return [File] Represents a file.
+ */
+suspend fun TelegramFlow.addFileToDownloads(
+  fileId: Int,
+  chatId: Long,
+  messageId: Long,
+  priority: Int
+): File = this.sendFunctionAsync(TdApi.AddFileToDownloads(fileId, chatId, messageId, priority))
 
 /**
  * Suspend function, which stops the downloading of a file. If a file has already been downloaded,
@@ -34,13 +58,13 @@ suspend fun TelegramFlow.cancelDownloadFile(fileId: Int, onlyIfPending: Boolean)
     this.sendFunctionLaunch(TdApi.CancelDownloadFile(fileId, onlyIfPending))
 
 /**
- * Suspend function, which stops the uploading of a file. Supported only for files uploaded by using
- * uploadFile. For other files the behavior is undefined.
+ * Suspend function, which stops the preliminary uploading of a file. Supported only for files
+ * uploaded by using preliminaryUploadFile. For other files the behavior is undefined.
  *
  * @param fileId Identifier of the file to stop uploading.
  */
-suspend fun TelegramFlow.cancelUploadFile(fileId: Int) =
-    this.sendFunctionLaunch(TdApi.CancelUploadFile(fileId))
+suspend fun TelegramFlow.cancelPreliminaryUploadFile(fileId: Int) =
+    this.sendFunctionLaunch(TdApi.CancelPreliminaryUploadFile(fileId))
 
 /**
  * Suspend function, which removes potentially dangerous characters from the name of a file. The
@@ -68,21 +92,21 @@ suspend fun TelegramFlow.deleteFile(fileId: Int) = this.sendFunctionLaunch(TdApi
  * @param fileId Identifier of the file to download.  
  * @param priority Priority of the download (1-32). The higher the priority, the earlier the file
  * will be downloaded. If the priorities of two files are equal, then the last one for which
- * downloadFile was called will be downloaded first.  
+ * downloadFile/addFileToDownloads was called will be downloaded first.  
  * @param offset The starting position from which the file needs to be downloaded.  
  * @param limit Number of bytes which need to be downloaded starting from the &quot;offset&quot;
- * position before the download will be automatically canceled; use 0 to download without a limit.  
- * @param synchronous If false, this request returns file state just after the download has been
- * started. If true, this request returns file state only after the download has succeeded, has failed,
- * has been canceled or a new downloadFile request with different offset/limit parameters was sent.
+ * position before the download will automatically be canceled; use 0 to download without a limit.  
+ * @param synchronous Pass true to return response only after the file download has succeeded, has
+ * failed, has been canceled, or a new downloadFile request with different offset/limit parameters was
+ * sent; pass false to return file state immediately, just after the download has been started.
  *
  * @return [File] Represents a file.
  */
 suspend fun TelegramFlow.downloadFile(
   fileId: Int,
   priority: Int,
-  offset: Int,
-  limit: Int,
+  offset: Long,
+  limit: Long,
   synchronous: Boolean
 ): File = this.sendFunctionAsync(TdApi.DownloadFile(fileId, priority, offset, limit, synchronous))
 
@@ -111,10 +135,11 @@ suspend fun TelegramFlow.getFile(fileId: Int): File = this.sendFunctionAsync(TdA
  * @param fileId Identifier of the file.  
  * @param offset Offset from which downloaded prefix size needs to be calculated.
  *
- * @return [Count] Contains a counter.
+ * @return [FileDownloadedPrefixSize] Contains size of downloaded prefix of a file.
  */
-suspend fun TelegramFlow.getFileDownloadedPrefixSize(fileId: Int, offset: Int): Count =
-    this.sendFunctionAsync(TdApi.GetFileDownloadedPrefixSize(fileId, offset))
+suspend fun TelegramFlow.getFileDownloadedPrefixSize(fileId: Int, offset: Long):
+    FileDownloadedPrefixSize = this.sendFunctionAsync(TdApi.GetFileDownloadedPrefixSize(fileId,
+    offset))
 
 /**
  * Suspend function, which returns the extension of a file, guessed by its MIME type. Returns an
@@ -147,7 +172,7 @@ suspend fun TelegramFlow.getFileMimeType(fileName: String?): Text =
  * @param width Map width in pixels before applying scale; 16-1024.  
  * @param height Map height in pixels before applying scale; 16-1024.  
  * @param scale Map scale; 1-3.  
- * @param chatId Identifier of a chat, in which the thumbnail will be shown. Use 0 if unknown.
+ * @param chatId Identifier of a chat in which the thumbnail will be shown. Use 0 if unknown.
  *
  * @return [File] Represents a file.
  */
@@ -162,7 +187,8 @@ suspend fun TelegramFlow.getMapThumbnailFile(
     chatId))
 
 /**
- * Suspend function, which returns information about a file with messages exported from another app.
+ * Suspend function, which returns information about a file with messages exported from another
+ * application.
  *
  * @param messageFileHead Beginning of the message file; up to 100 first lines.
  *
@@ -172,11 +198,11 @@ suspend fun TelegramFlow.getMessageFileType(messageFileHead: String?): MessageFi
     this.sendFunctionAsync(TdApi.GetMessageFileType(messageFileHead))
 
 /**
- * Suspend function, which returns information about a file by its remote ID; this is an offline
- * request. Can be used to register a URL as a file for further uploading, or sending as a message.
- * Even the request succeeds, the file can be used only if it is still accessible to the user. For
- * example, if the file is from a message, then the message must be not deleted and accessible to the
- * user. If the file database is disabled, then the corresponding object with the file must be
+ * Suspend function, which returns information about a file by its remote identifier; this is an
+ * offline request. Can be used to register a URL as a file for further uploading, or sending as a
+ * message. Even the request succeeds, the file can be used only if it is still accessible to the user.
+ * For example, if the file is from a message, then the message must be not deleted and accessible to
+ * the user. If the file database is disabled, then the corresponding object with the file must be
  * preloaded by the application.
  *
  * @param remoteFileId Remote identifier of the file to get.  
@@ -199,6 +225,26 @@ suspend fun TelegramFlow.getSuggestedFileName(fileId: Int, directory: String?): 
     this.sendFunctionAsync(TdApi.GetSuggestedFileName(fileId, directory))
 
 /**
+ * Suspend function, which preliminary uploads a file to the cloud before sending it in a message,
+ * which can be useful for uploading of being recorded voice and video notes. In all other cases there
+ * is no need to preliminary upload a file. Updates updateFile will be used to notify about upload
+ * progress. The upload will not be completed until the file is sent in a message.
+ *
+ * @param file File to upload.  
+ * @param fileType File type; pass null if unknown.  
+ * @param priority Priority of the upload (1-32). The higher the priority, the earlier the file will
+ * be uploaded. If the priorities of two files are equal, then the first one for which
+ * preliminaryUploadFile was called will be uploaded first.
+ *
+ * @return [File] Represents a file.
+ */
+suspend fun TelegramFlow.preliminaryUploadFile(
+  file: InputFile?,
+  fileType: FileType?,
+  priority: Int
+): File = this.sendFunctionAsync(TdApi.PreliminaryUploadFile(file, fileType, priority))
+
+/**
  * Suspend function, which reads a part of a file from the TDLib file cache and returns read bytes.
  * This method is intended to be used only if the application has no direct access to TDLib's file
  * system, because it is usually slower than a direct read from the file.
@@ -213,9 +259,54 @@ suspend fun TelegramFlow.getSuggestedFileName(fileId: Int, directory: String?): 
  */
 suspend fun TelegramFlow.readFilePart(
   fileId: Int,
-  offset: Int,
-  count: Int
+  offset: Long,
+  count: Long
 ): FilePart = this.sendFunctionAsync(TdApi.ReadFilePart(fileId, offset, count))
+
+/**
+ * Suspend function, which removes all files from the file download list.
+ *
+ * @param onlyActive Pass true to remove only active downloads, including paused.  
+ * @param onlyCompleted Pass true to remove only completed downloads.  
+ * @param deleteFromCache Pass true to delete the file from the TDLib file cache.
+ */
+suspend fun TelegramFlow.removeAllFilesFromDownloads(
+  onlyActive: Boolean,
+  onlyCompleted: Boolean,
+  deleteFromCache: Boolean
+) = this.sendFunctionLaunch(TdApi.RemoveAllFilesFromDownloads(onlyActive, onlyCompleted,
+    deleteFromCache))
+
+/**
+ * Suspend function, which removes a file from the file download list.
+ *
+ * @param fileId Identifier of the downloaded file.  
+ * @param deleteFromCache Pass true to delete the file from the TDLib file cache.
+ */
+suspend fun TelegramFlow.removeFileFromDownloads(fileId: Int, deleteFromCache: Boolean) =
+    this.sendFunctionLaunch(TdApi.RemoveFileFromDownloads(fileId, deleteFromCache))
+
+/**
+ * Suspend function, which searches for files in the file download list or recently downloaded files
+ * from the list.
+ *
+ * @param query Query to search for; may be empty to return all downloaded files.  
+ * @param onlyActive Pass true to search only for active downloads, including paused.  
+ * @param onlyCompleted Pass true to search only for completed downloads.  
+ * @param offset Offset of the first entry to return as received from the previous request; use
+ * empty string to get the first chunk of results.  
+ * @param limit The maximum number of files to be returned.
+ *
+ * @return [FoundFileDownloads] Contains a list of downloaded files, found by a search.
+ */
+suspend fun TelegramFlow.searchFileDownloads(
+  query: String?,
+  onlyActive: Boolean,
+  onlyCompleted: Boolean,
+  offset: String?,
+  limit: Int
+): FoundFileDownloads = this.sendFunctionAsync(TdApi.SearchFileDownloads(query, onlyActive,
+    onlyCompleted, offset, limit))
 
 /**
  * Suspend function, which informs TDLib on a file generation progress.
@@ -226,40 +317,27 @@ suspend fun TelegramFlow.readFilePart(
  */
 suspend fun TelegramFlow.setFileGenerationProgress(
   generationId: Long,
-  expectedSize: Int,
-  localPrefixSize: Int
+  expectedSize: Long,
+  localPrefixSize: Long
 ) = this.sendFunctionLaunch(TdApi.SetFileGenerationProgress(generationId, expectedSize,
     localPrefixSize))
 
 /**
- * Suspend function, which asynchronously uploads a file to the cloud without sending it in a
- * message. updateFile will be used to notify about upload progress and successful completion of the
- * upload. The file will not have a persistent remote identifier until it will be sent in a message.
- *
- * @param file File to upload.  
- * @param fileType File type; pass null if unknown.  
- * @param priority Priority of the upload (1-32). The higher the priority, the earlier the file will
- * be uploaded. If the priorities of two files are equal, then the first one for which uploadFile was
- * called will be uploaded first.
- *
- * @return [File] Represents a file.
- */
-suspend fun TelegramFlow.uploadFile(
-  file: InputFile?,
-  fileType: FileType?,
-  priority: Int
-): File = this.sendFunctionAsync(TdApi.UploadFile(file, fileType, priority))
-
-/**
- * Suspend function, which uploads a PNG image with a sticker; returns the uploaded file.
+ * Suspend function, which uploads a file with a sticker; returns the uploaded file.
  *
  * @param userId Sticker file owner; ignored for regular users.  
- * @param sticker Sticker file to upload.
+ * @param stickerFormat Sticker format.  
+ * @param sticker File file to upload; must fit in a 512x512 square. For WEBP stickers the file must
+ * be in WEBP or PNG format, which will be converted to WEBP server-side. See
+ * https://core.telegram.org/animated_stickers#technical-requirements for technical requirements.
  *
  * @return [File] Represents a file.
  */
-suspend fun TelegramFlow.uploadStickerFile(userId: Long, sticker: InputSticker?): File =
-    this.sendFunctionAsync(TdApi.UploadStickerFile(userId, sticker))
+suspend fun TelegramFlow.uploadStickerFile(
+  userId: Long,
+  stickerFormat: StickerFormat?,
+  sticker: InputFile?
+): File = this.sendFunctionAsync(TdApi.UploadStickerFile(userId, stickerFormat, sticker))
 
 /**
  * Suspend function, which writes a part of a generated file. This method is intended to be used
@@ -272,6 +350,6 @@ suspend fun TelegramFlow.uploadStickerFile(userId: Long, sticker: InputSticker?)
  */
 suspend fun TelegramFlow.writeGeneratedFilePart(
   generationId: Long,
-  offset: Int,
+  offset: Long,
   data: ByteArray?
 ) = this.sendFunctionLaunch(TdApi.WriteGeneratedFilePart(generationId, offset, data))

@@ -25,18 +25,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.miracle.ui.R
-import com.miracle.ui.theme.LocalColorScheme
-import com.miracle.ui.theme.LocalShapes
-import com.miracle.ui.theme.LocalSpacing
-import com.miracle.ui.theme.LocalTypography
 import com.miracle.ui.theme.TGramThemeWithBack
+import com.miracle.ui.theme.lSpacing
+import com.miracle.ui.theme.mColors
+import com.miracle.ui.theme.mShapes
+import com.miracle.ui.theme.mTypography
 
 @Composable
 fun InputPhoneNumberScreen(
@@ -45,21 +43,16 @@ fun InputPhoneNumberScreen(
     onPhoneNumberChange: (String) -> Unit = {},
     setPhoneNumber: () -> Unit = {}
 ) {
-    val spacing = LocalSpacing.current
-    val colors = LocalColorScheme.current
-
     Scaffold(
-        containerColor = Color.Transparent,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = setPhoneNumber,
-                containerColor = colors.primary,
                 shape = CircleShape
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = null,
-                    tint = colors.onSurface
+                    tint = mColors.onSurface
                 )
             }
         },
@@ -69,33 +62,33 @@ fun InputPhoneNumberScreen(
             modifier = Modifier
                 .padding(it)
                 .fillMaxSize()
-                .padding(LocalSpacing.current.extraLarge),
+                .padding(lSpacing.extraLarge),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = stringResource(id = R.string.your_phone_number),
-                style = LocalTypography.current.titleMedium,
+                style = mTypography.titleMedium,
                 fontWeight = FontWeight.Medium,
-                color = colors.onSurface,
+                color = mColors.onSurface,
             )
 
-            Spacer(Modifier.height(spacing.small))
+            Spacer(Modifier.height(lSpacing.small))
 
             Text(
                 text = stringResource(id = R.string.please_confirm_country_code),
-                style = LocalTypography.current.titleSmall,
-                color = colors.onSurfaceVariant,
+                style = mTypography.titleSmall,
+                color = mColors.secondary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.sizeIn(maxWidth = 220.dp)
             )
 
-            Spacer(Modifier.height(spacing.large))
+            Spacer(Modifier.height(lSpacing.large))
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(1.dp, colors.onSurfaceVariant, LocalShapes.current.medium)
+                    .border(1.dp, mColors.secondary, mShapes.medium)
                     .defaultMinSize(
                         minWidth = OutlinedTextFieldDefaults.MinWidth,
                         minHeight = OutlinedTextFieldDefaults.MinHeight
@@ -104,10 +97,10 @@ fun InputPhoneNumberScreen(
             ) {
                 Text(
                     text = stringResource(id = R.string.country),
-                    style = LocalTypography.current.titleMedium,
-                    color = colors.onSurfaceVariant,
+                    style = mTypography.titleMedium,
+                    color = mColors.secondary,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(spacing.medium)
+                    modifier = Modifier.padding(lSpacing.medium)
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -115,33 +108,33 @@ fun InputPhoneNumberScreen(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
-                    tint = colors.onSurfaceVariant,
+                    tint = mColors.secondary,
                     modifier = Modifier
-                        .padding(end = spacing.medium)
+                        .padding(end = lSpacing.medium)
                         .size(29.dp)
                 )
             }
 
-            Spacer(Modifier.height(spacing.medium))
+            Spacer(Modifier.height(lSpacing.medium))
 
             OutlinedTextField(
                 value = phoneNumber,
                 onValueChange = onPhoneNumberChange,
-                shape = LocalShapes.current.medium,
+                shape = mShapes.medium,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = colors.primary,
-                    focusedLabelColor = colors.primary,
-                    focusedTextColor = colors.onSurface,
-                    unfocusedLabelColor = colors.onSurfaceVariant,
-                    unfocusedTextColor = colors.onSurfaceVariant
+                    focusedBorderColor = mColors.primary,
+                    focusedLabelColor = mColors.primary,
+                    focusedTextColor = mColors.onSurface,
+                    unfocusedLabelColor = mColors.secondary,
+                    unfocusedTextColor = mColors.secondary
                 ),
                 label = {
                     Text(
                         text = stringResource(id = R.string.phone_number),
-                        style = LocalTypography.current.titleSmall,
+                        style = mTypography.titleSmall,
                     )
                 },
-                textStyle = LocalTypography.current.titleMedium,
+                textStyle = mTypography.titleMedium,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -155,7 +148,7 @@ fun InputPhoneNumberScreen(
 private fun InputPhoneNumberScreenPreview() {
     TGramThemeWithBack {
         InputPhoneNumberScreen(
-            Modifier.padding(LocalSpacing.current.medium),
+            Modifier.padding(lSpacing.medium),
             phoneNumber = "09090909"
         )
     }

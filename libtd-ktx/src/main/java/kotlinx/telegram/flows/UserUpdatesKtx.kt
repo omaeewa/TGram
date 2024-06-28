@@ -4,15 +4,16 @@
 //
 package kotlinx.telegram.flows
 
+import kotlin.Array
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.telegram.core.TelegramFlow
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.ChatNearby
-import org.drinkless.td.libcore.telegram.TdApi.UpdateUserFullInfo
-import org.drinkless.td.libcore.telegram.TdApi.UpdateUserPrivacySettingRules
-import org.drinkless.td.libcore.telegram.TdApi.UpdateUserStatus
-import org.drinkless.td.libcore.telegram.TdApi.User
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.ChatNearby
+import org.drinkless.tdlib.TdApi.UpdateUserFullInfo
+import org.drinkless.tdlib.TdApi.UpdateUserPrivacySettingRules
+import org.drinkless.tdlib.TdApi.UpdateUserStatus
+import org.drinkless.tdlib.TdApi.User
 
 /**
  * emits [UpdateUserStatus] if the user went online or offline.
@@ -27,7 +28,7 @@ fun TelegramFlow.userFlow(): Flow<User> = this.getUpdatesFlowOfType<TdApi.Update
     .mapNotNull { it.user }
 
 /**
- * emits [UpdateUserFullInfo] if some data from userFullInfo has been changed.
+ * emits [UpdateUserFullInfo] if some data in userFullInfo has been changed.
  */
 fun TelegramFlow.userFullInfoFlow(): Flow<UpdateUserFullInfo> = this.getUpdatesFlowOfType()
 

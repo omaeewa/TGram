@@ -5,86 +5,136 @@
 package kotlinx.telegram.coroutines
 
 import kotlin.Boolean
+import kotlin.ByteArray
 import kotlin.Int
 import kotlin.IntArray
 import kotlin.Long
 import kotlin.LongArray
 import kotlin.String
 import kotlinx.telegram.core.TelegramFlow
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.Chat
-import org.drinkless.td.libcore.telegram.TdApi.ChatAction
-import org.drinkless.td.libcore.telegram.TdApi.ChatAdministrators
-import org.drinkless.td.libcore.telegram.TdApi.ChatFilter
-import org.drinkless.td.libcore.telegram.TdApi.ChatFilterInfo
-import org.drinkless.td.libcore.telegram.TdApi.ChatInviteLink
-import org.drinkless.td.libcore.telegram.TdApi.ChatInviteLinkCounts
-import org.drinkless.td.libcore.telegram.TdApi.ChatInviteLinkInfo
-import org.drinkless.td.libcore.telegram.TdApi.ChatInviteLinkMember
-import org.drinkless.td.libcore.telegram.TdApi.ChatInviteLinkMembers
-import org.drinkless.td.libcore.telegram.TdApi.ChatInviteLinks
-import org.drinkless.td.libcore.telegram.TdApi.ChatJoinRequest
-import org.drinkless.td.libcore.telegram.TdApi.ChatJoinRequests
-import org.drinkless.td.libcore.telegram.TdApi.ChatList
-import org.drinkless.td.libcore.telegram.TdApi.ChatLists
-import org.drinkless.td.libcore.telegram.TdApi.ChatLocation
-import org.drinkless.td.libcore.telegram.TdApi.ChatMember
-import org.drinkless.td.libcore.telegram.TdApi.ChatMemberStatus
-import org.drinkless.td.libcore.telegram.TdApi.ChatMembers
-import org.drinkless.td.libcore.telegram.TdApi.ChatMembersFilter
-import org.drinkless.td.libcore.telegram.TdApi.ChatNotificationSettings
-import org.drinkless.td.libcore.telegram.TdApi.ChatPermissions
-import org.drinkless.td.libcore.telegram.TdApi.ChatReportReason
-import org.drinkless.td.libcore.telegram.TdApi.ChatStatistics
-import org.drinkless.td.libcore.telegram.TdApi.Chats
-import org.drinkless.td.libcore.telegram.TdApi.ChatsNearby
-import org.drinkless.td.libcore.telegram.TdApi.CheckChatUsernameResult
-import org.drinkless.td.libcore.telegram.TdApi.Count
-import org.drinkless.td.libcore.telegram.TdApi.DraftMessage
-import org.drinkless.td.libcore.telegram.TdApi.GroupCallId
-import org.drinkless.td.libcore.telegram.TdApi.InputChatPhoto
-import org.drinkless.td.libcore.telegram.TdApi.Location
-import org.drinkless.td.libcore.telegram.TdApi.Message
-import org.drinkless.td.libcore.telegram.TdApi.MessageCalendar
-import org.drinkless.td.libcore.telegram.TdApi.MessagePositions
-import org.drinkless.td.libcore.telegram.TdApi.MessageSender
-import org.drinkless.td.libcore.telegram.TdApi.MessageSenders
-import org.drinkless.td.libcore.telegram.TdApi.Messages
-import org.drinkless.td.libcore.telegram.TdApi.NotificationSettingsScope
-import org.drinkless.td.libcore.telegram.TdApi.PublicChatType
-import org.drinkless.td.libcore.telegram.TdApi.RecommendedChatFilters
-import org.drinkless.td.libcore.telegram.TdApi.SearchMessagesFilter
-import org.drinkless.td.libcore.telegram.TdApi.SecretChat
-import org.drinkless.td.libcore.telegram.TdApi.SponsoredMessages
-import org.drinkless.td.libcore.telegram.TdApi.Text
-import org.drinkless.td.libcore.telegram.TdApi.TopChatCategory
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.ArchiveChatListSettings
+import org.drinkless.tdlib.TdApi.BackgroundType
+import org.drinkless.tdlib.TdApi.BusinessChatLink
+import org.drinkless.tdlib.TdApi.BusinessChatLinkInfo
+import org.drinkless.tdlib.TdApi.BusinessChatLinks
+import org.drinkless.tdlib.TdApi.Chat
+import org.drinkless.tdlib.TdApi.ChatAction
+import org.drinkless.tdlib.TdApi.ChatActiveStories
+import org.drinkless.tdlib.TdApi.ChatAdministrators
+import org.drinkless.tdlib.TdApi.ChatAvailableReactions
+import org.drinkless.tdlib.TdApi.ChatBoostFeatures
+import org.drinkless.tdlib.TdApi.ChatBoostLevelFeatures
+import org.drinkless.tdlib.TdApi.ChatBoostLink
+import org.drinkless.tdlib.TdApi.ChatBoostLinkInfo
+import org.drinkless.tdlib.TdApi.ChatBoostSlots
+import org.drinkless.tdlib.TdApi.ChatBoostStatus
+import org.drinkless.tdlib.TdApi.ChatFolder
+import org.drinkless.tdlib.TdApi.ChatFolderIcon
+import org.drinkless.tdlib.TdApi.ChatFolderInfo
+import org.drinkless.tdlib.TdApi.ChatFolderInviteLink
+import org.drinkless.tdlib.TdApi.ChatFolderInviteLinkInfo
+import org.drinkless.tdlib.TdApi.ChatFolderInviteLinks
+import org.drinkless.tdlib.TdApi.ChatInviteLink
+import org.drinkless.tdlib.TdApi.ChatInviteLinkCounts
+import org.drinkless.tdlib.TdApi.ChatInviteLinkInfo
+import org.drinkless.tdlib.TdApi.ChatInviteLinkMember
+import org.drinkless.tdlib.TdApi.ChatInviteLinkMembers
+import org.drinkless.tdlib.TdApi.ChatInviteLinks
+import org.drinkless.tdlib.TdApi.ChatJoinRequest
+import org.drinkless.tdlib.TdApi.ChatJoinRequests
+import org.drinkless.tdlib.TdApi.ChatList
+import org.drinkless.tdlib.TdApi.ChatLists
+import org.drinkless.tdlib.TdApi.ChatLocation
+import org.drinkless.tdlib.TdApi.ChatMember
+import org.drinkless.tdlib.TdApi.ChatMemberStatus
+import org.drinkless.tdlib.TdApi.ChatMembers
+import org.drinkless.tdlib.TdApi.ChatMembersFilter
+import org.drinkless.tdlib.TdApi.ChatMessageSenders
+import org.drinkless.tdlib.TdApi.ChatNotificationSettings
+import org.drinkless.tdlib.TdApi.ChatPermissions
+import org.drinkless.tdlib.TdApi.ChatRevenueStatistics
+import org.drinkless.tdlib.TdApi.ChatRevenueTransactions
+import org.drinkless.tdlib.TdApi.ChatStatistics
+import org.drinkless.tdlib.TdApi.Chats
+import org.drinkless.tdlib.TdApi.ChatsNearby
+import org.drinkless.tdlib.TdApi.CheckChatUsernameResult
+import org.drinkless.tdlib.TdApi.Count
+import org.drinkless.tdlib.TdApi.CreatedBasicGroupChat
+import org.drinkless.tdlib.TdApi.DraftMessage
+import org.drinkless.tdlib.TdApi.FailedToAddMembers
+import org.drinkless.tdlib.TdApi.FoundChatBoosts
+import org.drinkless.tdlib.TdApi.FoundChatMessages
+import org.drinkless.tdlib.TdApi.GroupCallId
+import org.drinkless.tdlib.TdApi.HttpUrl
+import org.drinkless.tdlib.TdApi.InputBackground
+import org.drinkless.tdlib.TdApi.InputBusinessChatLink
+import org.drinkless.tdlib.TdApi.InputChatPhoto
+import org.drinkless.tdlib.TdApi.Location
+import org.drinkless.tdlib.TdApi.Message
+import org.drinkless.tdlib.TdApi.MessageCalendar
+import org.drinkless.tdlib.TdApi.MessagePositions
+import org.drinkless.tdlib.TdApi.MessageSender
+import org.drinkless.tdlib.TdApi.MessageSenders
+import org.drinkless.tdlib.TdApi.Messages
+import org.drinkless.tdlib.TdApi.NewChatPrivacySettings
+import org.drinkless.tdlib.TdApi.NotificationSettingsScope
+import org.drinkless.tdlib.TdApi.PublicChatType
+import org.drinkless.tdlib.TdApi.ReactionType
+import org.drinkless.tdlib.TdApi.RecommendedChatFolders
+import org.drinkless.tdlib.TdApi.ReportChatSponsoredMessageResult
+import org.drinkless.tdlib.TdApi.ReportReason
+import org.drinkless.tdlib.TdApi.RtmpUrl
+import org.drinkless.tdlib.TdApi.SearchMessagesFilter
+import org.drinkless.tdlib.TdApi.SecretChat
+import org.drinkless.tdlib.TdApi.SponsoredMessages
+import org.drinkless.tdlib.TdApi.Stories
+import org.drinkless.tdlib.TdApi.StoryInteractions
+import org.drinkless.tdlib.TdApi.StoryList
+import org.drinkless.tdlib.TdApi.TopChatCategory
 
 /**
- * Suspend function, which adds a new member to a chat. Members can't be added to private or secret
- * chats.
+ * Suspend function, which adds a chat folder by an invite link.
+ *
+ * @param inviteLink Invite link for the chat folder.  
+ * @param chatIds Identifiers of the chats added to the chat folder. The chats are automatically
+ * joined if they aren't joined yet.
+ */
+suspend fun TelegramFlow.addChatFolderByInviteLink(inviteLink: String?, chatIds: LongArray?) =
+    this.sendFunctionLaunch(TdApi.AddChatFolderByInviteLink(inviteLink, chatIds))
+
+/**
+ * Suspend function, which adds a new member to a chat; requires canInviteUsers member right.
+ * Members can't be added to private or secret chats. Returns information about members that weren't
+ * added.
  *
  * @param chatId Chat identifier.  
  * @param userId Identifier of the user.  
  * @param forwardLimit The number of earlier messages from the chat to be forwarded to the new
  * member; up to 100. Ignored for supergroups and channels, or if the added user is a bot.
+ *
+ * @return [FailedToAddMembers] Represents a list of users that has failed to be added to a chat.
  */
 suspend fun TelegramFlow.addChatMember(
   chatId: Long,
   userId: Long,
   forwardLimit: Int
-) = this.sendFunctionLaunch(TdApi.AddChatMember(chatId, userId, forwardLimit))
+): FailedToAddMembers = this.sendFunctionAsync(TdApi.AddChatMember(chatId, userId, forwardLimit))
 
 /**
- * Suspend function, which adds multiple new members to a chat. Currently this method is only
- * available for supergroups and channels. This method can't be used to join a chat. Members can't be
- * added to a channel if it has more than 200 members.
+ * Suspend function, which adds multiple new members to a chat; requires canInviteUsers member
+ * right. Currently, this method is only available for supergroups and channels. This method can't be
+ * used to join a chat. Members can't be added to a channel if it has more than 200 members. Returns
+ * information about members that weren't added.
  *
  * @param chatId Chat identifier.  
  * @param userIds Identifiers of the users to be added to the chat. The maximum number of added
  * users is 20 for supergroups and 100 for channels.
+ *
+ * @return [FailedToAddMembers] Represents a list of users that has failed to be added to a chat.
  */
-suspend fun TelegramFlow.addChatMembers(chatId: Long, userIds: LongArray?) =
-    this.sendFunctionLaunch(TdApi.AddChatMembers(chatId, userIds))
+suspend fun TelegramFlow.addChatMembers(chatId: Long, userIds: LongArray?): FailedToAddMembers =
+    this.sendFunctionAsync(TdApi.AddChatMembers(chatId, userIds))
 
 /**
  * Suspend function, which adds a chat to a chat list. A chat can't be simultaneously in Main and
@@ -106,24 +156,15 @@ suspend fun TelegramFlow.addRecentlyFoundChat(chatId: Long) =
     this.sendFunctionLaunch(TdApi.AddRecentlyFoundChat(chatId))
 
 /**
- * Suspend function, which approves pending join request in a chat.
- *
- * @param chatId Chat identifier.  
- * @param userId Identifier of the user, which request will be approved.
- */
-suspend fun TelegramFlow.approveChatJoinRequest(chatId: Long, userId: Long) =
-    this.sendFunctionLaunch(TdApi.ApproveChatJoinRequest(chatId, userId))
-
-/**
- * Suspend function, which bans a member in a chat. Members can't be banned in private or secret
- * chats. In supergroups and channels, the user will not be able to return to the group on their own
- * using invite links, etc., unless unbanned first.
+ * Suspend function, which bans a member in a chat; requires canRestrictMembers administrator right.
+ * Members can't be banned in private or secret chats. In supergroups and channels, the user will not
+ * be able to return to the group on their own using invite links, etc., unless unbanned first.
  *
  * @param chatId Chat identifier.  
  * @param memberId Member identifier.  
  * @param bannedUntilDate Point in time (Unix timestamp) when the user will be unbanned; 0 if never.
  * If the user is banned for more than 366 days or for less than 30 seconds from the current time, the
- * user is considered to be banned forever. Ignored in basic groups.  
+ * user is considered to be banned forever. Ignored in basic groups and if a chat is banned.  
  * @param revokeMessages Pass true to delete all messages in the chat for the user that is being
  * removed. Always true for supergroups and channels.
  */
@@ -133,6 +174,30 @@ suspend fun TelegramFlow.banChatMember(
   bannedUntilDate: Int,
   revokeMessages: Boolean
 ) = this.sendFunctionLaunch(TdApi.BanChatMember(chatId, memberId, bannedUntilDate, revokeMessages))
+
+/**
+ * Suspend function, which boosts a chat and returns the list of available chat boost slots for the
+ * current user after the boost.
+ *
+ * @param chatId Identifier of the chat.  
+ * @param slotIds Identifiers of boost slots of the current user from which to apply boosts to the
+ * chat.
+ *
+ * @return [ChatBoostSlots] Contains a list of chat boost slots.
+ */
+suspend fun TelegramFlow.boostChat(chatId: Long, slotIds: IntArray?): ChatBoostSlots =
+    this.sendFunctionAsync(TdApi.BoostChat(chatId, slotIds))
+
+/**
+ * Suspend function, which checks the validity of an invite link for a chat folder and returns
+ * information about the corresponding chat folder.
+ *
+ * @param inviteLink Invite link to be checked.
+ *
+ * @return [ChatFolderInviteLinkInfo] Contains information about an invite link to a chat folder.
+ */
+suspend fun TelegramFlow.checkChatFolderInviteLink(inviteLink: String?): ChatFolderInviteLinkInfo =
+    this.sendFunctionAsync(TdApi.CheckChatFolderInviteLink(inviteLink))
 
 /**
  * Suspend function, which checks the validity of an invite link for a chat and returns information
@@ -149,7 +214,7 @@ suspend fun TelegramFlow.checkChatInviteLink(inviteLink: String?): ChatInviteLin
  * Suspend function, which checks whether a username can be set for a chat.
  *
  * @param chatId Chat identifier; must be identifier of a supergroup chat, or a channel chat, or a
- * private chat with self, or zero if the chat is being created.  
+ * private chat with self, or 0 if the chat is being created.  
  * @param username Username to be checked.
  *
  * @return [CheckChatUsernameResult] This class is an abstract base class.
@@ -159,7 +224,8 @@ suspend fun TelegramFlow.checkChatUsername(chatId: Long, username: String?): Che
 
 /**
  * Suspend function, which checks whether the maximum number of owned public chats has been reached.
- * Returns corresponding error if the limit was reached.
+ * Returns corresponding error if the limit was reached. The limit can be increased with Telegram
+ * Premium.
  *
  * @param type Type of the public chats, for which to check the limit.
  */
@@ -171,6 +237,16 @@ suspend fun TelegramFlow.checkCreatedPublicChatsLimit(type: PublicChatType?) =
  */
 suspend fun TelegramFlow.clearRecentlyFoundChats() =
     this.sendFunctionLaunch(TdApi.ClearRecentlyFoundChats())
+
+/**
+ * Suspend function, which informs TDLib that the user opened the sponsored chat via the button, the
+ * name, the photo, or a mention in the sponsored message.
+ *
+ * @param chatId Chat identifier of the sponsored message.  
+ * @param messageId Identifier of the sponsored message.
+ */
+suspend fun TelegramFlow.clickChatSponsoredMessage(chatId: Long, messageId: Long) =
+    this.sendFunctionLaunch(TdApi.ClickChatSponsoredMessage(chatId, messageId))
 
 /**
  * Suspend function, which informs TDLib that the chat is closed by the user. Many useful activities
@@ -193,8 +269,8 @@ suspend fun TelegramFlow.closeSecretChat(secretChatId: Int) =
  * Suspend function, which returns an existing chat corresponding to a known basic group.
  *
  * @param basicGroupId Basic group identifier.  
- * @param force If true, the chat will be created without network request. In this case all
- * information about the chat except its type, title and photo can be incorrect.
+ * @param force Pass true to create the chat without a network request. In this case all information
+ * about the chat except its type, title and photo can be incorrect.
  *
  * @return [Chat] A chat. (Can be a private chat, basic group, supergroup, or secret chat.)
  */
@@ -202,15 +278,47 @@ suspend fun TelegramFlow.createBasicGroupChat(basicGroupId: Long, force: Boolean
     this.sendFunctionAsync(TdApi.CreateBasicGroupChat(basicGroupId, force))
 
 /**
- * Suspend function, which creates new chat filter. Returns information about the created chat
- * filter.
+ * Suspend function, which creates a business chat link for the current account. Requires Telegram
+ * Business subscription. There can be up to getOption(&quot;business_chat_link_count_max&quot;) links
+ * created. Returns the created link.
  *
- * @param filter Chat filter.
+ * @param linkInfo Information about the link to create.
  *
- * @return [ChatFilterInfo] Contains basic information about a chat filter.
+ * @return [BusinessChatLink] Contains information about a business chat link.
  */
-suspend fun TelegramFlow.createChatFilter(filter: ChatFilter?): ChatFilterInfo =
-    this.sendFunctionAsync(TdApi.CreateChatFilter(filter))
+suspend fun TelegramFlow.createBusinessChatLink(linkInfo: InputBusinessChatLink?): BusinessChatLink
+    = this.sendFunctionAsync(TdApi.CreateBusinessChatLink(linkInfo))
+
+/**
+ * Suspend function, which creates new chat folder. Returns information about the created chat
+ * folder. There can be up to getOption(&quot;chat_folder_count_max&quot;) chat folders, but the limit
+ * can be increased with Telegram Premium.
+ *
+ * @param folder The new chat folder.
+ *
+ * @return [ChatFolderInfo] Contains basic information about a chat folder.
+ */
+suspend fun TelegramFlow.createChatFolder(folder: ChatFolder?): ChatFolderInfo =
+    this.sendFunctionAsync(TdApi.CreateChatFolder(folder))
+
+/**
+ * Suspend function, which creates a new invite link for a chat folder. A link can be created for a
+ * chat folder if it has only pinned and included chats.
+ *
+ * @param chatFolderId Chat folder identifier.  
+ * @param name Name of the link; 0-32 characters.  
+ * @param chatIds Identifiers of chats to be accessible by the invite link. Use
+ * getChatsForChatFolderInviteLink to get suitable chats. Basic groups will be automatically converted
+ * to supergroups before link creation.
+ *
+ * @return [ChatFolderInviteLink] Contains a chat folder invite link.
+ */
+suspend fun TelegramFlow.createChatFolderInviteLink(
+  chatFolderId: Int,
+  name: String?,
+  chatIds: LongArray?
+): ChatFolderInviteLink = this.sendFunctionAsync(TdApi.CreateChatFolderInviteLink(chatFolderId,
+    name, chatIds))
 
 /**
  * Suspend function, which creates a new invite link for a chat. Available for basic groups,
@@ -218,34 +326,42 @@ suspend fun TelegramFlow.createChatFilter(filter: ChatFilter?): ChatFilterInfo =
  *
  * @param chatId Chat identifier.  
  * @param name Invite link name; 0-32 characters.  
- * @param expireDate Point in time (Unix timestamp) when the link will expire; pass 0 if never.  
- * @param memberLimit The maximum number of chat members that can join the chat by the link
+ * @param expirationDate Point in time (Unix timestamp) when the link will expire; pass 0 if never. 
+ * 
+ * @param memberLimit The maximum number of chat members that can join the chat via the link
  * simultaneously; 0-99999; pass 0 if not limited.  
- * @param createsJoinRequest True, if the link only creates join request. If true, memberLimit must
- * not be specified.
+ * @param createsJoinRequest Pass true if users joining the chat via the link need to be approved by
+ * chat administrators. In this case, memberLimit must be 0.
  *
  * @return [ChatInviteLink] Contains a chat invite link.
  */
 suspend fun TelegramFlow.createChatInviteLink(
   chatId: Long,
   name: String?,
-  expireDate: Int,
+  expirationDate: Int,
   memberLimit: Int,
   createsJoinRequest: Boolean
-): ChatInviteLink = this.sendFunctionAsync(TdApi.CreateChatInviteLink(chatId, name, expireDate,
+): ChatInviteLink = this.sendFunctionAsync(TdApi.CreateChatInviteLink(chatId, name, expirationDate,
     memberLimit, createsJoinRequest))
 
 /**
  * Suspend function, which creates a new basic group and sends a corresponding
- * messageBasicGroupChatCreate. Returns the newly created chat.
+ * messageBasicGroupChatCreate. Returns information about the newly created chat.
  *
- * @param userIds Identifiers of users to be added to the basic group.  
- * @param title Title of the new basic group; 1-128 characters.
+ * @param userIds Identifiers of users to be added to the basic group; may be empty to create a
+ * basic group without other members.  
+ * @param title Title of the new basic group; 1-128 characters.  
+ * @param messageAutoDeleteTime Message auto-delete time value, in seconds; must be from 0 up to 365
+ * * 86400 and be divisible by 86400. If 0, then messages aren't deleted automatically.
  *
- * @return [Chat] A chat. (Can be a private chat, basic group, supergroup, or secret chat.)
+ * @return [CreatedBasicGroupChat] Contains information about a newly created basic group chat.
  */
-suspend fun TelegramFlow.createNewBasicGroupChat(userIds: LongArray?, title: String?): Chat =
-    this.sendFunctionAsync(TdApi.CreateNewBasicGroupChat(userIds, title))
+suspend fun TelegramFlow.createNewBasicGroupChat(
+  userIds: LongArray?,
+  title: String?,
+  messageAutoDeleteTime: Int
+): CreatedBasicGroupChat = this.sendFunctionAsync(TdApi.CreateNewBasicGroupChat(userIds, title,
+    messageAutoDeleteTime))
 
 /**
  * Suspend function, which creates a new secret chat. Returns the newly created chat.
@@ -262,29 +378,34 @@ suspend fun TelegramFlow.createNewSecretChat(userId: Long): Chat =
  * messageSupergroupChatCreate. Returns the newly created chat.
  *
  * @param title Title of the new chat; 1-128 characters.  
- * @param isChannel True, if a channel chat needs to be created.  
+ * @param isForum Pass true to create a forum supergroup chat.  
+ * @param isChannel Pass true to create a channel chat; ignored if a forum is created.  
  * @param description Chat description; 0-255 characters.  
  * @param location Chat location if a location-based supergroup is being created; pass null to
  * create an ordinary supergroup chat.  
- * @param forImport True, if the supergroup is created for importing messages using importMessage.
+ * @param messageAutoDeleteTime Message auto-delete time value, in seconds; must be from 0 up to 365
+ * * 86400 and be divisible by 86400. If 0, then messages aren't deleted automatically.  
+ * @param forImport Pass true to create a supergroup for importing messages using importMessages.
  *
  * @return [Chat] A chat. (Can be a private chat, basic group, supergroup, or secret chat.)
  */
 suspend fun TelegramFlow.createNewSupergroupChat(
   title: String?,
+  isForum: Boolean,
   isChannel: Boolean,
   description: String?,
   location: ChatLocation?,
+  messageAutoDeleteTime: Int,
   forImport: Boolean
-): Chat = this.sendFunctionAsync(TdApi.CreateNewSupergroupChat(title, isChannel, description,
-    location, forImport))
+): Chat = this.sendFunctionAsync(TdApi.CreateNewSupergroupChat(title, isForum, isChannel,
+    description, location, messageAutoDeleteTime, forImport))
 
 /**
  * Suspend function, which returns an existing chat corresponding to a given user.
  *
  * @param userId User identifier.  
- * @param force If true, the chat will be created without network request. In this case all
- * information about the chat except its type, title and photo can be incorrect.
+ * @param force Pass true to create the chat without a network request. In this case all information
+ * about the chat except its type, title and photo can be incorrect.
  *
  * @return [Chat] A chat. (Can be a private chat, basic group, supergroup, or secret chat.)
  */
@@ -305,8 +426,8 @@ suspend fun TelegramFlow.createSecretChat(secretChatId: Int): Chat =
  * Suspend function, which returns an existing chat corresponding to a known supergroup or channel.
  *
  * @param supergroupId Supergroup or channel identifier.  
- * @param force If true, the chat will be created without network request. In this case all
- * information about the chat except its type, title and photo can be incorrect.
+ * @param force Pass true to create the chat without a network request. In this case all information
+ * about the chat except its type, title and photo can be incorrect.
  *
  * @return [Chat] A chat. (Can be a private chat, basic group, supergroup, or secret chat.)
  */
@@ -315,30 +436,25 @@ suspend fun TelegramFlow.createSupergroupChat(supergroupId: Long, force: Boolean
 
 /**
  * Suspend function, which creates a video chat (a group call bound to a chat). Available only for
- * basic groups, supergroups and channels; requires canManageVideoChats rights.
+ * basic groups, supergroups and channels; requires canManageVideoChats administrator right.
  *
- * @param chatId Chat identifier, in which the video chat will be created.  
+ * @param chatId Identifier of a chat in which the video chat will be created.  
  * @param title Group call title; if empty, chat title will be used.  
  * @param startDate Point in time (Unix timestamp) when the group call is supposed to be started by
  * an administrator; 0 to start the video chat immediately. The date must be at least 10 seconds and at
- * most 8 days in the future.
+ * most 8 days in the future.  
+ * @param isRtmpStream Pass true to create an RTMP stream instead of an ordinary video chat;
+ * requires owner privileges.
  *
  * @return [GroupCallId] Contains the group call identifier.
  */
 suspend fun TelegramFlow.createVideoChat(
   chatId: Long,
   title: String?,
-  startDate: Int
-): GroupCallId = this.sendFunctionAsync(TdApi.CreateVideoChat(chatId, title, startDate))
-
-/**
- * Suspend function, which declines pending join request in a chat.
- *
- * @param chatId Chat identifier.  
- * @param userId Identifier of the user, which request will be declined.
- */
-suspend fun TelegramFlow.declineChatJoinRequest(chatId: Long, userId: Long) =
-    this.sendFunctionLaunch(TdApi.DeclineChatJoinRequest(chatId, userId))
+  startDate: Int,
+  isRtmpStream: Boolean
+): GroupCallId = this.sendFunctionAsync(TdApi.CreateVideoChat(chatId, title, startDate,
+    isRtmpStream))
 
 /**
  * Suspend function, which deletes all revoked chat invite links created by a given chat
@@ -353,9 +469,17 @@ suspend fun TelegramFlow.deleteAllRevokedChatInviteLinks(chatId: Long, creatorUs
     this.sendFunctionLaunch(TdApi.DeleteAllRevokedChatInviteLinks(chatId, creatorUserId))
 
 /**
+ * Suspend function, which deletes a business chat link of the current account.
+ *
+ * @param link The link to delete.
+ */
+suspend fun TelegramFlow.deleteBusinessChatLink(link: String?) =
+    this.sendFunctionLaunch(TdApi.DeleteBusinessChatLink(link))
+
+/**
  * Suspend function, which deletes a chat along with all messages in the corresponding chat for all
- * chat members; requires owner privileges. For group chats this will release the username and remove
- * all members. Chats with more than 1000 members can't be deleted using this method.
+ * chat members. For group chats this will release the usernames and remove all members. Use the field
+ * chat.canBeDeletedForAllUsers to find whether the method can be applied to the chat.
  *
  * @param chatId Chat identifier.
  */
@@ -363,20 +487,43 @@ suspend fun TelegramFlow.deleteChat(chatId: Long) =
     this.sendFunctionLaunch(TdApi.DeleteChat(chatId))
 
 /**
- * Suspend function, which deletes existing chat filter.
+ * Suspend function, which deletes background in a specific chat.
  *
- * @param chatFilterId Chat filter identifier.
+ * @param chatId Chat identifier.  
+ * @param restorePrevious Pass true to restore previously set background. Can be used only in
+ * private and secret chats with non-deleted users if userFullInfo.setChatBackground == true. Supposed
+ * to be used from messageChatSetBackground messages with the currently set background that was set for
+ * both sides by the other user.
  */
-suspend fun TelegramFlow.deleteChatFilter(chatFilterId: Int) =
-    this.sendFunctionLaunch(TdApi.DeleteChatFilter(chatFilterId))
+suspend fun TelegramFlow.deleteChatBackground(chatId: Long, restorePrevious: Boolean) =
+    this.sendFunctionLaunch(TdApi.DeleteChatBackground(chatId, restorePrevious))
+
+/**
+ * Suspend function, which deletes existing chat folder.
+ *
+ * @param chatFolderId Chat folder identifier.  
+ * @param leaveChatIds Identifiers of the chats to leave. The chats must be pinned or always
+ * included in the folder.
+ */
+suspend fun TelegramFlow.deleteChatFolder(chatFolderId: Int, leaveChatIds: LongArray?) =
+    this.sendFunctionLaunch(TdApi.DeleteChatFolder(chatFolderId, leaveChatIds))
+
+/**
+ * Suspend function, which deletes an invite link for a chat folder.
+ *
+ * @param chatFolderId Chat folder identifier.  
+ * @param inviteLink Invite link to be deleted.
+ */
+suspend fun TelegramFlow.deleteChatFolderInviteLink(chatFolderId: Int, inviteLink: String?) =
+    this.sendFunctionLaunch(TdApi.DeleteChatFolderInviteLink(chatFolderId, inviteLink))
 
 /**
  * Suspend function, which deletes all messages in the chat. Use chat.canBeDeletedOnlyForSelf and
  * chat.canBeDeletedForAllUsers fields to find whether and how the method can be applied to the chat.
  *
  * @param chatId Chat identifier.  
- * @param removeFromChatList Pass true if the chat needs to be removed from the chat list.  
- * @param revoke Pass true to try to delete chat history for all users.
+ * @param removeFromChatList Pass true to remove the chat from all chat lists.  
+ * @param revoke Pass true to delete chat history for all users.
  */
 suspend fun TelegramFlow.deleteChatHistory(
   chatId: Long,
@@ -391,7 +538,7 @@ suspend fun TelegramFlow.deleteChatHistory(
  * @param chatId Chat identifier.  
  * @param minDate The minimum date of the messages to delete.  
  * @param maxDate The maximum date of the messages to delete.  
- * @param revoke Pass true to try to delete chat messages for all users; private chats only.
+ * @param revoke Pass true to delete chat messages for all users; private chats only.
  */
 suspend fun TelegramFlow.deleteChatMessagesByDate(
   chatId: Long,
@@ -401,19 +548,19 @@ suspend fun TelegramFlow.deleteChatMessagesByDate(
 ) = this.sendFunctionLaunch(TdApi.DeleteChatMessagesByDate(chatId, minDate, maxDate, revoke))
 
 /**
- * Suspend function, which deletes all messages sent by the specified user to a chat. Supported only
- * for supergroups; requires canDeleteMessages administrator privileges.
+ * Suspend function, which deletes all messages sent by the specified message sender in a chat.
+ * Supported only for supergroups; requires canDeleteMessages administrator privileges.
  *
  * @param chatId Chat identifier.  
- * @param userId User identifier.
+ * @param senderId Identifier of the sender of messages to delete.
  */
-suspend fun TelegramFlow.deleteChatMessagesFromUser(chatId: Long, userId: Long) =
-    this.sendFunctionLaunch(TdApi.DeleteChatMessagesFromUser(chatId, userId))
+suspend fun TelegramFlow.deleteChatMessagesBySender(chatId: Long, senderId: MessageSender?) =
+    this.sendFunctionLaunch(TdApi.DeleteChatMessagesBySender(chatId, senderId))
 
 /**
  * Suspend function, which deletes the default reply markup from a chat. Must be called after a
- * one-time keyboard or a ForceReply reply markup has been used. UpdateChatReplyMarkup will be sent if
- * the reply markup is changed.
+ * one-time keyboard or a replyMarkupForceReply reply markup has been used. An updateChatReplyMarkup
+ * update will be sent if the reply markup is changed.
  *
  * @param chatId Chat identifier.  
  * @param messageId The message identifier of the used keyboard.
@@ -432,16 +579,48 @@ suspend fun TelegramFlow.deleteRevokedChatInviteLink(chatId: Long, inviteLink: S
     this.sendFunctionLaunch(TdApi.DeleteRevokedChatInviteLink(chatId, inviteLink))
 
 /**
- * Suspend function, which edits existing chat filter. Returns information about the edited chat
- * filter.
+ * Suspend function, which edits a business chat link of the current account. Requires Telegram
+ * Business subscription. Returns the edited link.
  *
- * @param chatFilterId Chat filter identifier.  
- * @param filter The edited chat filter.
+ * @param link The link to edit.  
+ * @param linkInfo New description of the link.
  *
- * @return [ChatFilterInfo] Contains basic information about a chat filter.
+ * @return [BusinessChatLink] Contains information about a business chat link.
  */
-suspend fun TelegramFlow.editChatFilter(chatFilterId: Int, filter: ChatFilter?): ChatFilterInfo =
-    this.sendFunctionAsync(TdApi.EditChatFilter(chatFilterId, filter))
+suspend fun TelegramFlow.editBusinessChatLink(link: String?, linkInfo: InputBusinessChatLink?):
+    BusinessChatLink = this.sendFunctionAsync(TdApi.EditBusinessChatLink(link, linkInfo))
+
+/**
+ * Suspend function, which edits existing chat folder. Returns information about the edited chat
+ * folder.
+ *
+ * @param chatFolderId Chat folder identifier.  
+ * @param folder The edited chat folder.
+ *
+ * @return [ChatFolderInfo] Contains basic information about a chat folder.
+ */
+suspend fun TelegramFlow.editChatFolder(chatFolderId: Int, folder: ChatFolder?): ChatFolderInfo =
+    this.sendFunctionAsync(TdApi.EditChatFolder(chatFolderId, folder))
+
+/**
+ * Suspend function, which edits an invite link for a chat folder.
+ *
+ * @param chatFolderId Chat folder identifier.  
+ * @param inviteLink Invite link to be edited.  
+ * @param name New name of the link; 0-32 characters.  
+ * @param chatIds New identifiers of chats to be accessible by the invite link. Use
+ * getChatsForChatFolderInviteLink to get suitable chats. Basic groups will be automatically converted
+ * to supergroups before link editing.
+ *
+ * @return [ChatFolderInviteLink] Contains a chat folder invite link.
+ */
+suspend fun TelegramFlow.editChatFolderInviteLink(
+  chatFolderId: Int,
+  inviteLink: String?,
+  name: String?,
+  chatIds: LongArray?
+): ChatFolderInviteLink = this.sendFunctionAsync(TdApi.EditChatFolderInviteLink(chatFolderId,
+    inviteLink, name, chatIds))
 
 /**
  * Suspend function, which edits a non-primary invite link for a chat. Available for basic groups,
@@ -451,11 +630,12 @@ suspend fun TelegramFlow.editChatFilter(chatFilterId: Int, filter: ChatFilter?):
  * @param chatId Chat identifier.  
  * @param inviteLink Invite link to be edited.  
  * @param name Invite link name; 0-32 characters.  
- * @param expireDate Point in time (Unix timestamp) when the link will expire; pass 0 if never.  
- * @param memberLimit The maximum number of chat members that can join the chat by the link
+ * @param expirationDate Point in time (Unix timestamp) when the link will expire; pass 0 if never. 
+ * 
+ * @param memberLimit The maximum number of chat members that can join the chat via the link
  * simultaneously; 0-99999; pass 0 if not limited.  
- * @param createsJoinRequest True, if the link only creates join request. If true, memberLimit must
- * not be specified.
+ * @param createsJoinRequest Pass true if users joining the chat via the link need to be approved by
+ * chat administrators. In this case, memberLimit must be 0.
  *
  * @return [ChatInviteLink] Contains a chat invite link.
  */
@@ -463,14 +643,50 @@ suspend fun TelegramFlow.editChatInviteLink(
   chatId: Long,
   inviteLink: String?,
   name: String?,
-  expireDate: Int,
+  expirationDate: Int,
   memberLimit: Int,
   createsJoinRequest: Boolean
 ): ChatInviteLink = this.sendFunctionAsync(TdApi.EditChatInviteLink(chatId, inviteLink, name,
-    expireDate, memberLimit, createsJoinRequest))
+    expirationDate, memberLimit, createsJoinRequest))
 
 /**
- * Suspend function, which returns information about a chat by its identifier, this is an offline
+ * Suspend function, which returns settings for automatic moving of chats to and from the Archive
+ * chat lists.
+ *
+ * @return [ArchiveChatListSettings] Contains settings for automatic moving of chats to and from the
+ * Archive chat lists.
+ */
+suspend fun TelegramFlow.getArchiveChatListSettings(): ArchiveChatListSettings =
+    this.sendFunctionAsync(TdApi.GetArchiveChatListSettings())
+
+/**
+ * Suspend function, which returns the list of available chat boost slots for the current user.
+ *
+ * @return [ChatBoostSlots] Contains a list of chat boost slots.
+ */
+suspend fun TelegramFlow.getAvailableChatBoostSlots(): ChatBoostSlots =
+    this.sendFunctionAsync(TdApi.GetAvailableChatBoostSlots())
+
+/**
+ * Suspend function, which returns information about a business chat link.
+ *
+ * @param linkName Name of the link.
+ *
+ * @return [BusinessChatLinkInfo] Contains information about a business chat link.
+ */
+suspend fun TelegramFlow.getBusinessChatLinkInfo(linkName: String?): BusinessChatLinkInfo =
+    this.sendFunctionAsync(TdApi.GetBusinessChatLinkInfo(linkName))
+
+/**
+ * Suspend function, which returns business chat links created for the current account.
+ *
+ * @return [BusinessChatLinks] Contains a list of business chat links created by the user.
+ */
+suspend fun TelegramFlow.getBusinessChatLinks(): BusinessChatLinks =
+    this.sendFunctionAsync(TdApi.GetBusinessChatLinks())
+
+/**
+ * Suspend function, which returns information about a chat by its identifier; this is an offline
  * request if the current user is not a bot.
  *
  * @param chatId Chat identifier.
@@ -478,6 +694,16 @@ suspend fun TelegramFlow.editChatInviteLink(
  * @return [Chat] A chat. (Can be a private chat, basic group, supergroup, or secret chat.)
  */
 suspend fun TelegramFlow.getChat(chatId: Long): Chat = this.sendFunctionAsync(TdApi.GetChat(chatId))
+
+/**
+ * Suspend function, which returns the list of active stories posted by the given chat.
+ *
+ * @param chatId Chat identifier.
+ *
+ * @return [ChatActiveStories] Describes active stories posted by a chat.
+ */
+suspend fun TelegramFlow.getChatActiveStories(chatId: Long): ChatActiveStories =
+    this.sendFunctionAsync(TdApi.GetChatActiveStories(chatId))
 
 /**
  * Suspend function, which returns a list of administrators of the chat with their custom titles.
@@ -490,24 +716,181 @@ suspend fun TelegramFlow.getChatAdministrators(chatId: Long): ChatAdministrators
     this.sendFunctionAsync(TdApi.GetChatAdministrators(chatId))
 
 /**
- * Suspend function, which returns information about a chat filter by its identifier.
+ * Suspend function, which returns the list of all stories posted by the given chat; requires
+ * canEditStories right in the chat. The stories are returned in a reverse chronological order (i.e.,
+ * in order of decreasing storyId). For optimal performance, the number of returned stories is chosen
+ * by TDLib.
  *
- * @param chatFilterId Chat filter identifier.
+ * @param chatId Chat identifier.  
+ * @param fromStoryId Identifier of the story starting from which stories must be returned; use 0 to
+ * get results from the last story.  
+ * @param limit The maximum number of stories to be returned For optimal performance, the number of
+ * returned stories is chosen by TDLib and can be smaller than the specified limit.
  *
- * @return [ChatFilter] Represents a filter of user chats.
+ * @return [Stories] Represents a list of stories.
  */
-suspend fun TelegramFlow.getChatFilter(chatFilterId: Int): ChatFilter =
-    this.sendFunctionAsync(TdApi.GetChatFilter(chatFilterId))
+suspend fun TelegramFlow.getChatArchivedStories(
+  chatId: Long,
+  fromStoryId: Int,
+  limit: Int
+): Stories = this.sendFunctionAsync(TdApi.GetChatArchivedStories(chatId, fromStoryId, limit))
 
 /**
- * Suspend function, which returns default icon name for a filter. Can be called synchronously.
+ * Suspend function, which returns the list of message sender identifiers, which can be used to send
+ * messages in a chat.
  *
- * @param filter Chat filter.
+ * @param chatId Chat identifier.
  *
- * @return [Text] Contains some text.
+ * @return [ChatMessageSenders] Represents a list of message senders, which can be used to send
+ * messages in a chat.
  */
-suspend fun TelegramFlow.getChatFilterDefaultIconName(filter: ChatFilter?): Text =
-    this.sendFunctionAsync(TdApi.GetChatFilterDefaultIconName(filter))
+suspend fun TelegramFlow.getChatAvailableMessageSenders(chatId: Long): ChatMessageSenders =
+    this.sendFunctionAsync(TdApi.GetChatAvailableMessageSenders(chatId))
+
+/**
+ * Suspend function, which returns the list of features available for different chat boost levels;
+ * this is an offline request.
+ *
+ * @param isChannel Pass true to get the list of features for channels; pass false to get the list
+ * of features for supergroups.
+ *
+ * @return [ChatBoostFeatures] Contains a list of features available on the first chat boost levels.
+ */
+suspend fun TelegramFlow.getChatBoostFeatures(isChannel: Boolean): ChatBoostFeatures =
+    this.sendFunctionAsync(TdApi.GetChatBoostFeatures(isChannel))
+
+/**
+ * Suspend function, which returns the list of features available on the specific chat boost level;
+ * this is an offline request.
+ *
+ * @param isChannel Pass true to get the list of features for channels; pass false to get the list
+ * of features for supergroups.  
+ * @param level Chat boost level.
+ *
+ * @return [ChatBoostLevelFeatures] Contains a list of features available on a specific chat boost
+ * level.
+ */
+suspend fun TelegramFlow.getChatBoostLevelFeatures(isChannel: Boolean, level: Int):
+    ChatBoostLevelFeatures = this.sendFunctionAsync(TdApi.GetChatBoostLevelFeatures(isChannel,
+    level))
+
+/**
+ * Suspend function, which returns an HTTPS link to boost the specified supergroup or channel chat.
+ *
+ * @param chatId Identifier of the chat.
+ *
+ * @return [ChatBoostLink] Contains an HTTPS link to boost a chat.
+ */
+suspend fun TelegramFlow.getChatBoostLink(chatId: Long): ChatBoostLink =
+    this.sendFunctionAsync(TdApi.GetChatBoostLink(chatId))
+
+/**
+ * Suspend function, which returns information about a link to boost a chat. Can be called for any
+ * internal link of the type internalLinkTypeChatBoost.
+ *
+ * @param url The link to boost a chat.
+ *
+ * @return [ChatBoostLinkInfo] Contains information about a link to boost a chat.
+ */
+suspend fun TelegramFlow.getChatBoostLinkInfo(url: String?): ChatBoostLinkInfo =
+    this.sendFunctionAsync(TdApi.GetChatBoostLinkInfo(url))
+
+/**
+ * Suspend function, which returns the current boost status for a supergroup or a channel chat.
+ *
+ * @param chatId Identifier of the chat.
+ *
+ * @return [ChatBoostStatus] Describes current boost status of a chat.
+ */
+suspend fun TelegramFlow.getChatBoostStatus(chatId: Long): ChatBoostStatus =
+    this.sendFunctionAsync(TdApi.GetChatBoostStatus(chatId))
+
+/**
+ * Suspend function, which returns the list of boosts applied to a chat; requires administrator
+ * rights in the chat.
+ *
+ * @param chatId Identifier of the chat.  
+ * @param onlyGiftCodes Pass true to receive only boosts received from gift codes and giveaways
+ * created by the chat.  
+ * @param offset Offset of the first entry to return as received from the previous request; use
+ * empty string to get the first chunk of results.  
+ * @param limit The maximum number of boosts to be returned; up to 100. For optimal performance, the
+ * number of returned boosts can be smaller than the specified limit.
+ *
+ * @return [FoundChatBoosts] Contains a list of boosts applied to a chat.
+ */
+suspend fun TelegramFlow.getChatBoosts(
+  chatId: Long,
+  onlyGiftCodes: Boolean,
+  offset: String?,
+  limit: Int
+): FoundChatBoosts = this.sendFunctionAsync(TdApi.GetChatBoosts(chatId, onlyGiftCodes, offset,
+    limit))
+
+/**
+ * Suspend function, which returns information about a chat folder by its identifier.
+ *
+ * @param chatFolderId Chat folder identifier.
+ *
+ * @return [ChatFolder] Represents a folder for user chats.
+ */
+suspend fun TelegramFlow.getChatFolder(chatFolderId: Int): ChatFolder =
+    this.sendFunctionAsync(TdApi.GetChatFolder(chatFolderId))
+
+/**
+ * Suspend function, which returns approximate number of chats in a being created chat folder. Main
+ * and archive chat lists must be fully preloaded for this function to work correctly.
+ *
+ * @param folder The new chat folder.
+ *
+ * @return [Count] Contains a counter.
+ */
+suspend fun TelegramFlow.getChatFolderChatCount(folder: ChatFolder?): Count =
+    this.sendFunctionAsync(TdApi.GetChatFolderChatCount(folder))
+
+/**
+ * Suspend function, which returns identifiers of pinned or always included chats from a chat
+ * folder, which are suggested to be left when the chat folder is deleted.
+ *
+ * @param chatFolderId Chat folder identifier.
+ *
+ * @return [Chats] Represents a list of chats.
+ */
+suspend fun TelegramFlow.getChatFolderChatsToLeave(chatFolderId: Int): Chats =
+    this.sendFunctionAsync(TdApi.GetChatFolderChatsToLeave(chatFolderId))
+
+/**
+ * Suspend function, which returns default icon name for a folder. Can be called synchronously.
+ *
+ * @param folder Chat folder.
+ *
+ * @return [ChatFolderIcon] Represents an icon for a chat folder.
+ */
+suspend fun TelegramFlow.getChatFolderDefaultIconName(folder: ChatFolder?): ChatFolderIcon =
+    this.sendFunctionAsync(TdApi.GetChatFolderDefaultIconName(folder))
+
+/**
+ * Suspend function, which returns invite links created by the current user for a shareable chat
+ * folder.
+ *
+ * @param chatFolderId Chat folder identifier.
+ *
+ * @return [ChatFolderInviteLinks] Represents a list of chat folder invite links.
+ */
+suspend fun TelegramFlow.getChatFolderInviteLinks(chatFolderId: Int): ChatFolderInviteLinks =
+    this.sendFunctionAsync(TdApi.GetChatFolderInviteLinks(chatFolderId))
+
+/**
+ * Suspend function, which returns new chats added to a shareable chat folder by its owner. The
+ * method must be called at most once in getOption(&quot;chat_folder_new_chats_update_period&quot;) for
+ * the given chat folder.
+ *
+ * @param chatFolderId Chat folder identifier.
+ *
+ * @return [Chats] Represents a list of chats.
+ */
+suspend fun TelegramFlow.getChatFolderNewChats(chatFolderId: Int): Chats =
+    this.sendFunctionAsync(TdApi.GetChatFolderNewChats(chatFolderId))
 
 /**
  * Suspend function, which returns messages in a chat. The messages are returned in a reverse
@@ -517,14 +900,14 @@ suspend fun TelegramFlow.getChatFilterDefaultIconName(filter: ChatFilter?): Text
  * @param chatId Chat identifier.  
  * @param fromMessageId Identifier of the message starting from which history must be fetched; use 0
  * to get results from the last message.  
- * @param offset Specify 0 to get results from exactly the fromMessageId or a negative offset up to
- * 99 to get additionally some newer messages.  
+ * @param offset Specify 0 to get results from exactly the message fromMessageId or a negative
+ * offset up to 99 to get additionally some newer messages.  
  * @param limit The maximum number of messages to be returned; must be positive and can't be greater
  * than 100. If the offset is negative, the limit must be greater than or equal to -offset. For optimal
  * performance, the number of returned messages is chosen by TDLib and can be smaller than the
  * specified limit.  
- * @param onlyLocal If true, returns only messages that are available locally without sending
- * network requests.
+ * @param onlyLocal Pass true to get only messages that are available without sending network
+ * requests.
  *
  * @return [Messages] Contains a list of messages.
  */
@@ -551,8 +934,8 @@ suspend fun TelegramFlow.getChatInviteLink(chatId: Long, inviteLink: String?): C
     this.sendFunctionAsync(TdApi.GetChatInviteLink(chatId, inviteLink))
 
 /**
- * Suspend function, which returns list of chat administrators with number of their invite links.
- * Requires owner privileges in the chat.
+ * Suspend function, which returns the list of chat administrators with number of their invite
+ * links. Requires owner privileges in the chat.
  *
  * @param chatId Chat identifier.
  *
@@ -562,7 +945,7 @@ suspend fun TelegramFlow.getChatInviteLinkCounts(chatId: Long): ChatInviteLinkCo
     this.sendFunctionAsync(TdApi.GetChatInviteLinkCounts(chatId))
 
 /**
- * Suspend function, which returns chat members joined a chat by an invite link. Requires
+ * Suspend function, which returns chat members joined a chat via an invite link. Requires
  * administrator privileges and canInviteUsers right in the chat for own links and owner privileges for
  * other links.
  *
@@ -572,7 +955,7 @@ suspend fun TelegramFlow.getChatInviteLinkCounts(chatId: Long): ChatInviteLinkCo
  * results from the beginning.  
  * @param limit The maximum number of chat members to return; up to 100.
  *
- * @return [ChatInviteLinkMembers] Contains a list of chat members joined a chat by an invite link.
+ * @return [ChatInviteLinkMembers] Contains a list of chat members joined a chat via an invite link.
  */
 suspend fun TelegramFlow.getChatInviteLinkMembers(
   chatId: Long,
@@ -620,9 +1003,9 @@ suspend fun TelegramFlow.getChatInviteLinks(
  * return.  
  * @param offsetRequest A chat join request from which to return next requests; pass null to get
  * results from the beginning.  
- * @param limit The maximum number of chat join requests to return.
+ * @param limit The maximum number of requests to join the chat to return.
  *
- * @return [ChatJoinRequests] Contains a list of chat join requests.
+ * @return [ChatJoinRequests] Contains a list of requests to join a chat.
  */
 suspend fun TelegramFlow.getChatJoinRequests(
   chatId: Long,
@@ -668,26 +1051,29 @@ suspend fun TelegramFlow.getChatMessageByDate(chatId: Long, date: Int): Message 
 
 /**
  * Suspend function, which returns information about the next messages of the specified type in the
- * chat splitted by days. Returns the results in reverse chronological order. Can return partial result
+ * chat split by days. Returns the results in reverse chronological order. Can return partial result
  * for the last returned day. Behavior of this method depends on the value of the option
  * &quot;utc_time_offset&quot;.
  *
  * @param chatId Identifier of the chat in which to return information about messages.  
  * @param filter Filter for message content. Filters searchMessagesFilterEmpty,
- * searchMessagesFilterCall, searchMessagesFilterMissedCall, searchMessagesFilterMention and
- * searchMessagesFilterUnreadMention are unsupported in this function.  
+ * searchMessagesFilterMention, searchMessagesFilterUnreadMention, and
+ * searchMessagesFilterUnreadReaction are unsupported in this function.  
  * @param fromMessageId The message identifier from which to return information about messages; use
- * 0 to get results from the last message.
+ * 0 to get results from the last message.  
+ * @param savedMessagesTopicId If not0, only messages in the specified Saved Messages topic will be
+ * considered; pass 0 to consider all messages, or for chats other than Saved Messages.
  *
- * @return [MessageCalendar] Contains information about found messages, splitted by days according
- * to the option &quot;utc_time_offset&quot;.
+ * @return [MessageCalendar] Contains information about found messages, split by days according to
+ * the option &quot;utc_time_offset&quot;.
  */
 suspend fun TelegramFlow.getChatMessageCalendar(
   chatId: Long,
   filter: SearchMessagesFilter?,
-  fromMessageId: Long
+  fromMessageId: Long,
+  savedMessagesTopicId: Long
 ): MessageCalendar = this.sendFunctionAsync(TdApi.GetChatMessageCalendar(chatId, filter,
-    fromMessageId))
+    fromMessageId, savedMessagesTopicId))
 
 /**
  * Suspend function, which returns approximate number of messages of the specified type in the chat.
@@ -695,23 +1081,53 @@ suspend fun TelegramFlow.getChatMessageCalendar(
  * @param chatId Identifier of the chat in which to count messages.  
  * @param filter Filter for message content; searchMessagesFilterEmpty is unsupported in this
  * function.  
- * @param returnLocal If true, returns count that is available locally without sending network
- * requests, returning -1 if the number of messages is unknown.
+ * @param savedMessagesTopicId If not 0, only messages in the specified Saved Messages topic will be
+ * counted; pass 0 to count all messages, or for chats other than Saved Messages.  
+ * @param returnLocal Pass true to get the number of messages without sending network requests,
+ * or -1 if the number of messages is unknown locally.
  *
  * @return [Count] Contains a counter.
  */
 suspend fun TelegramFlow.getChatMessageCount(
   chatId: Long,
   filter: SearchMessagesFilter?,
+  savedMessagesTopicId: Long,
   returnLocal: Boolean
-): Count = this.sendFunctionAsync(TdApi.GetChatMessageCount(chatId, filter, returnLocal))
+): Count = this.sendFunctionAsync(TdApi.GetChatMessageCount(chatId, filter, savedMessagesTopicId,
+    returnLocal))
 
 /**
- * Suspend function, which returns list of chats with non-default notification settings.
+ * Suspend function, which returns approximate 1-based position of a message among messages, which
+ * can be found by the specified filter in the chat. Cannot be used in secret chats.
+ *
+ * @param chatId Identifier of the chat in which to find message position.  
+ * @param messageId Message identifier.  
+ * @param filter Filter for message content; searchMessagesFilterEmpty,
+ * searchMessagesFilterUnreadMention, searchMessagesFilterUnreadReaction, and
+ * searchMessagesFilterFailedToSend are unsupported in this function.  
+ * @param messageThreadId If not 0, only messages in the specified thread will be considered;
+ * supergroups only.  
+ * @param savedMessagesTopicId If not 0, only messages in the specified Saved Messages topic will be
+ * considered; pass 0 to consider all relevant messages, or for chats other than Saved Messages.
+ *
+ * @return [Count] Contains a counter.
+ */
+suspend fun TelegramFlow.getChatMessagePosition(
+  chatId: Long,
+  messageId: Long,
+  filter: SearchMessagesFilter?,
+  messageThreadId: Long,
+  savedMessagesTopicId: Long
+): Count = this.sendFunctionAsync(TdApi.GetChatMessagePosition(chatId, messageId, filter,
+    messageThreadId, savedMessagesTopicId))
+
+/**
+ * Suspend function, which returns the list of chats with non-default notification settings for new
+ * messages.
  *
  * @param scope If specified, only chats from the scope will be returned; pass null to return chats
  * from all scopes.  
- * @param compareSound If true, also chats with non-default sound will be returned.
+ * @param compareSound Pass true to include in the response chats with only non-default sound.
  *
  * @return [Chats] Represents a list of chats.
  */
@@ -730,6 +1146,71 @@ suspend fun TelegramFlow.getChatPinnedMessage(chatId: Long): Message =
     this.sendFunctionAsync(TdApi.GetChatPinnedMessage(chatId))
 
 /**
+ * Suspend function, which returns the list of stories that posted by the given chat to its chat
+ * page. If fromStoryId == 0, then pinned stories are returned first. Then, stories are returned in a
+ * reverse chronological order (i.e., in order of decreasing storyId). For optimal performance, the
+ * number of returned stories is chosen by TDLib.
+ *
+ * @param chatId Chat identifier.  
+ * @param fromStoryId Identifier of the story starting from which stories must be returned; use 0 to
+ * get results from pinned and the newest story.  
+ * @param limit The maximum number of stories to be returned For optimal performance, the number of
+ * returned stories is chosen by TDLib and can be smaller than the specified limit.
+ *
+ * @return [Stories] Represents a list of stories.
+ */
+suspend fun TelegramFlow.getChatPostedToChatPageStories(
+  chatId: Long,
+  fromStoryId: Int,
+  limit: Int
+): Stories = this.sendFunctionAsync(TdApi.GetChatPostedToChatPageStories(chatId, fromStoryId,
+    limit))
+
+/**
+ * Suspend function, which returns detailed revenue statistics about a chat. Currently, this method
+ * can be used only for channels if supergroupFullInfo.canGetRevenueStatistics == true.
+ *
+ * @param chatId Chat identifier.  
+ * @param isDark Pass true if a dark theme is used by the application.
+ *
+ * @return [ChatRevenueStatistics] A detailed statistics about revenue earned from sponsored
+ * messages in a chat.
+ */
+suspend fun TelegramFlow.getChatRevenueStatistics(chatId: Long, isDark: Boolean):
+    ChatRevenueStatistics = this.sendFunctionAsync(TdApi.GetChatRevenueStatistics(chatId, isDark))
+
+/**
+ * Suspend function, which returns the list of revenue transactions for a chat. Currently, this
+ * method can be used only for channels if supergroupFullInfo.canGetRevenueStatistics == true.
+ *
+ * @param chatId Chat identifier.  
+ * @param offset Number of transactions to skip.  
+ * @param limit The maximum number of transactions to be returned; up to 200.
+ *
+ * @return [ChatRevenueTransactions] Contains a list of chat revenue transactions.
+ */
+suspend fun TelegramFlow.getChatRevenueTransactions(
+  chatId: Long,
+  offset: Int,
+  limit: Int
+): ChatRevenueTransactions = this.sendFunctionAsync(TdApi.GetChatRevenueTransactions(chatId, offset,
+    limit))
+
+/**
+ * Suspend function, which returns URL for chat revenue withdrawal; requires owner privileges in the
+ * chat. Currently, this method can be used only for channels if
+ * supergroupFullInfo.canGetRevenueStatistics == true and
+ * getOption(&quot;can_withdraw_chat_revenue&quot;).
+ *
+ * @param chatId Chat identifier.  
+ * @param password The 2-step verification password of the current user.
+ *
+ * @return [HttpUrl] Contains an HTTP URL.
+ */
+suspend fun TelegramFlow.getChatRevenueWithdrawalUrl(chatId: Long, password: String?): HttpUrl =
+    this.sendFunctionAsync(TdApi.GetChatRevenueWithdrawalUrl(chatId, password))
+
+/**
  * Suspend function, which returns all scheduled messages in a chat. The messages are returned in a
  * reverse chronological order (i.e., in order of decreasing messageId).
  *
@@ -741,6 +1222,28 @@ suspend fun TelegramFlow.getChatScheduledMessages(chatId: Long): Messages =
     this.sendFunctionAsync(TdApi.GetChatScheduledMessages(chatId))
 
 /**
+ * Suspend function, which returns approximate number of chats similar to the given chat.
+ *
+ * @param chatId Identifier of the target chat; must be an identifier of a channel chat.  
+ * @param returnLocal Pass true to get the number of chats without sending network requests, or -1
+ * if the number of chats is unknown locally.
+ *
+ * @return [Count] Contains a counter.
+ */
+suspend fun TelegramFlow.getChatSimilarChatCount(chatId: Long, returnLocal: Boolean): Count =
+    this.sendFunctionAsync(TdApi.GetChatSimilarChatCount(chatId, returnLocal))
+
+/**
+ * Suspend function, which returns a list of chats similar to the given chat.
+ *
+ * @param chatId Identifier of the target chat; must be an identifier of a channel chat.
+ *
+ * @return [Chats] Represents a list of chats.
+ */
+suspend fun TelegramFlow.getChatSimilarChats(chatId: Long): Chats =
+    this.sendFunctionAsync(TdApi.GetChatSimilarChats(chatId))
+
+/**
  * Suspend function, which returns sparse positions of messages of the specified type in the chat to
  * be used for shared media scroll implementation. Returns the results in reverse chronological order
  * (i.e., in order of decreasing messageId). Cannot be used in secret chats or with
@@ -748,12 +1251,14 @@ suspend fun TelegramFlow.getChatScheduledMessages(chatId: Long): Messages =
  *
  * @param chatId Identifier of the chat in which to return information about message positions.  
  * @param filter Filter for message content. Filters searchMessagesFilterEmpty,
- * searchMessagesFilterCall, searchMessagesFilterMissedCall, searchMessagesFilterMention and
- * searchMessagesFilterUnreadMention are unsupported in this function.  
+ * searchMessagesFilterMention, searchMessagesFilterUnreadMention, and
+ * searchMessagesFilterUnreadReaction are unsupported in this function.  
  * @param fromMessageId The message identifier from which to return information about message
  * positions.  
  * @param limit The expected number of message positions to be returned; 50-2000. A smaller number
- * of positions can be returned, if there are not enough appropriate messages.
+ * of positions can be returned, if there are not enough appropriate messages.  
+ * @param savedMessagesTopicId If not 0, only messages in the specified Saved Messages topic will be
+ * considered; pass 0 to consider all messages, or for chats other than Saved Messages.
  *
  * @return [MessagePositions] Contains a list of message positions.
  */
@@ -761,9 +1266,10 @@ suspend fun TelegramFlow.getChatSparseMessagePositions(
   chatId: Long,
   filter: SearchMessagesFilter?,
   fromMessageId: Long,
-  limit: Int
+  limit: Int,
+  savedMessagesTopicId: Long
 ): MessagePositions = this.sendFunctionAsync(TdApi.GetChatSparseMessagePositions(chatId, filter,
-    fromMessageId, limit))
+    fromMessageId, limit, savedMessagesTopicId))
 
 /**
  * Suspend function, which returns sponsored messages to be shown in a chat; for channel chats only.
@@ -776,7 +1282,7 @@ suspend fun TelegramFlow.getChatSponsoredMessages(chatId: Long): SponsoredMessag
     this.sendFunctionAsync(TdApi.GetChatSponsoredMessages(chatId))
 
 /**
- * Suspend function, which returns detailed statistics about a chat. Currently this method can be
+ * Suspend function, which returns detailed statistics about a chat. Currently, this method can be
  * used only for supergroups and channels. Can be used only if supergroupFullInfo.canGetStatistics ==
  * true.
  *
@@ -787,6 +1293,32 @@ suspend fun TelegramFlow.getChatSponsoredMessages(chatId: Long): SponsoredMessag
  */
 suspend fun TelegramFlow.getChatStatistics(chatId: Long, isDark: Boolean): ChatStatistics =
     this.sendFunctionAsync(TdApi.GetChatStatistics(chatId, isDark))
+
+/**
+ * Suspend function, which returns interactions with a story posted in a chat. Can be used only if
+ * story is posted on behalf of a chat and the user is an administrator in the chat.
+ *
+ * @param storySenderChatId The identifier of the sender of the story.  
+ * @param storyId Story identifier.  
+ * @param reactionType Pass the default heart reaction or a suggested reaction type to receive only
+ * interactions with the specified reaction type; pass null to receive all interactions.  
+ * @param preferForwards Pass true to get forwards and reposts first, then reactions, then other
+ * views; pass false to get interactions sorted just by interaction date.  
+ * @param offset Offset of the first entry to return as received from the previous request; use
+ * empty string to get the first chunk of results.  
+ * @param limit The maximum number of story interactions to return.
+ *
+ * @return [StoryInteractions] Represents a list of interactions with a story.
+ */
+suspend fun TelegramFlow.getChatStoryInteractions(
+  storySenderChatId: Long,
+  storyId: Int,
+  reactionType: ReactionType?,
+  preferForwards: Boolean,
+  offset: String?,
+  limit: Int
+): StoryInteractions = this.sendFunctionAsync(TdApi.GetChatStoryInteractions(storySenderChatId,
+    storyId, reactionType, preferForwards, offset, limit))
 
 /**
  * Suspend function, which returns an ordered list of chats from the beginning of a chat list. For
@@ -803,6 +1335,27 @@ suspend fun TelegramFlow.getChats(chatList: ChatList?, limit: Int): Chats =
     this.sendFunctionAsync(TdApi.GetChats(chatList, limit))
 
 /**
+ * Suspend function, which returns identifiers of chats from a chat folder, suitable for adding to a
+ * chat folder invite link.
+ *
+ * @param chatFolderId Chat folder identifier.
+ *
+ * @return [Chats] Represents a list of chats.
+ */
+suspend fun TelegramFlow.getChatsForChatFolderInviteLink(chatFolderId: Int): Chats =
+    this.sendFunctionAsync(TdApi.GetChatsForChatFolderInviteLink(chatFolderId))
+
+/**
+ * Suspend function, which returns supergroup and channel chats in which the current user has the
+ * right to post stories. The chats must be rechecked with canSendStory before actually trying to post
+ * a story there.
+ *
+ * @return [Chats] Represents a list of chats.
+ */
+suspend fun TelegramFlow.getChatsToSendStories(): Chats =
+    this.sendFunctionAsync(TdApi.GetChatsToSendStories())
+
+/**
  * Suspend function, which returns a list of public chats of the specified type, owned by the user.
  *
  * @param type Type of the public chats to return.
@@ -815,7 +1368,7 @@ suspend fun TelegramFlow.getCreatedPublicChats(type: PublicChatType?): Chats =
 /**
  * Suspend function, which returns a list of recently inactive supergroups and channels. Can be used
  * when user reaches limit on the number of joined supergroups and channels and receives
- * CHANNELSTOOMUCH error.
+ * CHANNELSTOOMUCH error. Also, the limit can be increased with Telegram Premium.
  *
  * @return [Chats] Represents a list of chats.
  */
@@ -823,7 +1376,15 @@ suspend fun TelegramFlow.getInactiveSupergroupChats(): Chats =
     this.sendFunctionAsync(TdApi.GetInactiveSupergroupChats())
 
 /**
- * Suspend function, which returns recently opened chats, this is an offline request. Returns chats
+ * Suspend function, which returns privacy settings for new chat creation.
+ *
+ * @return [NewChatPrivacySettings] Contains privacy settings for new chats with non-contacts.
+ */
+suspend fun TelegramFlow.getNewChatPrivacySettings(): NewChatPrivacySettings =
+    this.sendFunctionAsync(TdApi.GetNewChatPrivacySettings())
+
+/**
+ * Suspend function, which returns recently opened chats; this is an offline request. Returns chats
  * in the order of last opening.
  *
  * @param limit The maximum number of chats to be returned.
@@ -834,12 +1395,20 @@ suspend fun TelegramFlow.getRecentlyOpenedChats(limit: Int): Chats =
     this.sendFunctionAsync(TdApi.GetRecentlyOpenedChats(limit))
 
 /**
- * Suspend function, which returns recommended chat filters for the current user.
+ * Suspend function, which returns recommended chat folders for the current user.
  *
- * @return [RecommendedChatFilters] Contains a list of recommended chat filters.
+ * @return [RecommendedChatFolders] Contains a list of recommended chat folders.
  */
-suspend fun TelegramFlow.getRecommendedChatFilters(): RecommendedChatFilters =
-    this.sendFunctionAsync(TdApi.GetRecommendedChatFilters())
+suspend fun TelegramFlow.getRecommendedChatFolders(): RecommendedChatFolders =
+    this.sendFunctionAsync(TdApi.GetRecommendedChatFolders())
+
+/**
+ * Suspend function, which returns a list of channel chats recommended to the current user.
+ *
+ * @return [Chats] Represents a list of chats.
+ */
+suspend fun TelegramFlow.getRecommendedChats(): Chats =
+    this.sendFunctionAsync(TdApi.GetRecommendedChats())
 
 /**
  * Suspend function, which returns information about a secret chat by its identifier. This is an
@@ -864,8 +1433,15 @@ suspend fun TelegramFlow.getSuitableDiscussionChats(): Chats =
     this.sendFunctionAsync(TdApi.GetSuitableDiscussionChats())
 
 /**
- * Suspend function, which returns a list of frequently used chats. Supported only if the chat info
- * database is enabled.
+ * Suspend function, which returns a list of channel chats, which can be used as a personal chat.
+ *
+ * @return [Chats] Represents a list of chats.
+ */
+suspend fun TelegramFlow.getSuitablePersonalChats(): Chats =
+    this.sendFunctionAsync(TdApi.GetSuitablePersonalChats())
+
+/**
+ * Suspend function, which returns a list of frequently used chats.
  *
  * @param category Category of chats to be returned.  
  * @param limit The maximum number of chats to be returned; up to 30.
@@ -876,8 +1452,20 @@ suspend fun TelegramFlow.getTopChats(category: TopChatCategory?, limit: Int): Ch
     this.sendFunctionAsync(TdApi.GetTopChats(category, limit))
 
 /**
- * Suspend function, which returns list of participant identifiers, which can be used to join video
- * chats in a chat.
+ * Suspend function, which returns the list of boosts applied to a chat by a given user; requires
+ * administrator rights in the chat; for bots only.
+ *
+ * @param chatId Identifier of the chat.  
+ * @param userId Identifier of the user.
+ *
+ * @return [FoundChatBoosts] Contains a list of boosts applied to a chat.
+ */
+suspend fun TelegramFlow.getUserChatBoosts(chatId: Long, userId: Long): FoundChatBoosts =
+    this.sendFunctionAsync(TdApi.GetUserChatBoosts(chatId, userId))
+
+/**
+ * Suspend function, which returns the list of participant identifiers, on whose behalf a video chat
+ * in the chat can be joined.
  *
  * @param chatId Chat identifier.
  *
@@ -887,15 +1475,27 @@ suspend fun TelegramFlow.getVideoChatAvailableParticipants(chatId: Long): Messag
     this.sendFunctionAsync(TdApi.GetVideoChatAvailableParticipants(chatId))
 
 /**
+ * Suspend function, which returns RTMP URL for streaming to the chat; requires owner privileges.
+ *
+ * @param chatId Chat identifier.
+ *
+ * @return [RtmpUrl] Represents an RTMP URL.
+ */
+suspend fun TelegramFlow.getVideoChatRtmpUrl(chatId: Long): RtmpUrl =
+    this.sendFunctionAsync(TdApi.GetVideoChatRtmpUrl(chatId))
+
+/**
  * Suspend function, which adds the current user as a new member to a chat. Private and secret chats
- * can't be joined using this method.
+ * can't be joined using this method. May return an error with a message
+ * &quot;INVITE_REQUEST_SENT&quot; if only a join request was created.
  *
  * @param chatId Chat identifier.
  */
 suspend fun TelegramFlow.joinChat(chatId: Long) = this.sendFunctionLaunch(TdApi.JoinChat(chatId))
 
 /**
- * Suspend function, which uses an invite link to add the current user to the chat if possible.
+ * Suspend function, which uses an invite link to add the current user to the chat if possible. May
+ * return an error with a message &quot;INVITE_REQUEST_SENT&quot; if only a join request was created.
  *
  * @param inviteLink Invite link to use.
  *
@@ -915,7 +1515,7 @@ suspend fun TelegramFlow.leaveChat(chatId: Long) = this.sendFunctionLaunch(TdApi
 /**
  * Suspend function, which loads more chats from a chat list. The loaded chats and their positions
  * in the chat list will be sent through updates. Chats are sorted by the pair (chat.position.order,
- * chat.id) in descending order. Returns a 404 error if all chats has been loaded.
+ * chat.id) in descending order. Returns a 404 error if all chats have been loaded.
  *
  * @param chatList The chat list in which to load chats; pass null to load chats from the main chat
  * list.  
@@ -936,14 +1536,25 @@ suspend fun TelegramFlow.loadChats(chatList: ChatList?, limit: Int) =
 suspend fun TelegramFlow.openChat(chatId: Long) = this.sendFunctionLaunch(TdApi.OpenChat(chatId))
 
 /**
- * Suspend function, which pins a message in a chat; requires canPinMessages rights or
- * canEditMessages rights in the channel.
+ * Suspend function, which informs TDLib that a chat was opened from the list of similar chats. The
+ * method is independent of openChat and closeChat methods.
+ *
+ * @param chatId Identifier of the original chat, which similar chats were requested.  
+ * @param openedChatId Identifier of the opened chat.
+ */
+suspend fun TelegramFlow.openChatSimilarChat(chatId: Long, openedChatId: Long) =
+    this.sendFunctionLaunch(TdApi.OpenChatSimilarChat(chatId, openedChatId))
+
+/**
+ * Suspend function, which pins a message in a chat; requires canPinMessages member right if the
+ * chat is a basic group or supergroup, or canEditMessages administrator right if the chat is a
+ * channel.
  *
  * @param chatId Identifier of the chat.  
  * @param messageId Identifier of the new pinned message.  
- * @param disableNotification True, if there must be no notification about the pinned message.
+ * @param disableNotification Pass true to disable notification about the pinned message.
  * Notifications are always disabled in channels and private chats.  
- * @param onlyForSelf True, if the message needs to be pinned for one side only; private chats only.
+ * @param onlyForSelf Pass true to pin the message only for self; private chats only.
  */
 suspend fun TelegramFlow.pinChatMessage(
   chatId: Long,
@@ -954,12 +1565,76 @@ suspend fun TelegramFlow.pinChatMessage(
     onlyForSelf))
 
 /**
+ * Suspend function, which process new chats added to a shareable chat folder by its owner.
+ *
+ * @param chatFolderId Chat folder identifier.  
+ * @param addedChatIds Identifiers of the new chats, which are added to the chat folder. The chats
+ * are automatically joined if they aren't joined yet.
+ */
+suspend fun TelegramFlow.processChatFolderNewChats(chatFolderId: Int, addedChatIds: LongArray?) =
+    this.sendFunctionLaunch(TdApi.ProcessChatFolderNewChats(chatFolderId, addedChatIds))
+
+/**
+ * Suspend function, which handles a pending join request in a chat.
+ *
+ * @param chatId Chat identifier.  
+ * @param userId Identifier of the user that sent the request.  
+ * @param approve Pass true to approve the request; pass false to decline it.
+ */
+suspend fun TelegramFlow.processChatJoinRequest(
+  chatId: Long,
+  userId: Long,
+  approve: Boolean
+) = this.sendFunctionLaunch(TdApi.ProcessChatJoinRequest(chatId, userId, approve))
+
+/**
+ * Suspend function, which handles all pending join requests for a given link in a chat.
+ *
+ * @param chatId Chat identifier.  
+ * @param inviteLink Invite link for which to process join requests. If empty, all join requests
+ * will be processed. Requires administrator privileges and canInviteUsers right in the chat for own
+ * links and owner privileges for other links.  
+ * @param approve Pass true to approve all requests; pass false to decline them.
+ */
+suspend fun TelegramFlow.processChatJoinRequests(
+  chatId: Long,
+  inviteLink: String?,
+  approve: Boolean
+) = this.sendFunctionLaunch(TdApi.ProcessChatJoinRequests(chatId, inviteLink, approve))
+
+/**
  * Suspend function, which marks all mentions in a chat as read.
  *
  * @param chatId Chat identifier.
  */
 suspend fun TelegramFlow.readAllChatMentions(chatId: Long) =
     this.sendFunctionLaunch(TdApi.ReadAllChatMentions(chatId))
+
+/**
+ * Suspend function, which marks all reactions in a chat or a forum topic as read.
+ *
+ * @param chatId Chat identifier.
+ */
+suspend fun TelegramFlow.readAllChatReactions(chatId: Long) =
+    this.sendFunctionLaunch(TdApi.ReadAllChatReactions(chatId))
+
+/**
+ * Suspend function, which traverse all chats in a chat list and marks all messages in the chats as
+ * read.
+ *
+ * @param chatList Chat list in which to mark all chats as read.
+ */
+suspend fun TelegramFlow.readChatList(chatList: ChatList?) =
+    this.sendFunctionLaunch(TdApi.ReadChatList(chatList))
+
+/**
+ * Suspend function, which removes the connected business bot from a specific chat by adding the
+ * chat to businessRecipients.excludedChatIds.
+ *
+ * @param chatId Chat identifier.
+ */
+suspend fun TelegramFlow.removeBusinessConnectedBotFromChat(chatId: Long) =
+    this.sendFunctionLaunch(TdApi.RemoveBusinessConnectedBotFromChat(chatId))
 
 /**
  * Suspend function, which removes a chat action bar without any other action.
@@ -988,12 +1663,14 @@ suspend fun TelegramFlow.removeTopChat(category: TopChatCategory?, chatId: Long)
     this.sendFunctionLaunch(TdApi.RemoveTopChat(category, chatId))
 
 /**
- * Suspend function, which changes the order of chat filters.
+ * Suspend function, which changes the order of chat folders.
  *
- * @param chatFilterIds Identifiers of chat filters in the new correct order.
+ * @param chatFolderIds Identifiers of chat folders in the new correct order.  
+ * @param mainChatListPosition Position of the main chat list among chat folders, 0-based. Can be
+ * non-zero only for Premium users.
  */
-suspend fun TelegramFlow.reorderChatFilters(chatFilterIds: IntArray?) =
-    this.sendFunctionLaunch(TdApi.ReorderChatFilters(chatFilterIds))
+suspend fun TelegramFlow.reorderChatFolders(chatFolderIds: IntArray?, mainChatListPosition: Int) =
+    this.sendFunctionLaunch(TdApi.ReorderChatFolders(chatFolderIds, mainChatListPosition))
 
 /**
  * Suspend function, which replaces current primary invite link for a chat with a new primary invite
@@ -1008,27 +1685,35 @@ suspend fun TelegramFlow.replacePrimaryChatInviteLink(chatId: Long): ChatInviteL
     this.sendFunctionAsync(TdApi.ReplacePrimaryChatInviteLink(chatId))
 
 /**
+ * Suspend function, which replaces the current RTMP URL for streaming to the chat; requires owner
+ * privileges.
+ *
+ * @param chatId Chat identifier.
+ *
+ * @return [RtmpUrl] Represents an RTMP URL.
+ */
+suspend fun TelegramFlow.replaceVideoChatRtmpUrl(chatId: Long): RtmpUrl =
+    this.sendFunctionAsync(TdApi.ReplaceVideoChatRtmpUrl(chatId))
+
+/**
  * Suspend function, which reports a chat to the Telegram moderators. A chat can be reported only
- * from the chat action bar, or if this is a private chat with a bot, a private chat with a user
- * sharing their location, a supergroup, or a channel, since other chats can't be checked by
- * moderators.
+ * from the chat action bar, or if chat.canBeReported.
  *
  * @param chatId Chat identifier.  
- * @param messageIds Identifiers of reported messages, if any.  
+ * @param messageIds Identifiers of reported messages; may be empty to report the whole chat.  
  * @param reason The reason for reporting the chat.  
  * @param text Additional report details; 0-1024 characters.
  */
 suspend fun TelegramFlow.reportChat(
   chatId: Long,
   messageIds: LongArray?,
-  reason: ChatReportReason?,
+  reason: ReportReason?,
   text: String?
 ) = this.sendFunctionLaunch(TdApi.ReportChat(chatId, messageIds, reason, text))
 
 /**
  * Suspend function, which reports a chat photo to the Telegram moderators. A chat photo can be
- * reported only if this is a private chat with a bot, a private chat with a user sharing their
- * location, a supergroup, or a channel, since other chats can't be checked by moderators.
+ * reported only if chat.canBeReported.
  *
  * @param chatId Chat identifier.  
  * @param fileId Identifier of the photo to report. Only full photos from chatPhoto can be reported.
@@ -1039,9 +1724,25 @@ suspend fun TelegramFlow.reportChat(
 suspend fun TelegramFlow.reportChatPhoto(
   chatId: Long,
   fileId: Int,
-  reason: ChatReportReason?,
+  reason: ReportReason?,
   text: String?
 ) = this.sendFunctionLaunch(TdApi.ReportChatPhoto(chatId, fileId, reason, text))
+
+/**
+ * Suspend function, which reports a sponsored message to Telegram moderators.
+ *
+ * @param chatId Chat identifier of the sponsored message.  
+ * @param messageId Identifier of the sponsored message.  
+ * @param optionId Option identifier chosen by the user; leave empty for the initial request.
+ *
+ * @return [ReportChatSponsoredMessageResult] This class is an abstract base class.
+ */
+suspend fun TelegramFlow.reportChatSponsoredMessage(
+  chatId: Long,
+  messageId: Long,
+  optionId: ByteArray?
+): ReportChatSponsoredMessageResult =
+    this.sendFunctionAsync(TdApi.ReportChatSponsoredMessage(chatId, messageId, optionId))
 
 /**
  * Suspend function, which revokes invite link for a chat. Available for basic groups, supergroups,
@@ -1058,8 +1759,8 @@ suspend fun TelegramFlow.revokeChatInviteLink(chatId: Long, inviteLink: String?)
     this.sendFunctionAsync(TdApi.RevokeChatInviteLink(chatId, inviteLink))
 
 /**
- * Suspend function, which searches for a specified query in the first name, last name and username
- * of the members of a specified chat. Requires administrator rights in channels.
+ * Suspend function, which searches for a specified query in the first name, last name and usernames
+ * of the members of a specified chat. Requires administrator rights if the chat is a channel.
  *
  * @param chatId Chat identifier.  
  * @param query Query to search for.  
@@ -1080,37 +1781,42 @@ suspend fun TelegramFlow.searchChatMembers(
  * in reverse chronological order, i.e. in order of decreasing messageId. Cannot be used in secret
  * chats with a non-empty query (searchSecretMessages must be used instead), or without an enabled
  * message database. For optimal performance, the number of returned messages is chosen by TDLib and
- * can be smaller than the specified limit.
+ * can be smaller than the specified limit. A combination of query, senderId, filter and
+ * messageThreadId search criteria is expected to be supported, only if it is required for Telegram
+ * official application implementation.
  *
  * @param chatId Identifier of the chat in which to search messages.  
  * @param query Query to search for.  
- * @param sender Sender of messages to search for; pass null to search for messages from any sender.
- * Not supported in secret chats.  
+ * @param senderId Identifier of the sender of messages to search for; pass null to search for
+ * messages from any sender. Not supported in secret chats.  
  * @param fromMessageId Identifier of the message starting from which history must be fetched; use 0
  * to get results from the last message.  
- * @param offset Specify 0 to get results from exactly the fromMessageId or a negative offset to get
- * the specified message and some newer messages.  
+ * @param offset Specify 0 to get results from exactly the message fromMessageId or a negative
+ * offset to get the specified message and some newer messages.  
  * @param limit The maximum number of messages to be returned; must be positive and can't be greater
  * than 100. If the offset is negative, the limit must be greater than -offset. For optimal
  * performance, the number of returned messages is chosen by TDLib and can be smaller than the
  * specified limit.  
  * @param filter Additional filter for messages to search; pass null to search for all messages.  
  * @param messageThreadId If not 0, only messages in the specified thread will be returned;
- * supergroups only.
+ * supergroups only.  
+ * @param savedMessagesTopicId If not 0, only messages in the specified Saved Messages topic will be
+ * returned; pass 0 to return all messages, or for chats other than Saved Messages.
  *
- * @return [Messages] Contains a list of messages.
+ * @return [FoundChatMessages] Contains a list of messages found by a search in a given chat.
  */
 suspend fun TelegramFlow.searchChatMessages(
   chatId: Long,
   query: String?,
-  sender: MessageSender?,
+  senderId: MessageSender?,
   fromMessageId: Long,
   offset: Int,
   limit: Int,
   filter: SearchMessagesFilter?,
-  messageThreadId: Long
-): Messages = this.sendFunctionAsync(TdApi.SearchChatMessages(chatId, query, sender, fromMessageId,
-    offset, limit, filter, messageThreadId))
+  messageThreadId: Long,
+  savedMessagesTopicId: Long
+): FoundChatMessages = this.sendFunctionAsync(TdApi.SearchChatMessages(chatId, query, senderId,
+    fromMessageId, offset, limit, filter, messageThreadId, savedMessagesTopicId))
 
 /**
  * Suspend function, which returns information about the recent locations of chat members that were
@@ -1126,7 +1832,7 @@ suspend fun TelegramFlow.searchChatRecentLocationMessages(chatId: Long, limit: I
 
 /**
  * Suspend function, which searches for the specified query in the title and username of already
- * known chats, this is an offline request. Returns chats in the order seen in the main chat list.
+ * known chats; this is an offline request. Returns chats in the order seen in the main chat list.
  *
  * @param query Query to search for. If the query is empty, returns up to 50 recently found chats.  
  * @param limit The maximum number of chats to be returned.
@@ -1161,8 +1867,8 @@ suspend fun TelegramFlow.searchChatsOnServer(query: String?, limit: Int): Chats 
     this.sendFunctionAsync(TdApi.SearchChatsOnServer(query, limit))
 
 /**
- * Suspend function, which searches a public chat by its username. Currently only private chats,
- * supergroups and channels can be public. Returns the chat if found; otherwise an error is returned.
+ * Suspend function, which searches a public chat by its username. Currently, only private chats,
+ * supergroups and channels can be public. Returns the chat if found; otherwise, an error is returned.
  *
  * @param username Username to be resolved.
  *
@@ -1173,7 +1879,7 @@ suspend fun TelegramFlow.searchPublicChat(username: String?): Chat =
 
 /**
  * Suspend function, which searches public chats by looking for specified query in their username
- * and title. Currently only private chats, supergroups and channels can be public. Returns a
+ * and title. Currently, only private chats, supergroups and channels can be public. Returns a
  * meaningful number of results. Excludes private chats with contacts and chats from the chat list from
  * the results.
  *
@@ -1185,26 +1891,111 @@ suspend fun TelegramFlow.searchPublicChats(query: String?): Chats =
     this.sendFunctionAsync(TdApi.SearchPublicChats(query))
 
 /**
+ * Suspend function, which searches for the specified query in the title and username of up to 50
+ * recently found chats; this is an offline request.
+ *
+ * @param query Query to search for.  
+ * @param limit The maximum number of chats to be returned.
+ *
+ * @return [Chats] Represents a list of chats.
+ */
+suspend fun TelegramFlow.searchRecentlyFoundChats(query: String?, limit: Int): Chats =
+    this.sendFunctionAsync(TdApi.SearchRecentlyFoundChats(query, limit))
+
+/**
  * Suspend function, which sends a notification about user activity in a chat.
  *
  * @param chatId Chat identifier.  
- * @param messageThreadId If not 0, a message thread identifier in which the action was performed.  
+ * @param messageThreadId If not 0, the message thread identifier in which the action was performed.
+ *  
+ * @param businessConnectionId Unique identifier of business connection on behalf of which to send
+ * the request; for bots only.  
  * @param action The action description; pass null to cancel the currently active action.
  */
 suspend fun TelegramFlow.sendChatAction(
   chatId: Long,
   messageThreadId: Long,
+  businessConnectionId: String?,
   action: ChatAction?
-) = this.sendFunctionLaunch(TdApi.SendChatAction(chatId, messageThreadId, action))
+) = this.sendFunctionLaunch(TdApi.SendChatAction(chatId, messageThreadId, businessConnectionId,
+    action))
 
 /**
- * Suspend function, which sends a notification about a screenshot taken in a chat. Supported only
- * in private and secret chats.
+ * Suspend function, which changes settings for automatic moving of chats to and from the Archive
+ * chat lists.
  *
- * @param chatId Chat identifier.
+ * @param settings New settings.
  */
-suspend fun TelegramFlow.sendChatScreenshotTakenNotification(chatId: Long) =
-    this.sendFunctionLaunch(TdApi.SendChatScreenshotTakenNotification(chatId))
+suspend fun TelegramFlow.setArchiveChatListSettings(settings: ArchiveChatListSettings?) =
+    this.sendFunctionLaunch(TdApi.SetArchiveChatListSettings(settings))
+
+/**
+ * Suspend function, which changes accent color and background custom emoji of a channel chat.
+ * Requires canChangeInfo administrator right.
+ *
+ * @param chatId Chat identifier.  
+ * @param accentColorId Identifier of the accent color to use. The chat must have at least
+ * accentColor.minChannelChatBoostLevel boost level to pass the corresponding color.  
+ * @param backgroundCustomEmojiId Identifier of a custom emoji to be shown on the reply header and
+ * link preview background; 0 if none. Use chatBoostLevelFeatures.canSetBackgroundCustomEmoji to check
+ * whether a custom emoji can be set.
+ */
+suspend fun TelegramFlow.setChatAccentColor(
+  chatId: Long,
+  accentColorId: Int,
+  backgroundCustomEmojiId: Long
+) = this.sendFunctionLaunch(TdApi.SetChatAccentColor(chatId, accentColorId,
+    backgroundCustomEmojiId))
+
+/**
+ * Suspend function, which changes story list in which stories from the chat are shown.
+ *
+ * @param chatId Identifier of the chat that posted stories.  
+ * @param storyList New list for active stories posted by the chat.
+ */
+suspend fun TelegramFlow.setChatActiveStoriesList(chatId: Long, storyList: StoryList?) =
+    this.sendFunctionLaunch(TdApi.SetChatActiveStoriesList(chatId, storyList))
+
+/**
+ * Suspend function, which changes reactions, available in a chat. Available for basic groups,
+ * supergroups, and channels. Requires canChangeInfo member right.
+ *
+ * @param chatId Identifier of the chat.  
+ * @param availableReactions Reactions available in the chat. All explicitly specified emoji
+ * reactions must be active. In channel chats up to the chat's boost level custom emoji reactions can
+ * be explicitly specified.
+ */
+suspend fun TelegramFlow.setChatAvailableReactions(chatId: Long,
+    availableReactions: ChatAvailableReactions?) =
+    this.sendFunctionLaunch(TdApi.SetChatAvailableReactions(chatId, availableReactions))
+
+/**
+ * Suspend function, which sets the background in a specific chat. Supported only in private and
+ * secret chats with non-deleted users, and in chats with sufficient boost level and canChangeInfo
+ * administrator right.
+ *
+ * @param chatId Chat identifier.  
+ * @param background The input background to use; pass null to create a new filled or chat theme
+ * background.  
+ * @param type Background type; pass null to use default background type for the chosen background;
+ * backgroundTypeChatTheme isn't supported for private and secret chats. Use
+ * chatBoostLevelFeatures.chatThemeBackgroundCount and chatBoostLevelFeatures.canSetCustomBackground to
+ * check whether the background type can be set in the boosted chat.  
+ * @param darkThemeDimming Dimming of the background in dark themes, as a percentage; 0-100. Applied
+ * only to Wallpaper and Fill types of background.  
+ * @param onlyForSelf Pass true to set background only for self; pass false to set background for
+ * all chat users. Always false for backgrounds set in boosted chats. Background can be set for both
+ * users only by Telegram Premium users and if set background isn't of the type
+ * inputBackgroundPrevious.
+ */
+suspend fun TelegramFlow.setChatBackground(
+  chatId: Long,
+  background: InputBackground?,
+  type: BackgroundType?,
+  darkThemeDimming: Int,
+  onlyForSelf: Boolean
+) = this.sendFunctionLaunch(TdApi.SetChatBackground(chatId, background, type, darkThemeDimming,
+    onlyForSelf))
 
 /**
  * Suspend function, which changes application-specific data associated with a chat.
@@ -1217,7 +2008,7 @@ suspend fun TelegramFlow.setChatClientData(chatId: Long, clientData: String?) =
 
 /**
  * Suspend function, which changes information about a chat. Available for basic groups,
- * supergroups, and channels. Requires canChangeInfo administrator right.
+ * supergroups, and channels. Requires canChangeInfo member right.
  *
  * @param chatId Identifier of the chat.  
  * @param description New chat description; 0-255 characters.
@@ -1230,8 +2021,8 @@ suspend fun TelegramFlow.setChatDescription(chatId: Long, description: String?) 
  * administrator right in the channel if it is specified.
  *
  * @param chatId Identifier of the channel chat. Pass 0 to remove a link from the supergroup passed
- * in the second argument to a linked channel chat (requires canPinMessages rights in the supergroup). 
- * 
+ * in the second argument to a linked channel chat (requires canPinMessages member right in the
+ * supergroup).  
  * @param discussionChatId Identifier of a new channel's discussion group. Use 0 to remove the
  * discussion group. Use the method getSuitableDiscussionChats to find all suitable groups. Basic group
  * chats must be first upgraded to supergroup chats. If new chat members don't have access to old
@@ -1245,8 +2036,9 @@ suspend fun TelegramFlow.setChatDiscussionGroup(chatId: Long, discussionChatId: 
  * Suspend function, which changes the draft message in a chat.
  *
  * @param chatId Chat identifier.  
- * @param messageThreadId If not 0, a message thread identifier in which the draft was changed.  
- * @param draftMessage New draft message; pass null to remove the draft.
+ * @param messageThreadId If not 0, the message thread identifier in which the draft was changed.  
+ * @param draftMessage New draft message; pass null to remove the draft. All files in draft message
+ * content must be of the type inputFileLocal. Media thumbnails and captions are ignored.
  */
 suspend fun TelegramFlow.setChatDraftMessage(
   chatId: Long,
@@ -1265,9 +2057,11 @@ suspend fun TelegramFlow.setChatLocation(chatId: Long, location: ChatLocation?) 
     this.sendFunctionLaunch(TdApi.SetChatLocation(chatId, location))
 
 /**
- * Suspend function, which changes the status of a chat member, needs appropriate privileges. This
- * function is currently not suitable for transferring chat ownership; use transferChatOwnership
- * instead. Use addChatMember or banChatMember if some additional parameters needs to be passed.
+ * Suspend function, which changes the status of a chat member; requires canInviteUsers member right
+ * to add a chat member, canPromoteMembers administrator right to change administrator rights of the
+ * member, and canRestrictMembers administrator right to change restrictions of a user. This function
+ * is currently not suitable for transferring chat ownership; use transferChatOwnership instead. Use
+ * addChatMember or banChatMember if some additional parameters needs to be passed.
  *
  * @param chatId Chat identifier.  
  * @param memberId Member identifier. Chats can be only banned and unbanned in supergroups and
@@ -1281,17 +2075,27 @@ suspend fun TelegramFlow.setChatMemberStatus(
 ) = this.sendFunctionLaunch(TdApi.SetChatMemberStatus(chatId, memberId, status))
 
 /**
- * Suspend function, which changes the message TTL setting (sets a new self-destruct timer) in a
- * chat. Requires canDeleteMessages administrator right in basic groups, supergroups and channels
- * Message TTL setting of a chat with the current user (Saved Messages) and the chat 777000 (Telegram)
- * can't be changed.
+ * Suspend function, which changes the message auto-delete or self-destruct (for secret chats) time
+ * in a chat. Requires changeInfo administrator right in basic groups, supergroups and channels Message
+ * auto-delete time can't be changed in a chat with the current user (Saved Messages) and the chat
+ * 777000 (Telegram).
  *
  * @param chatId Chat identifier.  
- * @param ttl New TTL value, in seconds; must be one of 0, 86400, 7 * 86400, or 31 * 86400 unless
- * the chat is secret.
+ * @param messageAutoDeleteTime New time value, in seconds; unless the chat is secret, it must be
+ * from 0 up to 365 * 86400 and be divisible by 86400. If 0, then messages aren't deleted
+ * automatically.
  */
-suspend fun TelegramFlow.setChatMessageTtlSetting(chatId: Long, ttl: Int) =
-    this.sendFunctionLaunch(TdApi.SetChatMessageTtlSetting(chatId, ttl))
+suspend fun TelegramFlow.setChatMessageAutoDeleteTime(chatId: Long, messageAutoDeleteTime: Int) =
+    this.sendFunctionLaunch(TdApi.SetChatMessageAutoDeleteTime(chatId, messageAutoDeleteTime))
+
+/**
+ * Suspend function, which selects a message sender to send messages in a chat.
+ *
+ * @param chatId Chat identifier.  
+ * @param messageSenderId New message sender for the chat.
+ */
+suspend fun TelegramFlow.setChatMessageSender(chatId: Long, messageSenderId: MessageSender?) =
+    this.sendFunctionLaunch(TdApi.SetChatMessageSender(chatId, messageSenderId))
 
 /**
  * Suspend function, which changes the notification settings of a chat. Notification settings of a
@@ -1299,7 +2103,7 @@ suspend fun TelegramFlow.setChatMessageTtlSetting(chatId: Long, ttl: Int) =
  *
  * @param chatId Chat identifier.  
  * @param notificationSettings New notification settings for the chat. If the chat is muted for more
- * than 1 week, it is considered to be muted forever.
+ * than 366 days, it is considered to be muted forever.
  */
 suspend fun TelegramFlow.setChatNotificationSettings(chatId: Long,
     notificationSettings: ChatNotificationSettings?) =
@@ -1317,7 +2121,7 @@ suspend fun TelegramFlow.setChatPermissions(chatId: Long, permissions: ChatPermi
 
 /**
  * Suspend function, which changes the photo of a chat. Supported only for basic groups, supergroups
- * and channels. Requires canChangeInfo administrator right.
+ * and channels. Requires canChangeInfo member right.
  *
  * @param chatId Chat identifier.  
  * @param photo New chat photo; pass null to delete the chat photo.
@@ -1326,8 +2130,39 @@ suspend fun TelegramFlow.setChatPhoto(chatId: Long, photo: InputChatPhoto?) =
     this.sendFunctionLaunch(TdApi.SetChatPhoto(chatId, photo))
 
 /**
+ * Suspend function, which changes the list of pinned stories on a chat page; requires
+ * canEditStories right in the chat.
+ *
+ * @param chatId Identifier of the chat that posted the stories.  
+ * @param storyIds New list of pinned stories. All stories must be posted to the chat page first.
+ * There can be up to getOption(&quot;pinned_story_count_max&quot;) pinned stories on a chat page.
+ */
+suspend fun TelegramFlow.setChatPinnedStories(chatId: Long, storyIds: IntArray?) =
+    this.sendFunctionLaunch(TdApi.SetChatPinnedStories(chatId, storyIds))
+
+/**
+ * Suspend function, which changes accent color and background custom emoji for profile of a
+ * supergroup or channel chat. Requires canChangeInfo administrator right.
+ *
+ * @param chatId Chat identifier.  
+ * @param profileAccentColorId Identifier of the accent color to use for profile; pass -1 if none.
+ * The chat must have at least profileAccentColor.minSupergroupChatBoostLevel for supergroups or
+ * profileAccentColor.minChannelChatBoostLevel for channels boost level to pass the corresponding
+ * color.  
+ * @param profileBackgroundCustomEmojiId Identifier of a custom emoji to be shown on the chat's
+ * profile photo background; 0 if none. Use chatBoostLevelFeatures.canSetProfileBackgroundCustomEmoji
+ * to check whether a custom emoji can be set.
+ */
+suspend fun TelegramFlow.setChatProfileAccentColor(
+  chatId: Long,
+  profileAccentColorId: Int,
+  profileBackgroundCustomEmojiId: Long
+) = this.sendFunctionLaunch(TdApi.SetChatProfileAccentColor(chatId, profileAccentColorId,
+    profileBackgroundCustomEmojiId))
+
+/**
  * Suspend function, which changes the slow mode delay of a chat. Available only for supergroups;
- * requires canRestrictMembers rights.
+ * requires canRestrictMembers right.
  *
  * @param chatId Chat identifier.  
  * @param slowModeDelay New slow mode delay for the chat, in seconds; must be one of 0, 10, 30, 60,
@@ -1347,13 +2182,31 @@ suspend fun TelegramFlow.setChatTheme(chatId: Long, themeName: String?) =
 
 /**
  * Suspend function, which changes the chat title. Supported only for basic groups, supergroups and
- * channels. Requires canChangeInfo administrator right.
+ * channels. Requires canChangeInfo member right.
  *
  * @param chatId Chat identifier.  
  * @param title New title of the chat; 1-128 characters.
  */
 suspend fun TelegramFlow.setChatTitle(chatId: Long, title: String?) =
     this.sendFunctionLaunch(TdApi.SetChatTitle(chatId, title))
+
+/**
+ * Suspend function, which changes privacy settings for new chat creation; can be used only if
+ * getOption(&quot;can_set_new_chat_privacy_settings&quot;).
+ *
+ * @param settings New settings.
+ */
+suspend fun TelegramFlow.setNewChatPrivacySettings(settings: NewChatPrivacySettings?) =
+    this.sendFunctionLaunch(TdApi.SetNewChatPrivacySettings(settings))
+
+/**
+ * Suspend function, which changes the personal chat of the current user.
+ *
+ * @param chatId Identifier of the new personal chat; pass 0 to remove the chat. Use
+ * getSuitablePersonalChats to get suitable chats.
+ */
+suspend fun TelegramFlow.setPersonalChat(chatId: Long) =
+    this.sendFunctionLaunch(TdApi.SetPersonalChat(chatId))
 
 /**
  * Suspend function, which changes the order of pinned chats.
@@ -1365,8 +2218,8 @@ suspend fun TelegramFlow.setPinnedChats(chatList: ChatList?, chatIds: LongArray?
     this.sendFunctionLaunch(TdApi.SetPinnedChats(chatList, chatIds))
 
 /**
- * Suspend function, which changes default participant identifier, which can be used to join video
- * chats in a chat.
+ * Suspend function, which changes default participant identifier, on whose behalf a video chat in
+ * the chat will be joined.
  *
  * @param chatId Chat identifier.  
  * @param defaultParticipantId Default group call participant identifier to join the video chats.
@@ -1374,6 +2227,40 @@ suspend fun TelegramFlow.setPinnedChats(chatList: ChatList?, chatIds: LongArray?
 suspend fun TelegramFlow.setVideoChatDefaultParticipant(chatId: Long,
     defaultParticipantId: MessageSender?) =
     this.sendFunctionLaunch(TdApi.SetVideoChatDefaultParticipant(chatId, defaultParticipantId))
+
+/**
+ * Suspend function, which shares a chat after pressing a keyboardButtonTypeRequestChat button with
+ * the bot.
+ *
+ * @param chatId Identifier of the chat with the bot.  
+ * @param messageId Identifier of the message with the button.  
+ * @param buttonId Identifier of the button.  
+ * @param sharedChatId Identifier of the shared chat.  
+ * @param onlyCheck Pass true to check that the chat can be shared by the button instead of actually
+ * sharing it. Doesn't check botIsMember and botAdministratorRights restrictions. If the bot must be a
+ * member, then all chats from getGroupsInCommon and all chats, where the user can add the bot, are
+ * suitable. In the latter case the bot will be automatically added to the chat. If the bot must be an
+ * administrator, then all chats, where the bot already has requested rights or can be added to
+ * administrators by the user, are suitable. In the latter case the bot will be automatically granted
+ * requested rights.
+ */
+suspend fun TelegramFlow.shareChatWithBot(
+  chatId: Long,
+  messageId: Long,
+  buttonId: Int,
+  sharedChatId: Long,
+  onlyCheck: Boolean
+) = this.sendFunctionLaunch(TdApi.ShareChatWithBot(chatId, messageId, buttonId, sharedChatId,
+    onlyCheck))
+
+/**
+ * Suspend function, which pauses or resumes the connected business bot in a specific chat.
+ *
+ * @param chatId Chat identifier.  
+ * @param isPaused Pass true to pause the connected bot in the chat; pass false to resume the bot.
+ */
+suspend fun TelegramFlow.toggleBusinessConnectedBotChatIsPaused(chatId: Long, isPaused: Boolean) =
+    this.sendFunctionLaunch(TdApi.ToggleBusinessConnectedBotChatIsPaused(chatId, isPaused))
 
 /**
  * Suspend function, which changes the value of the default disableNotification parameter, used when
@@ -1388,6 +2275,24 @@ suspend fun TelegramFlow.toggleChatDefaultDisableNotification(chatId: Long,
     defaultDisableNotification))
 
 /**
+ * Suspend function, which toggles whether chat folder tags are enabled.
+ *
+ * @param areTagsEnabled Pass true to enable folder tags; pass false to disable them.
+ */
+suspend fun TelegramFlow.toggleChatFolderTags(areTagsEnabled: Boolean) =
+    this.sendFunctionLaunch(TdApi.ToggleChatFolderTags(areTagsEnabled))
+
+/**
+ * Suspend function, which changes the ability of users to save, forward, or copy chat content.
+ * Supported only for basic groups, supergroups and channels. Requires owner privileges.
+ *
+ * @param chatId Chat identifier.  
+ * @param hasProtectedContent New value of hasProtectedContent.
+ */
+suspend fun TelegramFlow.toggleChatHasProtectedContent(chatId: Long, hasProtectedContent: Boolean) =
+    this.sendFunctionLaunch(TdApi.ToggleChatHasProtectedContent(chatId, hasProtectedContent))
+
+/**
  * Suspend function, which changes the marked as unread state of a chat.
  *
  * @param chatId Chat identifier.  
@@ -1398,12 +2303,13 @@ suspend fun TelegramFlow.toggleChatIsMarkedAsUnread(chatId: Long, isMarkedAsUnre
 
 /**
  * Suspend function, which changes the pinned state of a chat. There can be up to
- * GetOption(&quot;pinned_chat_count_max&quot;)/GetOption(&quot;pinned_archived_chat_count_max&quot;)
- * pinned non-secret chats and the same number of secret chats in the main/arhive chat list.
+ * getOption(&quot;pinned_chat_count_max&quot;)/getOption(&quot;pinned_archived_chat_count_max&quot;)
+ * pinned non-secret chats and the same number of secret chats in the main/archive chat list. The limit
+ * can be increased with Telegram Premium.
  *
  * @param chatList Chat list in which to change the pinned state of the chat.  
  * @param chatId Chat identifier.  
- * @param isPinned True, if the chat is pinned.
+ * @param isPinned Pass true to pin the chat; pass false to unpin it.
  */
 suspend fun TelegramFlow.toggleChatIsPinned(
   chatList: ChatList?,
@@ -1412,14 +2318,60 @@ suspend fun TelegramFlow.toggleChatIsPinned(
 ) = this.sendFunctionLaunch(TdApi.ToggleChatIsPinned(chatList, chatId, isPinned))
 
 /**
- * Suspend function, which changes the owner of a chat. The current user must be a current owner of
- * the chat. Use the method canTransferOwnership to check whether the ownership can be transferred from
- * the current session. Available only for supergroups and channel chats.
+ * Suspend function, which changes the translatable state of a chat.
+ *
+ * @param chatId Chat identifier.  
+ * @param isTranslatable New value of isTranslatable.
+ */
+suspend fun TelegramFlow.toggleChatIsTranslatable(chatId: Long, isTranslatable: Boolean) =
+    this.sendFunctionLaunch(TdApi.ToggleChatIsTranslatable(chatId, isTranslatable))
+
+/**
+ * Suspend function, which changes the viewAsTopics setting of a forum chat or Saved Messages.
+ *
+ * @param chatId Chat identifier.  
+ * @param viewAsTopics New value of viewAsTopics.
+ */
+suspend fun TelegramFlow.toggleChatViewAsTopics(chatId: Long, viewAsTopics: Boolean) =
+    this.sendFunctionLaunch(TdApi.ToggleChatViewAsTopics(chatId, viewAsTopics))
+
+/**
+ * Suspend function, which toggles whether a session can accept incoming secret chats.
+ *
+ * @param sessionId Session identifier.  
+ * @param canAcceptSecretChats Pass true to allow accepting secret chats by the session; pass false
+ * otherwise.
+ */
+suspend fun TelegramFlow.toggleSessionCanAcceptSecretChats(sessionId: Long,
+    canAcceptSecretChats: Boolean) =
+    this.sendFunctionLaunch(TdApi.ToggleSessionCanAcceptSecretChats(sessionId,
+    canAcceptSecretChats))
+
+/**
+ * Suspend function, which toggles whether a story is accessible after expiration. Can be called
+ * only if story.canToggleIsPostedToChatPage == true.
+ *
+ * @param storySenderChatId Identifier of the chat that posted the story.  
+ * @param storyId Identifier of the story.  
+ * @param isPostedToChatPage Pass true to make the story accessible after expiration; pass false to
+ * make it private.
+ */
+suspend fun TelegramFlow.toggleStoryIsPostedToChatPage(
+  storySenderChatId: Long,
+  storyId: Int,
+  isPostedToChatPage: Boolean
+) = this.sendFunctionLaunch(TdApi.ToggleStoryIsPostedToChatPage(storySenderChatId, storyId,
+    isPostedToChatPage))
+
+/**
+ * Suspend function, which changes the owner of a chat; requires owner privileges in the chat. Use
+ * the method canTransferOwnership to check whether the ownership can be transferred from the current
+ * session. Available only for supergroups and channel chats.
  *
  * @param chatId Chat identifier.  
  * @param userId Identifier of the user to which transfer the ownership. The ownership can't be
  * transferred to a bot or to a deleted user.  
- * @param password The password of the current user.
+ * @param password The 2-step verification password of the current user.
  */
 suspend fun TelegramFlow.transferChatOwnership(
   chatId: Long,
@@ -1428,8 +2380,9 @@ suspend fun TelegramFlow.transferChatOwnership(
 ) = this.sendFunctionLaunch(TdApi.TransferChatOwnership(chatId, userId, password))
 
 /**
- * Suspend function, which removes all pinned messages from a chat; requires canPinMessages rights
- * in the group or canEditMessages rights in the channel.
+ * Suspend function, which removes all pinned messages from a chat; requires canPinMessages member
+ * right if the chat is a basic group or supergroup, or canEditMessages administrator right if the chat
+ * is a channel.
  *
  * @param chatId Identifier of the chat.
  */
@@ -1437,8 +2390,9 @@ suspend fun TelegramFlow.unpinAllChatMessages(chatId: Long) =
     this.sendFunctionLaunch(TdApi.UnpinAllChatMessages(chatId))
 
 /**
- * Suspend function, which removes a pinned message from a chat; requires canPinMessages rights in
- * the group or canEditMessages rights in the channel.
+ * Suspend function, which removes a pinned message from a chat; requires canPinMessages member
+ * right if the chat is a basic group or supergroup, or canEditMessages administrator right if the chat
+ * is a channel.
  *
  * @param chatId Identifier of the chat.  
  * @param messageId Identifier of the removed pinned message.
@@ -1448,7 +2402,7 @@ suspend fun TelegramFlow.unpinChatMessage(chatId: Long, messageId: Long) =
 
 /**
  * Suspend function, which creates a new supergroup from an existing basic group and sends a
- * corresponding messageChatUpgradeTo and messageChatUpgradeFrom; requires creator privileges.
+ * corresponding messageChatUpgradeTo and messageChatUpgradeFrom; requires owner privileges.
  * Deactivates the original basic group.
  *
  * @param chatId Identifier of the chat to upgrade.

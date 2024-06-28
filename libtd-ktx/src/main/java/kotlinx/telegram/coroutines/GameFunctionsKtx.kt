@@ -9,9 +9,9 @@ import kotlin.Int
 import kotlin.Long
 import kotlin.String
 import kotlinx.telegram.core.TelegramFlow
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.GameHighScores
-import org.drinkless.td.libcore.telegram.TdApi.Message
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.GameHighScores
+import org.drinkless.tdlib.TdApi.Message
 
 /**
  * Suspend function, which returns the high scores for a game and some part of the high score table
@@ -46,7 +46,7 @@ suspend fun TelegramFlow.getInlineGameHighScores(inlineMessageId: String?, userI
  *
  * @param chatId The chat to which the message with the game belongs.  
  * @param messageId Identifier of the message.  
- * @param editMessage True, if the message needs to be edited.  
+ * @param editMessage Pass true to edit the game message to include the current scoreboard.  
  * @param userId User identifier.  
  * @param score The new score.  
  * @param force Pass true to update the score even if it decreases. If the score is 0, the user will
@@ -68,7 +68,7 @@ suspend fun TelegramFlow.setGameScore(
  * Suspend function, which updates the game score of the specified user in a game; for bots only.
  *
  * @param inlineMessageId Inline message identifier.  
- * @param editMessage True, if the message needs to be edited.  
+ * @param editMessage Pass true to edit the game message to include the current scoreboard.  
  * @param userId User identifier.  
  * @param score The new score.  
  * @param force Pass true to update the score even if it decreases. If the score is 0, the user will

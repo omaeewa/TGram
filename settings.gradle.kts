@@ -9,7 +9,7 @@ pluginManagement {
         }
         mavenCentral()
         gradlePluginPortal()
-    }
+    } 
 }
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
@@ -31,3 +31,4 @@ include(":core:data")
 include(":libtd-ktx")
 include(":libtd")
 include(":core:common")
+include(":core:model")

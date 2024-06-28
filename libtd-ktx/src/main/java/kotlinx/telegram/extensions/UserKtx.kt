@@ -8,38 +8,49 @@ import kotlin.Array
 import kotlin.Boolean
 import kotlin.Int
 import kotlin.Long
-import kotlin.LongArray
 import kotlin.String
 import kotlinx.telegram.core.TelegramFlow
 import kotlinx.telegram.coroutines.addChatMember
 import kotlinx.telegram.coroutines.addStickerToSet
-import kotlinx.telegram.coroutines.approveChatJoinRequest
+import kotlinx.telegram.coroutines.canSendMessageToUser
 import kotlinx.telegram.coroutines.createCall
 import kotlinx.telegram.coroutines.createNewSecretChat
 import kotlinx.telegram.coroutines.createNewStickerSet
 import kotlinx.telegram.coroutines.createPrivateChat
-import kotlinx.telegram.coroutines.declineChatJoinRequest
-import kotlinx.telegram.coroutines.deleteChatMessagesFromUser
 import kotlinx.telegram.coroutines.getGameHighScores
 import kotlinx.telegram.coroutines.getGroupsInCommon
 import kotlinx.telegram.coroutines.getInlineGameHighScores
+import kotlinx.telegram.coroutines.getMenuButton
 import kotlinx.telegram.coroutines.getUser
+import kotlinx.telegram.coroutines.getUserChatBoosts
 import kotlinx.telegram.coroutines.getUserFullInfo
 import kotlinx.telegram.coroutines.getUserProfilePhotos
-import kotlinx.telegram.coroutines.reportSupergroupSpam
+import kotlinx.telegram.coroutines.getUserSupportInfo
+import kotlinx.telegram.coroutines.processChatJoinRequest
+import kotlinx.telegram.coroutines.refundStarPayment
+import kotlinx.telegram.coroutines.replaceStickerInSet
 import kotlinx.telegram.coroutines.setGameScore
 import kotlinx.telegram.coroutines.setInlineGameScore
+import kotlinx.telegram.coroutines.setMenuButton
 import kotlinx.telegram.coroutines.setPassportElementErrors
 import kotlinx.telegram.coroutines.setStickerSetThumbnail
+import kotlinx.telegram.coroutines.setUserPersonalProfilePhoto
+import kotlinx.telegram.coroutines.setUserSupportInfo
 import kotlinx.telegram.coroutines.sharePhoneNumber
+import kotlinx.telegram.coroutines.suggestUserProfilePhoto
 import kotlinx.telegram.coroutines.transferChatOwnership
 import kotlinx.telegram.coroutines.uploadStickerFile
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.CallProtocol
-import org.drinkless.td.libcore.telegram.TdApi.InputFile
-import org.drinkless.td.libcore.telegram.TdApi.InputPassportElementError
-import org.drinkless.td.libcore.telegram.TdApi.InputSticker
-import org.drinkless.td.libcore.telegram.TdApi.User
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.BotMenuButton
+import org.drinkless.tdlib.TdApi.CallProtocol
+import org.drinkless.tdlib.TdApi.FormattedText
+import org.drinkless.tdlib.TdApi.InputChatPhoto
+import org.drinkless.tdlib.TdApi.InputFile
+import org.drinkless.tdlib.TdApi.InputPassportElementError
+import org.drinkless.tdlib.TdApi.InputSticker
+import org.drinkless.tdlib.TdApi.StickerFormat
+import org.drinkless.tdlib.TdApi.StickerType
+import org.drinkless.tdlib.TdApi.User
 
 /**
  * Interface for access [TdApi.User] extension functions. Can be used alongside with other extension
@@ -52,40 +63,47 @@ interface UserKtx : BaseKtx {
   override val api: TelegramFlow
 
   /**
-   * Suspend function, which adds a new member to a chat. Members can't be added to private or
-   * secret chats.
+   * Suspend function, which adds a new member to a chat; requires canInviteUsers member right.
+   * Members can't be added to private or secret chats. Returns information about members that weren't
+   * added.
    *
    * @param chatId Chat identifier.  
    * @param forwardLimit The number of earlier messages from the chat to be forwarded to the new
    * member; up to 100. Ignored for supergroups and channels, or if the added user is a bot.
+   *
+   * @return [TdApi.FailedToAddMembers] Represents a list of users that has failed to be added to a
+   * chat.
    */
   suspend fun User.addChatMember(chatId: Long, forwardLimit: Int) = api.addChatMember(chatId,
       this.id, forwardLimit)
 
   /**
-   * Suspend function, which adds a new sticker to a set; for bots only. Returns the sticker set.
+   * Suspend function, which adds a new sticker to a set.
    *
-   * @param name Sticker set name.  
+   * @param name Sticker set name. The sticker set must be owned by the current user, and contain
+   * less than 200 stickers for custom emoji sticker sets and less than 120 otherwise.  
    * @param sticker Sticker to add to the set.
-   *
-   * @return [TdApi.StickerSet] Represents a sticker set.
    */
   suspend fun User.addStickerToSet(name: String?, sticker: InputSticker?) =
       api.addStickerToSet(this.id, name, sticker)
 
   /**
-   * Suspend function, which approves pending join request in a chat.
+   * Suspend function, which check whether the current user can message another user or try to
+   * create a chat with them.
    *
-   * @param chatId Chat identifier.  
+   * @param onlyLocal Pass true to get only locally available information without sending network
+   * requests.
+   *
+   * @return [TdApi.CanSendMessageToUserResult] This class is an abstract base class.
    */
-  suspend fun User.approveChatJoinRequest(chatId: Long) = api.approveChatJoinRequest(chatId,
-      this.id)
+  suspend fun User.canSendMessageTo(onlyLocal: Boolean) = api.canSendMessageToUser(this.id,
+      onlyLocal)
 
   /**
    * Suspend function, which creates a new call.
    *
    * @param protocol The call protocols supported by the application.  
-   * @param isVideo True, if a video call needs to be created.
+   * @param isVideo Pass true to create a video call.
    *
    * @return [TdApi.CallId] Contains the call identifier.
    */
@@ -106,11 +124,14 @@ interface UserKtx : BaseKtx {
    * @param title Sticker set title; 1-64 characters.  
    * @param name Sticker set name. Can contain only English letters, digits and underscores. Must
    * end with *&quot;_by_&lt;bot username&gt;&quot;* (*&lt;botUsername&gt;* is case insensitive) for
-   * bots; 1-64 characters.  
-   * @param isMasks True, if stickers are masks. Animated stickers can't be masks.  
-   * @param stickers List of stickers to be added to the set; must be non-empty. All stickers must
-   * be of the same type. For animated stickers, uploadStickerFile must be used before the sticker is
-   * shown.  
+   * bots; 0-64 characters. If empty, then the name returned by getSuggestedStickerSetName will be used
+   * automatically.  
+   * @param stickerType Type of the stickers in the set.  
+   * @param needsRepainting Pass true if stickers in the sticker set must be repainted; for custom
+   * emoji sticker sets only.  
+   * @param stickers List of stickers to be added to the set; 1-200 stickers for custom emoji
+   * sticker sets, and 1-120 stickers otherwise. For TGS stickers, uploadStickerFile must be used
+   * before the sticker is shown.  
    * @param source Source of the sticker set; may be empty if unknown.
    *
    * @return [TdApi.StickerSet] Represents a sticker set.
@@ -118,37 +139,21 @@ interface UserKtx : BaseKtx {
   suspend fun User.createNewStickerSet(
     title: String?,
     name: String?,
-    isMasks: Boolean,
+    stickerType: StickerType?,
+    needsRepainting: Boolean,
     stickers: Array<InputSticker>?,
     source: String?
-  ) = api.createNewStickerSet(this.id, title, name, isMasks, stickers, source)
+  ) = api.createNewStickerSet(this.id, title, name, stickerType, needsRepainting, stickers, source)
 
   /**
    * Suspend function, which returns an existing chat corresponding to a given user.
    *
-   * @param force If true, the chat will be created without network request. In this case all
+   * @param force Pass true to create the chat without a network request. In this case all
    * information about the chat except its type, title and photo can be incorrect.
    *
    * @return [TdApi.Chat] A chat. (Can be a private chat, basic group, supergroup, or secret chat.)
    */
   suspend fun User.createPrivateChat(force: Boolean) = api.createPrivateChat(this.id, force)
-
-  /**
-   * Suspend function, which declines pending join request in a chat.
-   *
-   * @param chatId Chat identifier.  
-   */
-  suspend fun User.declineChatJoinRequest(chatId: Long) = api.declineChatJoinRequest(chatId,
-      this.id)
-
-  /**
-   * Suspend function, which deletes all messages sent by the specified user to a chat. Supported
-   * only for supergroups; requires canDeleteMessages administrator privileges.
-   *
-   * @param chatId Chat identifier.  
-   */
-  suspend fun User.deleteChatMessagesFrom(chatId: Long) = api.deleteChatMessagesFromUser(chatId,
-      this.id)
 
   /**
    * Suspend function, which returns the high scores for a game and some part of the high score
@@ -187,6 +192,15 @@ interface UserKtx : BaseKtx {
       api.getInlineGameHighScores(inlineMessageId, this.id)
 
   /**
+   * Suspend function, which returns menu button set by the bot for the given user; for bots only.
+   *
+   *
+   * @return [TdApi.BotMenuButton] Describes a button to be shown instead of bot commands menu
+   * button.
+   */
+  suspend fun User.getMenuButton() = api.getMenuButton(this.id)
+
+  /**
    * Suspend function, which returns information about a user by their identifier. This is an
    * offline request if the current user is not a bot.
    *
@@ -194,6 +208,16 @@ interface UserKtx : BaseKtx {
    * @return [TdApi.User] Represents a user.
    */
   suspend fun User.get() = api.getUser(this.id)
+
+  /**
+   * Suspend function, which returns the list of boosts applied to a chat by a given user; requires
+   * administrator rights in the chat; for bots only.
+   *
+   * @param chatId Identifier of the chat.  
+   *
+   * @return [TdApi.FoundChatBoosts] Contains a list of boosts applied to a chat.
+   */
+  suspend fun User.getChatBoosts(chatId: Long) = api.getUserChatBoosts(chatId, this.id)
 
   /**
    * Suspend function, which returns full information about a user by their identifier.
@@ -204,8 +228,8 @@ interface UserKtx : BaseKtx {
   suspend fun User.getFullInfo() = api.getUserFullInfo(this.id)
 
   /**
-   * Suspend function, which returns the profile photos of a user. The result of this query may be
-   * outdated: some photos might have been deleted already.
+   * Suspend function, which returns the profile photos of a user. Personal and public photo aren't
+   * returned.
    *
    * @param offset The number of photos to skip; must be non-negative.  
    * @param limit The maximum number of photos to be returned; up to 100.
@@ -216,15 +240,44 @@ interface UserKtx : BaseKtx {
       offset, limit)
 
   /**
-   * Suspend function, which reports some messages from a user in a supergroup as spam; requires
-   * administrator rights in the supergroup.
+   * Suspend function, which returns support information for the given user; for Telegram support
+   * only.
    *
-   * @param supergroupId Supergroup identifier.  
-   * @param messageIds Identifiers of messages sent in the supergroup by the user. This list must be
-   * non-empty.
+   *
+   * @return [TdApi.UserSupportInfo] Contains custom information about the user.
    */
-  suspend fun User.reportSupergroupSpam(supergroupId: Long, messageIds: LongArray?) =
-      api.reportSupergroupSpam(supergroupId, this.id, messageIds)
+  suspend fun User.getSupportInfo() = api.getUserSupportInfo(this.id)
+
+  /**
+   * Suspend function, which handles a pending join request in a chat.
+   *
+   * @param chatId Chat identifier.  
+   * @param approve Pass true to approve the request; pass false to decline it.
+   */
+  suspend fun User.processChatJoinRequest(chatId: Long, approve: Boolean) =
+      api.processChatJoinRequest(chatId, this.id, approve)
+
+  /**
+   * Suspend function, which refunds a previously done payment in Telegram Stars.
+   *
+   * @param telegramPaymentChargeId Telegram payment identifier.
+   */
+  suspend fun User.refundStarPayment(telegramPaymentChargeId: String?) =
+      api.refundStarPayment(this.id, telegramPaymentChargeId)
+
+  /**
+   * Suspend function, which replaces existing sticker in a set. The function is equivalent to
+   * removeStickerFromSet, then addStickerToSet, then setStickerPositionInSet.
+   *
+   * @param name Sticker set name. The sticker set must be owned by the current user.  
+   * @param oldSticker Sticker to remove from the set.  
+   * @param newSticker Sticker to add to the set.
+   */
+  suspend fun User.replaceStickerInSet(
+    name: String?,
+    oldSticker: InputFile?,
+    newSticker: InputSticker?
+  ) = api.replaceStickerInSet(this.id, name, oldSticker, newSticker)
 
   /**
    * Suspend function, which updates the game score of the specified user in the game; for bots
@@ -232,7 +285,7 @@ interface UserKtx : BaseKtx {
    *
    * @param chatId The chat to which the message with the game belongs.  
    * @param messageId Identifier of the message.  
-   * @param editMessage True, if the message needs to be edited.  
+   * @param editMessage Pass true to edit the game message to include the current scoreboard.  
    * @param score The new score.  
    * @param force Pass true to update the score even if it decreases. If the score is 0, the user
    * will be deleted from the high score table.
@@ -251,7 +304,7 @@ interface UserKtx : BaseKtx {
    * Suspend function, which updates the game score of the specified user in a game; for bots only.
    *
    * @param inlineMessageId Inline message identifier.  
-   * @param editMessage True, if the message needs to be edited.  
+   * @param editMessage Pass true to edit the game message to include the current scoreboard.  
    * @param score The new score.  
    * @param force Pass true to update the score even if it decreases. If the score is 0, the user
    * will be deleted from the high score table.
@@ -264,6 +317,14 @@ interface UserKtx : BaseKtx {
   ) = api.setInlineGameScore(inlineMessageId, editMessage, this.id, score, force)
 
   /**
+   * Suspend function, which sets menu button for the given user or for all users; for bots only.
+   *
+   * @param menuButton New menu button.
+   */
+  suspend fun User.setMenuButton(menuButton: BotMenuButton?) = api.setMenuButton(this.id,
+      menuButton)
+
+  /**
    * Suspend function, which informs the user that some of the elements in their Telegram Passport
    * contain errors; for bots only. The user will not be able to resend the elements, until the errors
    * are fixed.
@@ -274,16 +335,36 @@ interface UserKtx : BaseKtx {
       api.setPassportElementErrors(this.id, errors)
 
   /**
-   * Suspend function, which sets a sticker set thumbnail; for bots only. Returns the sticker set.
+   * Suspend function, which sets a sticker set thumbnail.
    *
-   * @param name Sticker set name.  
-   * @param thumbnail Thumbnail to set in PNG or TGS format; pass null to remove the sticker set
-   * thumbnail. Animated thumbnail must be set for animated sticker sets and only for them.
-   *
-   * @return [TdApi.StickerSet] Represents a sticker set.
+   * @param name Sticker set name. The sticker set must be owned by the current user.  
+   * @param thumbnail Thumbnail to set; pass null to remove the sticker set thumbnail.  
+   * @param format Format of the thumbnail; pass null if thumbnail is removed.
    */
-  suspend fun User.setStickerSetThumbnail(name: String?, thumbnail: InputFile?) =
-      api.setStickerSetThumbnail(this.id, name, thumbnail)
+  suspend fun User.setStickerSetThumbnail(
+    name: String?,
+    thumbnail: InputFile?,
+    format: StickerFormat?
+  ) = api.setStickerSetThumbnail(this.id, name, thumbnail, format)
+
+  /**
+   * Suspend function, which changes a personal profile photo of a contact user.
+   *
+   * @param photo Profile photo to set; pass null to delete the photo; inputChatPhotoPrevious isn't
+   * supported in this function.
+   */
+  suspend fun User.setPersonalProfilePhoto(photo: InputChatPhoto?) =
+      api.setUserPersonalProfilePhoto(this.id, photo)
+
+  /**
+   * Suspend function, which sets support information for the given user; for Telegram support only.
+   *
+   * @param message New information message.
+   *
+   * @return [TdApi.UserSupportInfo] Contains custom information about the user.
+   */
+  suspend fun User.setSupportInfo(message: FormattedText?) = api.setUserSupportInfo(this.id,
+      message)
 
   /**
    * Suspend function, which shares the phone number of the current user with a mutual contact.
@@ -292,23 +373,34 @@ interface UserKtx : BaseKtx {
   suspend fun User.sharePhoneNumber() = api.sharePhoneNumber(this.id)
 
   /**
-   * Suspend function, which changes the owner of a chat. The current user must be a current owner
-   * of the chat. Use the method canTransferOwnership to check whether the ownership can be transferred
-   * from the current session. Available only for supergroups and channel chats.
+   * Suspend function, which suggests a profile photo to another regular user with common messages.
+   *
+   * @param photo Profile photo to suggest; inputChatPhotoPrevious isn't supported in this function.
+   */
+  suspend fun User.suggestProfilePhoto(photo: InputChatPhoto?) =
+      api.suggestUserProfilePhoto(this.id, photo)
+
+  /**
+   * Suspend function, which changes the owner of a chat; requires owner privileges in the chat. Use
+   * the method canTransferOwnership to check whether the ownership can be transferred from the current
+   * session. Available only for supergroups and channel chats.
    *
    * @param chatId Chat identifier.  
-   * @param password The password of the current user.
+   * @param password The 2-step verification password of the current user.
    */
   suspend fun User.transferChatOwnership(chatId: Long, password: String?) =
       api.transferChatOwnership(chatId, this.id, password)
 
   /**
-   * Suspend function, which uploads a PNG image with a sticker; returns the uploaded file.
+   * Suspend function, which uploads a file with a sticker; returns the uploaded file.
    *
-   * @param sticker Sticker file to upload.
+   * @param stickerFormat Sticker format.  
+   * @param sticker File file to upload; must fit in a 512x512 square. For WEBP stickers the file
+   * must be in WEBP or PNG format, which will be converted to WEBP server-side. See
+   * https://core.telegram.org/animated_stickers#technical-requirements for technical requirements.
    *
    * @return [TdApi.File] Represents a file.
    */
-  suspend fun User.uploadStickerFile(sticker: InputSticker?) = api.uploadStickerFile(this.id,
-      sticker)
+  suspend fun User.uploadStickerFile(stickerFormat: StickerFormat?, sticker: InputFile?) =
+      api.uploadStickerFile(this.id, stickerFormat, sticker)
 }

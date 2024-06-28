@@ -9,19 +9,29 @@ import kotlin.String
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.telegram.core.TelegramFlow
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.AuthorizationState
-import org.drinkless.td.libcore.telegram.TdApi.ConnectionState
-import org.drinkless.td.libcore.telegram.TdApi.UpdateLanguagePackStrings
-import org.drinkless.td.libcore.telegram.TdApi.UpdateNewChosenInlineResult
-import org.drinkless.td.libcore.telegram.TdApi.UpdateNewCustomQuery
-import org.drinkless.td.libcore.telegram.TdApi.UpdateNewInlineQuery
-import org.drinkless.td.libcore.telegram.TdApi.UpdateNewPreCheckoutQuery
-import org.drinkless.td.libcore.telegram.TdApi.UpdateNewShippingQuery
-import org.drinkless.td.libcore.telegram.TdApi.UpdateOption
-import org.drinkless.td.libcore.telegram.TdApi.UpdateSelectedBackground
-import org.drinkless.td.libcore.telegram.TdApi.UpdateSuggestedActions
-import org.drinkless.td.libcore.telegram.TdApi.UpdateTermsOfService
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.AttachmentMenuBot
+import org.drinkless.tdlib.TdApi.AuthorizationState
+import org.drinkless.tdlib.TdApi.BusinessConnection
+import org.drinkless.tdlib.TdApi.CloseBirthdayUser
+import org.drinkless.tdlib.TdApi.ConnectionState
+import org.drinkless.tdlib.TdApi.ReactionType
+import org.drinkless.tdlib.TdApi.UnconfirmedSession
+import org.drinkless.tdlib.TdApi.UpdateApplicationVerificationRequired
+import org.drinkless.tdlib.TdApi.UpdateAutosaveSettings
+import org.drinkless.tdlib.TdApi.UpdateDefaultBackground
+import org.drinkless.tdlib.TdApi.UpdateForumTopicInfo
+import org.drinkless.tdlib.TdApi.UpdateLanguagePackStrings
+import org.drinkless.tdlib.TdApi.UpdateNewChosenInlineResult
+import org.drinkless.tdlib.TdApi.UpdateNewCustomQuery
+import org.drinkless.tdlib.TdApi.UpdateNewInlineQuery
+import org.drinkless.tdlib.TdApi.UpdateNewPreCheckoutQuery
+import org.drinkless.tdlib.TdApi.UpdateNewShippingQuery
+import org.drinkless.tdlib.TdApi.UpdateOption
+import org.drinkless.tdlib.TdApi.UpdateSpeechRecognitionTrial
+import org.drinkless.tdlib.TdApi.UpdateStarRevenueStatus
+import org.drinkless.tdlib.TdApi.UpdateSuggestedActions
+import org.drinkless.tdlib.TdApi.UpdateTermsOfService
 
 /**
  * emits [AuthorizationState] if the user authorization state has changed.
@@ -31,14 +41,27 @@ fun TelegramFlow.authorizationStateFlow(): Flow<AuthorizationState> =
     .mapNotNull { it.authorizationState }
 
 /**
+ * emits [UpdateForumTopicInfo] if basic information about a topic in a forum chat was changed.
+ */
+fun TelegramFlow.forumTopicInfoFlow(): Flow<UpdateForumTopicInfo> = this.getUpdatesFlowOfType()
+
+/**
+ * emits [UpdateApplicationVerificationRequired] if a request can't be completed unless application
+ * verification is performed; for official mobile applications only. The method
+ * setApplicationVerificationToken must be called once the verification is completed or failed.
+ */
+fun TelegramFlow.applicationVerificationRequiredFlow(): Flow<UpdateApplicationVerificationRequired>
+    = this.getUpdatesFlowOfType()
+
+/**
  * emits [UpdateOption] if an option changed its value.
  */
 fun TelegramFlow.optionFlow(): Flow<UpdateOption> = this.getUpdatesFlowOfType()
 
 /**
- * emits [UpdateSelectedBackground] if the selected background has changed.
+ * emits [UpdateDefaultBackground] if the default background has changed.
  */
-fun TelegramFlow.selectedBackgroundFlow(): Flow<UpdateSelectedBackground> =
+fun TelegramFlow.defaultBackgroundFlow(): Flow<UpdateDefaultBackground> =
     this.getUpdatesFlowOfType()
 
 /**
@@ -63,6 +86,50 @@ fun TelegramFlow.connectionStateFlow(): Flow<ConnectionState> =
 fun TelegramFlow.termsOfServiceFlow(): Flow<UpdateTermsOfService> = this.getUpdatesFlowOfType()
 
 /**
+ * emits session [UnconfirmedSession] if the first unconfirmed session has changed.
+ */
+fun TelegramFlow.unconfirmedSessionFlow(): Flow<UnconfirmedSession> =
+    this.getUpdatesFlowOfType<TdApi.UpdateUnconfirmedSession>()
+    .mapNotNull { it.session }
+
+/**
+ * emits bots [AttachmentMenuBot[]] if the list of bots added to attachment or side menu has
+ * changed.
+ */
+fun TelegramFlow.attachmentMenuBotsFlow(): Flow<Array<AttachmentMenuBot>> =
+    this.getUpdatesFlowOfType<TdApi.UpdateAttachmentMenuBots>()
+    .mapNotNull { it.bots }
+
+/**
+ * emits emojis [String[]] if the list of active emoji reactions has changed.
+ */
+fun TelegramFlow.activeEmojiReactionsFlow(): Flow<Array<String>> =
+    this.getUpdatesFlowOfType<TdApi.UpdateActiveEmojiReactions>()
+    .mapNotNull { it.emojis }
+
+/**
+ * emits [ReactionType] if the type of default reaction has changed.
+ */
+fun TelegramFlow.defaultReactionTypeFlow(): Flow<ReactionType> =
+    this.getUpdatesFlowOfType<TdApi.UpdateDefaultReactionType>()
+    .mapNotNull { it.reactionType }
+
+/**
+ * emits [UpdateStarRevenueStatus] if the Telegram star revenue earned by a bot or a chat has
+ * changed. If star transactions screen of the chat is opened, then getStarTransactions may be called
+ * to fetch new transactions.
+ */
+fun TelegramFlow.starRevenueStatusFlow(): Flow<UpdateStarRevenueStatus> =
+    this.getUpdatesFlowOfType()
+
+/**
+ * emits [UpdateSpeechRecognitionTrial] if the parameters of speech recognition without Telegram
+ * Premium subscription has changed.
+ */
+fun TelegramFlow.speechRecognitionTrialFlow(): Flow<UpdateSpeechRecognitionTrial> =
+    this.getUpdatesFlowOfType()
+
+/**
  * emits emojis [String[]] if the list of supported dice emojis has changed.
  */
 fun TelegramFlow.diceEmojisFlow(): Flow<Array<String>> =
@@ -73,6 +140,26 @@ fun TelegramFlow.diceEmojisFlow(): Flow<Array<String>> =
  * emits [UpdateSuggestedActions] if the list of suggested to the user actions has changed.
  */
 fun TelegramFlow.suggestedActionsFlow(): Flow<UpdateSuggestedActions> = this.getUpdatesFlowOfType()
+
+/**
+ * emits closeBirthdayUsers [CloseBirthdayUser[]] if the list of contacts that had birthdays
+ * recently or will have birthday soon has changed.
+ */
+fun TelegramFlow.contactCloseBirthdaysFlow(): Flow<Array<CloseBirthdayUser>> =
+    this.getUpdatesFlowOfType<TdApi.UpdateContactCloseBirthdays>()
+    .mapNotNull { it.closeBirthdayUsers }
+
+/**
+ * emits [UpdateAutosaveSettings] if autosave settings for some type of chats were updated.
+ */
+fun TelegramFlow.autosaveSettingsFlow(): Flow<UpdateAutosaveSettings> = this.getUpdatesFlowOfType()
+
+/**
+ * emits connection [BusinessConnection] if a business connection has changed; for bots only.
+ */
+fun TelegramFlow.businessConnectionFlow(): Flow<BusinessConnection> =
+    this.getUpdatesFlowOfType<TdApi.UpdateBusinessConnection>()
+    .mapNotNull { it.connection }
 
 /**
  * emits [UpdateNewInlineQuery] if a new incoming inline query; for bots only.

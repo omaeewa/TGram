@@ -11,35 +11,53 @@ import kotlin.Long
 import kotlin.LongArray
 import kotlin.String
 import kotlinx.telegram.core.TelegramFlow
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.ChatList
-import org.drinkless.td.libcore.telegram.TdApi.FormattedText
-import org.drinkless.td.libcore.telegram.TdApi.FoundMessages
-import org.drinkless.td.libcore.telegram.TdApi.InputFile
-import org.drinkless.td.libcore.telegram.TdApi.InputMessageContent
-import org.drinkless.td.libcore.telegram.TdApi.Location
-import org.drinkless.td.libcore.telegram.TdApi.Message
-import org.drinkless.td.libcore.telegram.TdApi.MessageLink
-import org.drinkless.td.libcore.telegram.TdApi.MessageLinkInfo
-import org.drinkless.td.libcore.telegram.TdApi.MessageSchedulingState
-import org.drinkless.td.libcore.telegram.TdApi.MessageSendOptions
-import org.drinkless.td.libcore.telegram.TdApi.MessageSender
-import org.drinkless.td.libcore.telegram.TdApi.MessageSenders
-import org.drinkless.td.libcore.telegram.TdApi.MessageStatistics
-import org.drinkless.td.libcore.telegram.TdApi.MessageThreadInfo
-import org.drinkless.td.libcore.telegram.TdApi.Messages
-import org.drinkless.td.libcore.telegram.TdApi.ReplyMarkup
-import org.drinkless.td.libcore.telegram.TdApi.SearchMessagesFilter
-import org.drinkless.td.libcore.telegram.TdApi.Text
-import org.drinkless.td.libcore.telegram.TdApi.Users
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.AddedReactions
+import org.drinkless.tdlib.TdApi.AvailableReactions
+import org.drinkless.tdlib.TdApi.BlockList
+import org.drinkless.tdlib.TdApi.BusinessAwayMessageSettings
+import org.drinkless.tdlib.TdApi.BusinessGreetingMessageSettings
+import org.drinkless.tdlib.TdApi.BusinessMessage
+import org.drinkless.tdlib.TdApi.BusinessMessages
+import org.drinkless.tdlib.TdApi.ChatList
+import org.drinkless.tdlib.TdApi.FormattedText
+import org.drinkless.tdlib.TdApi.FoundChatMessages
+import org.drinkless.tdlib.TdApi.FoundMessages
+import org.drinkless.tdlib.TdApi.InputFile
+import org.drinkless.tdlib.TdApi.InputMessageContent
+import org.drinkless.tdlib.TdApi.InputMessageReplyTo
+import org.drinkless.tdlib.TdApi.InputTextQuote
+import org.drinkless.tdlib.TdApi.Location
+import org.drinkless.tdlib.TdApi.Message
+import org.drinkless.tdlib.TdApi.MessageAutoDeleteTime
+import org.drinkless.tdlib.TdApi.MessageEffect
+import org.drinkless.tdlib.TdApi.MessageLink
+import org.drinkless.tdlib.TdApi.MessageLinkInfo
+import org.drinkless.tdlib.TdApi.MessageSchedulingState
+import org.drinkless.tdlib.TdApi.MessageSendOptions
+import org.drinkless.tdlib.TdApi.MessageSender
+import org.drinkless.tdlib.TdApi.MessageSenders
+import org.drinkless.tdlib.TdApi.MessageSource
+import org.drinkless.tdlib.TdApi.MessageStatistics
+import org.drinkless.tdlib.TdApi.MessageThreadInfo
+import org.drinkless.tdlib.TdApi.MessageViewers
+import org.drinkless.tdlib.TdApi.Messages
+import org.drinkless.tdlib.TdApi.PublicForwards
+import org.drinkless.tdlib.TdApi.QuickReplyMessage
+import org.drinkless.tdlib.TdApi.QuickReplyMessages
+import org.drinkless.tdlib.TdApi.ReactionType
+import org.drinkless.tdlib.TdApi.ReplyMarkup
+import org.drinkless.tdlib.TdApi.SavedMessagesTags
+import org.drinkless.tdlib.TdApi.SearchMessagesFilter
+import org.drinkless.tdlib.TdApi.Text
 
 /**
  * Suspend function, which adds a local message to a chat. The message is persistent across
  * application restarts only if the message database is used. Returns the added message.
  *
  * @param chatId Target chat.  
- * @param sender The sender of the message.  
- * @param replyToMessageId Identifier of the message to reply to or 0.  
+ * @param senderId Identifier of the sender of the message.  
+ * @param replyTo Information about the message or story to be replied; pass null if none.  
  * @param disableNotification Pass true to disable notification for the message.  
  * @param inputMessageContent The content of the message to be added.
  *
@@ -47,20 +65,91 @@ import org.drinkless.td.libcore.telegram.TdApi.Users
  */
 suspend fun TelegramFlow.addLocalMessage(
   chatId: Long,
-  sender: MessageSender?,
-  replyToMessageId: Long,
+  senderId: MessageSender?,
+  replyTo: InputMessageReplyTo?,
   disableNotification: Boolean,
   inputMessageContent: InputMessageContent?
-): Message = this.sendFunctionAsync(TdApi.AddLocalMessage(chatId, sender, replyToMessageId,
+): Message = this.sendFunctionAsync(TdApi.AddLocalMessage(chatId, senderId, replyTo,
     disableNotification, inputMessageContent))
+
+/**
+ * Suspend function, which adds a reaction or a tag to a message. Use getMessageAvailableReactions
+ * to receive the list of available reactions for the message.
+ *
+ * @param chatId Identifier of the chat to which the message belongs.  
+ * @param messageId Identifier of the message.  
+ * @param reactionType Type of the reaction to add.  
+ * @param isBig Pass true if the reaction is added with a big animation.  
+ * @param updateRecentReactions Pass true if the reaction needs to be added to recent reactions;
+ * tags are never added to the list of recent reactions.
+ */
+suspend fun TelegramFlow.addMessageReaction(
+  chatId: Long,
+  messageId: Long,
+  reactionType: ReactionType?,
+  isBig: Boolean,
+  updateRecentReactions: Boolean
+) = this.sendFunctionLaunch(TdApi.AddMessageReaction(chatId, messageId, reactionType, isBig,
+    updateRecentReactions))
+
+/**
+ * Suspend function, which adds a message to a quick reply shortcut. If shortcut doesn't exist and
+ * there are less than getOption(&quot;quick_reply_shortcut_count_max&quot;) shortcuts, then a new
+ * shortcut is created. The shortcut must not contain more than
+ * getOption(&quot;quick_reply_shortcut_message_count_max&quot;) messages after adding the new message.
+ * Returns the added message.
+ *
+ * @param shortcutName Name of the target shortcut.  
+ * @param replyToMessageId Identifier of a quick reply message in the same shortcut to be replied;
+ * pass 0 if none.  
+ * @param inputMessageContent The content of the message to be added; inputMessagePoll,
+ * inputMessageForwarded and inputMessageLocation with livePeriod aren't supported.
+ *
+ * @return [QuickReplyMessage] Describes a message that can be used for quick reply.
+ */
+suspend fun TelegramFlow.addQuickReplyShortcutMessage(
+  shortcutName: String?,
+  replyToMessageId: Long,
+  inputMessageContent: InputMessageContent?
+): QuickReplyMessage = this.sendFunctionAsync(TdApi.AddQuickReplyShortcutMessage(shortcutName,
+    replyToMessageId, inputMessageContent))
+
+/**
+ * Suspend function, which adds 2-10 messages grouped together into an album to a quick reply
+ * shortcut. Currently, only audio, document, photo and video messages can be grouped into an album.
+ * Documents and audio files can be only grouped in an album with messages of the same type. Returns
+ * sent messages.
+ *
+ * @param shortcutName Name of the target shortcut.  
+ * @param replyToMessageId Identifier of a quick reply message in the same shortcut to be replied;
+ * pass 0 if none.  
+ * @param inputMessageContents Contents of messages to be sent. At most 10 messages can be added to
+ * an album. All messages must have the same value of showCaptionAboveMedia.
+ *
+ * @return [QuickReplyMessages] Contains a list of quick reply messages.
+ */
+suspend fun TelegramFlow.addQuickReplyShortcutMessageAlbum(
+  shortcutName: String?,
+  replyToMessageId: Long,
+  inputMessageContents: Array<InputMessageContent>?
+): QuickReplyMessages = this.sendFunctionAsync(TdApi.AddQuickReplyShortcutMessageAlbum(shortcutName,
+    replyToMessageId, inputMessageContents))
+
+/**
+ * Suspend function, which allows the specified bot to send messages to the user.
+ *
+ * @param botUserId Identifier of the target bot.
+ */
+suspend fun TelegramFlow.allowBotToSendMessages(botUserId: Long) =
+    this.sendFunctionLaunch(TdApi.AllowBotToSendMessages(botUserId))
 
 /**
  * Suspend function, which blocks an original sender of a message in the Replies chat.
  *
  * @param messageId The identifier of an incoming message in the Replies chat.  
- * @param deleteMessage Pass true if the message must be deleted.  
- * @param deleteAllMessages Pass true if all messages from the same sender must be deleted.  
- * @param reportSpam Pass true if the sender must be reported to the Telegram moderators.
+ * @param deleteMessage Pass true to delete the message.  
+ * @param deleteAllMessages Pass true to delete all messages from the same sender.  
+ * @param reportSpam Pass true to report the sender to the Telegram moderators.
  */
 suspend fun TelegramFlow.blockMessageSenderFromReplies(
   messageId: Long,
@@ -71,9 +160,18 @@ suspend fun TelegramFlow.blockMessageSenderFromReplies(
     deleteAllMessages, reportSpam))
 
 /**
- * Suspend function, which clears draft messages in all chats.
+ * Suspend function, which checks whether the specified bot can send messages to the user. Returns a
+ * 404 error if can't and the access can be granted by call to allowBotToSendMessages.
  *
- * @param excludeSecretChats If true, local draft messages in secret chats will not be cleared.
+ * @param botUserId Identifier of the target bot.
+ */
+suspend fun TelegramFlow.canBotSendMessages(botUserId: Long) =
+    this.sendFunctionLaunch(TdApi.CanBotSendMessages(botUserId))
+
+/**
+ * Suspend function, which clears message drafts in all chats.
+ *
+ * @param excludeSecretChats Pass true to keep local message drafts in secret chats.
  */
 suspend fun TelegramFlow.clearAllDraftMessages(excludeSecretChats: Boolean) =
     this.sendFunctionLaunch(TdApi.ClearAllDraftMessages(excludeSecretChats))
@@ -83,8 +181,8 @@ suspend fun TelegramFlow.clearAllDraftMessages(excludeSecretChats: Boolean) =
  *
  * @param chatId Chat identifier.  
  * @param messageIds Identifiers of the messages to be deleted.  
- * @param revoke Pass true to try to delete messages for all chat members. Always true for
- * supergroups, channels and secret chats.
+ * @param revoke Pass true to delete messages for all chat members. Always true for supergroups,
+ * channels and secret chats.
  */
 suspend fun TelegramFlow.deleteMessages(
   chatId: Long,
@@ -93,18 +191,167 @@ suspend fun TelegramFlow.deleteMessages(
 ) = this.sendFunctionLaunch(TdApi.DeleteMessages(chatId, messageIds, revoke))
 
 /**
+ * Suspend function, which deletes specified quick reply messages.
+ *
+ * @param shortcutId Unique identifier of the quick reply shortcut to which the messages belong.  
+ * @param messageIds Unique identifiers of the messages.
+ */
+suspend fun TelegramFlow.deleteQuickReplyShortcutMessages(shortcutId: Int, messageIds: LongArray?) =
+    this.sendFunctionLaunch(TdApi.DeleteQuickReplyShortcutMessages(shortcutId, messageIds))
+
+/**
+ * Suspend function, which deletes all messages in a Saved Messages topic.
+ *
+ * @param savedMessagesTopicId Identifier of Saved Messages topic which messages will be deleted.
+ */
+suspend fun TelegramFlow.deleteSavedMessagesTopicHistory(savedMessagesTopicId: Long) =
+    this.sendFunctionLaunch(TdApi.DeleteSavedMessagesTopicHistory(savedMessagesTopicId))
+
+/**
+ * Suspend function, which edits the caption of a message sent on behalf of a business account; for
+ * bots only.
+ *
+ * @param businessConnectionId Unique identifier of business connection on behalf of which the
+ * message was sent.  
+ * @param chatId The chat the message belongs to.  
+ * @param messageId Identifier of the message.  
+ * @param replyMarkup The new message reply markup; pass null if none.  
+ * @param caption New message content caption; pass null to remove caption;
+ * 0-getOption(&quot;message_caption_length_max&quot;) characters.  
+ * @param showCaptionAboveMedia Pass true to show the caption above the media; otherwise, caption
+ * will be shown below the media. Can be true only for animation, photo, and video messages.
+ *
+ * @return [BusinessMessage] Describes a message from a business account as received by a bot.
+ */
+suspend fun TelegramFlow.editBusinessMessageCaption(
+  businessConnectionId: String?,
+  chatId: Long,
+  messageId: Long,
+  replyMarkup: ReplyMarkup?,
+  caption: FormattedText?,
+  showCaptionAboveMedia: Boolean
+): BusinessMessage = this.sendFunctionAsync(TdApi.EditBusinessMessageCaption(businessConnectionId,
+    chatId, messageId, replyMarkup, caption, showCaptionAboveMedia))
+
+/**
+ * Suspend function, which edits the content of a live location in a message sent on behalf of a
+ * business account; for bots only.
+ *
+ * @param businessConnectionId Unique identifier of business connection on behalf of which the
+ * message was sent.  
+ * @param chatId The chat the message belongs to.  
+ * @param messageId Identifier of the message.  
+ * @param replyMarkup The new message reply markup; pass null if none.  
+ * @param location New location content of the message; pass null to stop sharing the live location.
+ *  
+ * @param livePeriod New time relative to the message send date, for which the location can be
+ * updated, in seconds. If 0x7FFFFFFF specified, then the location can be updated forever. Otherwise,
+ * must not exceed the current livePeriod by more than a day, and the live location expiration date
+ * must remain in the next 90 days. Pass 0 to keep the current livePeriod.  
+ * @param heading The new direction in which the location moves, in degrees; 1-360. Pass 0 if
+ * unknown.  
+ * @param proximityAlertRadius The new maximum distance for proximity alerts, in meters (0-100000).
+ * Pass 0 if the notification is disabled.
+ *
+ * @return [BusinessMessage] Describes a message from a business account as received by a bot.
+ */
+suspend fun TelegramFlow.editBusinessMessageLiveLocation(
+  businessConnectionId: String?,
+  chatId: Long,
+  messageId: Long,
+  replyMarkup: ReplyMarkup?,
+  location: Location?,
+  livePeriod: Int,
+  heading: Int,
+  proximityAlertRadius: Int
+): BusinessMessage =
+    this.sendFunctionAsync(TdApi.EditBusinessMessageLiveLocation(businessConnectionId, chatId,
+    messageId, replyMarkup, location, livePeriod, heading, proximityAlertRadius))
+
+/**
+ * Suspend function, which edits the content of a message with an animation, an audio, a document, a
+ * photo or a video in a message sent on behalf of a business account; for bots only.
+ *
+ * @param businessConnectionId Unique identifier of business connection on behalf of which the
+ * message was sent.  
+ * @param chatId The chat the message belongs to.  
+ * @param messageId Identifier of the message.  
+ * @param replyMarkup The new message reply markup; pass null if none; for bots only.  
+ * @param inputMessageContent New content of the message. Must be one of the following types:
+ * inputMessageAnimation, inputMessageAudio, inputMessageDocument, inputMessagePhoto or
+ * inputMessageVideo.
+ *
+ * @return [BusinessMessage] Describes a message from a business account as received by a bot.
+ */
+suspend fun TelegramFlow.editBusinessMessageMedia(
+  businessConnectionId: String?,
+  chatId: Long,
+  messageId: Long,
+  replyMarkup: ReplyMarkup?,
+  inputMessageContent: InputMessageContent?
+): BusinessMessage = this.sendFunctionAsync(TdApi.EditBusinessMessageMedia(businessConnectionId,
+    chatId, messageId, replyMarkup, inputMessageContent))
+
+/**
+ * Suspend function, which edits the reply markup of a message sent on behalf of a business account;
+ * for bots only.
+ *
+ * @param businessConnectionId Unique identifier of business connection on behalf of which the
+ * message was sent.  
+ * @param chatId The chat the message belongs to.  
+ * @param messageId Identifier of the message.  
+ * @param replyMarkup The new message reply markup; pass null if none.
+ *
+ * @return [BusinessMessage] Describes a message from a business account as received by a bot.
+ */
+suspend fun TelegramFlow.editBusinessMessageReplyMarkup(
+  businessConnectionId: String?,
+  chatId: Long,
+  messageId: Long,
+  replyMarkup: ReplyMarkup?
+): BusinessMessage =
+    this.sendFunctionAsync(TdApi.EditBusinessMessageReplyMarkup(businessConnectionId, chatId,
+    messageId, replyMarkup))
+
+/**
+ * Suspend function, which edits the text of a text or game message sent on behalf of a business
+ * account; for bots only.
+ *
+ * @param businessConnectionId Unique identifier of business connection on behalf of which the
+ * message was sent.  
+ * @param chatId The chat the message belongs to.  
+ * @param messageId Identifier of the message.  
+ * @param replyMarkup The new message reply markup; pass null if none.  
+ * @param inputMessageContent New text content of the message. Must be of type inputMessageText.
+ *
+ * @return [BusinessMessage] Describes a message from a business account as received by a bot.
+ */
+suspend fun TelegramFlow.editBusinessMessageText(
+  businessConnectionId: String?,
+  chatId: Long,
+  messageId: Long,
+  replyMarkup: ReplyMarkup?,
+  inputMessageContent: InputMessageContent?
+): BusinessMessage = this.sendFunctionAsync(TdApi.EditBusinessMessageText(businessConnectionId,
+    chatId, messageId, replyMarkup, inputMessageContent))
+
+/**
  * Suspend function, which edits the caption of an inline message sent via a bot; for bots only.
  *
  * @param inlineMessageId Inline message identifier.  
  * @param replyMarkup The new message reply markup; pass null if none.  
  * @param caption New message content caption; pass null to remove caption;
- * 0-GetOption(&quot;message_caption_length_max&quot;) characters.
+ * 0-getOption(&quot;message_caption_length_max&quot;) characters.  
+ * @param showCaptionAboveMedia Pass true to show the caption above the media; otherwise, caption
+ * will be shown below the media. Can be true only for animation, photo, and video messages.
  */
 suspend fun TelegramFlow.editInlineMessageCaption(
   inlineMessageId: String?,
   replyMarkup: ReplyMarkup?,
-  caption: FormattedText?
-) = this.sendFunctionLaunch(TdApi.EditInlineMessageCaption(inlineMessageId, replyMarkup, caption))
+  caption: FormattedText?,
+  showCaptionAboveMedia: Boolean
+) = this.sendFunctionLaunch(TdApi.EditInlineMessageCaption(inlineMessageId, replyMarkup, caption,
+    showCaptionAboveMedia))
 
 /**
  * Suspend function, which edits the content of a live location in an inline message sent via a bot;
@@ -114,6 +361,10 @@ suspend fun TelegramFlow.editInlineMessageCaption(
  * @param replyMarkup The new message reply markup; pass null if none.  
  * @param location New location content of the message; pass null to stop sharing the live location.
  *  
+ * @param livePeriod New time relative to the message send date, for which the location can be
+ * updated, in seconds. If 0x7FFFFFFF specified, then the location can be updated forever. Otherwise,
+ * must not exceed the current livePeriod by more than a day, and the live location expiration date
+ * must remain in the next 90 days. Pass 0 to keep the current livePeriod.  
  * @param heading The new direction in which the location moves, in degrees; 1-360. Pass 0 if
  * unknown.  
  * @param proximityAlertRadius The new maximum distance for proximity alerts, in meters (0-100000).
@@ -123,10 +374,11 @@ suspend fun TelegramFlow.editInlineMessageLiveLocation(
   inlineMessageId: String?,
   replyMarkup: ReplyMarkup?,
   location: Location?,
+  livePeriod: Int,
   heading: Int,
   proximityAlertRadius: Int
 ) = this.sendFunctionLaunch(TdApi.EditInlineMessageLiveLocation(inlineMessageId, replyMarkup,
-    location, heading, proximityAlertRadius))
+    location, livePeriod, heading, proximityAlertRadius))
 
 /**
  * Suspend function, which edits the content of a message with an animation, an audio, a document, a
@@ -173,13 +425,15 @@ suspend fun TelegramFlow.editInlineMessageText(
 
 /**
  * Suspend function, which edits the message content caption. Returns the edited message after the
- * edit is completed on the server side.
+ * edit is completed on the server side. Can be used only if message.canBeEdited == true.
  *
  * @param chatId The chat the message belongs to.  
  * @param messageId Identifier of the message.  
  * @param replyMarkup The new message reply markup; pass null if none; for bots only.  
- * @param caption New message content caption; 0-GetOption(&quot;message_caption_length_max&quot;)
- * characters; pass null to remove caption.
+ * @param caption New message content caption; 0-getOption(&quot;message_caption_length_max&quot;)
+ * characters; pass null to remove caption.  
+ * @param showCaptionAboveMedia Pass true to show the caption above the media; otherwise, caption
+ * will be shown below the media. Can be true only for animation, photo, and video messages.
  *
  * @return [Message] Describes a message.
  */
@@ -187,20 +441,25 @@ suspend fun TelegramFlow.editMessageCaption(
   chatId: Long,
   messageId: Long,
   replyMarkup: ReplyMarkup?,
-  caption: FormattedText?
+  caption: FormattedText?,
+  showCaptionAboveMedia: Boolean
 ): Message = this.sendFunctionAsync(TdApi.EditMessageCaption(chatId, messageId, replyMarkup,
-    caption))
+    caption, showCaptionAboveMedia))
 
 /**
  * Suspend function, which edits the message content of a live location. Messages can be edited for
  * a limited period of time specified in the live location. Returns the edited message after the edit
- * is completed on the server side.
+ * is completed on the server side. Can be used only if message.canBeEdited == true.
  *
  * @param chatId The chat the message belongs to.  
  * @param messageId Identifier of the message.  
  * @param replyMarkup The new message reply markup; pass null if none; for bots only.  
  * @param location New location content of the message; pass null to stop sharing the live location.
  *  
+ * @param livePeriod New time relative to the message send date, for which the location can be
+ * updated, in seconds. If 0x7FFFFFFF specified, then the location can be updated forever. Otherwise,
+ * must not exceed the current livePeriod by more than a day, and the live location expiration date
+ * must remain in the next 90 days. Pass 0 to keep the current livePeriod.  
  * @param heading The new direction in which the location moves, in degrees; 1-360. Pass 0 if
  * unknown.  
  * @param proximityAlertRadius The new maximum distance for proximity alerts, in meters (0-100000).
@@ -213,10 +472,11 @@ suspend fun TelegramFlow.editMessageLiveLocation(
   messageId: Long,
   replyMarkup: ReplyMarkup?,
   location: Location?,
+  livePeriod: Int,
   heading: Int,
   proximityAlertRadius: Int
 ): Message = this.sendFunctionAsync(TdApi.EditMessageLiveLocation(chatId, messageId, replyMarkup,
-    location, heading, proximityAlertRadius))
+    location, livePeriod, heading, proximityAlertRadius))
 
 /**
  * Suspend function, which edits the content of a message with an animation, an audio, a document, a
@@ -224,7 +484,7 @@ suspend fun TelegramFlow.editMessageLiveLocation(
  * editMessageCaption instead. The media can't be edited if the message was set to self-destruct or to
  * a self-destructing media. The type of message content in an album can't be changed with exception of
  * replacing a photo with a video or vice versa. Returns the edited message after the edit is completed
- * on the server side.
+ * on the server side. Can be used only if message.canBeEdited == true.
  *
  * @param chatId The chat the message belongs to.  
  * @param messageId Identifier of the message.  
@@ -245,7 +505,7 @@ suspend fun TelegramFlow.editMessageMedia(
 
 /**
  * Suspend function, which edits the message reply markup; for bots only. Returns the edited message
- * after the edit is completed on the server side.
+ * after the edit is completed on the server side. Can be used only if message.canBeEdited == true.
  *
  * @param chatId The chat the message belongs to.  
  * @param messageId Identifier of the message.  
@@ -276,7 +536,8 @@ suspend fun TelegramFlow.editMessageSchedulingState(
 
 /**
  * Suspend function, which edits the text of a message (or a text of a game message). Returns the
- * edited message after the edit is completed on the server side.
+ * edited message after the edit is completed on the server side. Can be used only if
+ * message.canBeEdited == true.
  *
  * @param chatId The chat the message belongs to.  
  * @param messageId Identifier of the message.  
@@ -294,34 +555,53 @@ suspend fun TelegramFlow.editMessageText(
     inputMessageContent))
 
 /**
+ * Suspend function, which asynchronously edits the text, media or caption of a quick reply message.
+ * Use quickReplyMessage.canBeEdited to check whether a message can be edited. Text message can be
+ * edited only to a text message. The type of message content in an album can't be changed with
+ * exception of replacing a photo with a video or vice versa.
+ *
+ * @param shortcutId Unique identifier of the quick reply shortcut with the message.  
+ * @param messageId Identifier of the message.  
+ * @param inputMessageContent New content of the message. Must be one of the following types:
+ * inputMessageText, inputMessageAnimation, inputMessageAudio, inputMessageDocument, inputMessagePhoto
+ * or inputMessageVideo.
+ */
+suspend fun TelegramFlow.editQuickReplyMessage(
+  shortcutId: Int,
+  messageId: Long,
+  inputMessageContent: InputMessageContent?
+) = this.sendFunctionLaunch(TdApi.EditQuickReplyMessage(shortcutId, messageId, inputMessageContent))
+
+/**
  * Suspend function, which forwards previously sent messages. Returns the forwarded messages in the
  * same order as the message identifiers passed in messageIds. If a message can't be forwarded, null
  * will be returned instead of the message.
  *
  * @param chatId Identifier of the chat to which to forward messages.  
+ * @param messageThreadId If not 0, the message thread identifier in which the message will be sent;
+ * for forum threads only.  
  * @param fromChatId Identifier of the chat from which to forward messages.  
  * @param messageIds Identifiers of the messages to forward. Message identifiers must be in a
- * strictly increasing order. At most 100 messages can be forwarded simultaneously.  
+ * strictly increasing order. At most 100 messages can be forwarded simultaneously. A message can be
+ * forwarded only if message.canBeForwarded.  
  * @param options Options to be used to send the messages; pass null to use default options.  
- * @param sendCopy If true, content of the messages will be copied without reference to the original
+ * @param sendCopy Pass true to copy content of the messages without reference to the original
  * sender. Always true if the messages are forwarded to a secret chat or are local.  
- * @param removeCaption If true, media caption of message copies will be removed. Ignored if
- * sendCopy is false.  
- * @param onlyPreview If true, messages will not be forwarded and instead fake messages will be
- * returned.
+ * @param removeCaption Pass true to remove media captions of message copies. Ignored if sendCopy is
+ * false.
  *
  * @return [Messages] Contains a list of messages.
  */
 suspend fun TelegramFlow.forwardMessages(
   chatId: Long,
+  messageThreadId: Long,
   fromChatId: Long,
   messageIds: LongArray?,
   options: MessageSendOptions?,
   sendCopy: Boolean,
-  removeCaption: Boolean,
-  onlyPreview: Boolean
-): Messages = this.sendFunctionAsync(TdApi.ForwardMessages(chatId, fromChatId, messageIds, options,
-    sendCopy, removeCaption, onlyPreview))
+  removeCaption: Boolean
+): Messages = this.sendFunctionAsync(TdApi.ForwardMessages(chatId, messageThreadId, fromChatId,
+    messageIds, options, sendCopy, removeCaption))
 
 /**
  * Suspend function, which returns all active live locations that need to be updated by the
@@ -336,13 +616,25 @@ suspend fun TelegramFlow.getActiveLiveLocationMessages(): Messages =
 /**
  * Suspend function, which returns users and chats that were blocked by the current user.
  *
+ * @param blockList Block list from which to return users.  
  * @param offset Number of users and chats to skip in the result; must be non-negative.  
  * @param limit The maximum number of users and chats to return; up to 100.
  *
  * @return [MessageSenders] Represents a list of message senders.
  */
-suspend fun TelegramFlow.getBlockedMessageSenders(offset: Int, limit: Int): MessageSenders =
-    this.sendFunctionAsync(TdApi.GetBlockedMessageSenders(offset, limit))
+suspend fun TelegramFlow.getBlockedMessageSenders(
+  blockList: BlockList?,
+  offset: Int,
+  limit: Int
+): MessageSenders = this.sendFunctionAsync(TdApi.GetBlockedMessageSenders(blockList, offset, limit))
+
+/**
+ * Suspend function, which returns default message auto-delete time setting for new chats.
+ *
+ * @return [MessageAutoDeleteTime] Contains default auto-delete timer setting for new chats.
+ */
+suspend fun TelegramFlow.getDefaultMessageAutoDeleteTime(): MessageAutoDeleteTime =
+    this.sendFunctionAsync(TdApi.GetDefaultMessageAutoDeleteTime())
 
 /**
  * Suspend function, which returns information about a message.
@@ -354,6 +646,57 @@ suspend fun TelegramFlow.getBlockedMessageSenders(offset: Int, limit: Int): Mess
  */
 suspend fun TelegramFlow.getMessage(chatId: Long, messageId: Long): Message =
     this.sendFunctionAsync(TdApi.GetMessage(chatId, messageId))
+
+/**
+ * Suspend function, which returns reactions added for a message, along with their sender.
+ *
+ * @param chatId Identifier of the chat to which the message belongs.  
+ * @param messageId Identifier of the message.  
+ * @param reactionType Type of the reactions to return; pass null to return all added reactions.  
+ * @param offset Offset of the first entry to return as received from the previous request; use
+ * empty string to get the first chunk of results.  
+ * @param limit The maximum number of reactions to be returned; must be positive and can't be
+ * greater than 100.
+ *
+ * @return [AddedReactions] Represents a list of reactions added to a message.
+ */
+suspend fun TelegramFlow.getMessageAddedReactions(
+  chatId: Long,
+  messageId: Long,
+  reactionType: ReactionType?,
+  offset: String?,
+  limit: Int
+): AddedReactions = this.sendFunctionAsync(TdApi.GetMessageAddedReactions(chatId, messageId,
+    reactionType, offset, limit))
+
+/**
+ * Suspend function, which returns reactions, which can be added to a message. The list can change
+ * after updateActiveEmojiReactions, updateChatAvailableReactions for the chat, or
+ * updateMessageInteractionInfo for the message.
+ *
+ * @param chatId Identifier of the chat to which the message belongs.  
+ * @param messageId Identifier of the message.  
+ * @param rowSize Number of reaction per row, 5-25.
+ *
+ * @return [AvailableReactions] Represents a list of reactions that can be added to a message.
+ */
+suspend fun TelegramFlow.getMessageAvailableReactions(
+  chatId: Long,
+  messageId: Long,
+  rowSize: Int
+): AvailableReactions = this.sendFunctionAsync(TdApi.GetMessageAvailableReactions(chatId, messageId,
+    rowSize))
+
+/**
+ * Suspend function, which returns information about a message effect. Returns a 404 error if the
+ * effect is not found.
+ *
+ * @param effectId Unique identifier of the effect.
+ *
+ * @return [MessageEffect] Contains information about an effect added to a message.
+ */
+suspend fun TelegramFlow.getMessageEffect(effectId: Long): MessageEffect =
+    this.sendFunctionAsync(TdApi.GetMessageEffect(effectId))
 
 /**
  * Suspend function, which returns an HTML code for embedding the message. Available only for
@@ -377,7 +720,7 @@ suspend fun TelegramFlow.getMessageEmbeddingCode(
  *
  * @param chatId Identifier of a chat to which the messages will be imported. It must be an
  * identifier of a private chat with a mutual contact or an identifier of a supergroup chat with
- * canChangeInfo administrator right.
+ * canChangeInfo member right.
  *
  * @return [Text] Contains some text.
  */
@@ -391,23 +734,24 @@ suspend fun TelegramFlow.getMessageImportConfirmationText(chatId: Long): Text =
  *
  * @param chatId Identifier of the chat to which the message belongs.  
  * @param messageId Identifier of the message.  
- * @param mediaTimestamp If not 0, timestamp from which the video/audio/video note/voice note
+ * @param mediaTimestamp If not 0, timestamp from which the video/audio/video note/voice note/story
  * playing must start, in seconds. The media can be in the message content or in its web page preview. 
  * 
  * @param forAlbum Pass true to create a link for the whole media album.  
- * @param forComment Pass true to create a link to the message as a channel post comment, or from a
- * message thread.
+ * @param inMessageThread Pass true to create a link to the message as a channel post comment, in a
+ * message thread, or a forum topic.
  *
- * @return [MessageLink] Contains an HTTPS link to a message in a supergroup or channel.
+ * @return [MessageLink] Contains an HTTPS link to a message in a supergroup or channel, or a forum
+ * topic.
  */
 suspend fun TelegramFlow.getMessageLink(
   chatId: Long,
   messageId: Long,
   mediaTimestamp: Int,
   forAlbum: Boolean,
-  forComment: Boolean
+  inMessageThread: Boolean
 ): MessageLink = this.sendFunctionAsync(TdApi.GetMessageLink(chatId, messageId, mediaTimestamp,
-    forAlbum, forComment))
+    forAlbum, inMessageThread))
 
 /**
  * Suspend function, which returns information about a public or private message link. Can be called
@@ -415,14 +759,15 @@ suspend fun TelegramFlow.getMessageLink(
  *
  * @param url The message link.
  *
- * @return [MessageLinkInfo] Contains information about a link to a message in a chat.
+ * @return [MessageLinkInfo] Contains information about a link to a message or a forum topic in a
+ * chat.
  */
 suspend fun TelegramFlow.getMessageLinkInfo(url: String?): MessageLinkInfo =
     this.sendFunctionAsync(TdApi.GetMessageLinkInfo(url))
 
 /**
- * Suspend function, which returns information about a message, if it is available locally without
- * sending network request. This is an offline request.
+ * Suspend function, which returns information about a message, if it is available without sending
+ * network request. This is an offline request.
  *
  * @param chatId Identifier of the chat the message belongs to.  
  * @param messageId Identifier of the message to get.
@@ -434,24 +779,26 @@ suspend fun TelegramFlow.getMessageLocally(chatId: Long, messageId: Long): Messa
 
 /**
  * Suspend function, which returns forwarded copies of a channel message to different public
- * channels. For optimal performance, the number of returned messages is chosen by TDLib.
+ * channels and public reposts as a story. Can be used only if message.canGetStatistics == true. For
+ * optimal performance, the number of returned messages and stories is chosen by TDLib.
  *
  * @param chatId Chat identifier of the message.  
  * @param messageId Message identifier.  
  * @param offset Offset of the first entry to return as received from the previous request; use
- * empty string to get first chunk of results.  
- * @param limit The maximum number of messages to be returned; must be positive and can't be greater
- * than 100. For optimal performance, the number of returned messages is chosen by TDLib and can be
- * smaller than the specified limit.
+ * empty string to get the first chunk of results.  
+ * @param limit The maximum number of messages and stories to be returned; must be positive and
+ * can't be greater than 100. For optimal performance, the number of returned objects is chosen by
+ * TDLib and can be smaller than the specified limit.
  *
- * @return [FoundMessages] Contains a list of messages found by a search.
+ * @return [PublicForwards] Represents a list of public forwards and reposts as a story of a message
+ * or a story.
  */
 suspend fun TelegramFlow.getMessagePublicForwards(
   chatId: Long,
   messageId: Long,
   offset: String?,
   limit: Int
-): FoundMessages = this.sendFunctionAsync(TdApi.GetMessagePublicForwards(chatId, messageId, offset,
+): PublicForwards = this.sendFunctionAsync(TdApi.GetMessagePublicForwards(chatId, messageId, offset,
     limit))
 
 /**
@@ -492,8 +839,8 @@ suspend fun TelegramFlow.getMessageThread(chatId: Long, messageId: Long): Messag
  * @param messageId Message identifier, which thread history needs to be returned.  
  * @param fromMessageId Identifier of the message starting from which history must be fetched; use 0
  * to get results from the last message.  
- * @param offset Specify 0 to get results from exactly the fromMessageId or a negative offset up to
- * 99 to get additionally some newer messages.  
+ * @param offset Specify 0 to get results from exactly the message fromMessageId or a negative
+ * offset up to 99 to get additionally some newer messages.  
  * @param limit The maximum number of messages to be returned; must be positive and can't be greater
  * than 100. If the offset is negative, the limit must be greater than or equal to -offset. For optimal
  * performance, the number of returned messages is chosen by TDLib and can be smaller than the
@@ -518,9 +865,9 @@ suspend fun TelegramFlow.getMessageThreadHistory(
  * @param chatId Chat identifier.  
  * @param messageId Identifier of the message.
  *
- * @return [Users] Represents a list of users.
+ * @return [MessageViewers] Represents a list of message viewers.
  */
-suspend fun TelegramFlow.getMessageViewers(chatId: Long, messageId: Long): Users =
+suspend fun TelegramFlow.getMessageViewers(chatId: Long, messageId: Long): MessageViewers =
     this.sendFunctionAsync(TdApi.GetMessageViewers(chatId, messageId))
 
 /**
@@ -536,9 +883,12 @@ suspend fun TelegramFlow.getMessages(chatId: Long, messageIds: LongArray?): Mess
     this.sendFunctionAsync(TdApi.GetMessages(chatId, messageIds))
 
 /**
- * Suspend function, which returns information about a message that is replied by a given message.
- * Also returns the pinned message, the game message, and the invoice message for messages of the types
- * messagePinMessage, messageGameScore, and messagePaymentSuccessful respectively.
+ * Suspend function, which returns information about a non-bundled message that is replied by a
+ * given message. Also, returns the pinned message, the game message, the invoice message, the message
+ * with a previously set same background, the giveaway message, and the topic creation message for
+ * messages of the types messagePinMessage, messageGameScore, messagePaymentSuccessful,
+ * messageChatSetBackground, messagePremiumGiveawayCompleted and topic messages without non-bundled
+ * replied message respectively.
  *
  * @param chatId Identifier of the chat the message belongs to.  
  * @param messageId Identifier of the reply message.
@@ -549,11 +899,46 @@ suspend fun TelegramFlow.getRepliedMessage(chatId: Long, messageId: Long): Messa
     this.sendFunctionAsync(TdApi.GetRepliedMessage(chatId, messageId))
 
 /**
+ * Suspend function, which returns tags used in Saved Messages or a Saved Messages topic.
+ *
+ * @param savedMessagesTopicId Identifier of Saved Messages topic which tags will be returned; pass
+ * 0 to get all Saved Messages tags.
+ *
+ * @return [SavedMessagesTags] Contains a list of tags used in Saved Messages.
+ */
+suspend fun TelegramFlow.getSavedMessagesTags(savedMessagesTopicId: Long): SavedMessagesTags =
+    this.sendFunctionAsync(TdApi.GetSavedMessagesTags(savedMessagesTopicId))
+
+/**
+ * Suspend function, which returns messages in a Saved Messages topic. The messages are returned in
+ * a reverse chronological order (i.e., in order of decreasing messageId).
+ *
+ * @param savedMessagesTopicId Identifier of Saved Messages topic which messages will be fetched.  
+ * @param fromMessageId Identifier of the message starting from which messages must be fetched; use
+ * 0 to get results from the last message.  
+ * @param offset Specify 0 to get results from exactly the message fromMessageId or a negative
+ * offset up to 99 to get additionally some newer messages.  
+ * @param limit The maximum number of messages to be returned; must be positive and can't be greater
+ * than 100. If the offset is negative, the limit must be greater than or equal to -offset. For optimal
+ * performance, the number of returned messages is chosen by TDLib and can be smaller than the
+ * specified limit.
+ *
+ * @return [Messages] Contains a list of messages.
+ */
+suspend fun TelegramFlow.getSavedMessagesTopicHistory(
+  savedMessagesTopicId: Long,
+  fromMessageId: Long,
+  offset: Int,
+  limit: Int
+): Messages = this.sendFunctionAsync(TdApi.GetSavedMessagesTopicHistory(savedMessagesTopicId,
+    fromMessageId, offset, limit))
+
+/**
  * Suspend function, which imports messages exported from another app.
  *
  * @param chatId Identifier of a chat to which the messages will be imported. It must be an
  * identifier of a private chat with a mutual contact or an identifier of a supergroup chat with
- * canChangeInfo administrator right.  
+ * canChangeInfo member right.  
  * @param messageFile File with messages to import. Only inputFileLocal and inputFileGenerated are
  * supported. The file must not be previously uploaded.  
  * @param attachedFiles Files used in the imported messages. Only inputFileLocal and
@@ -564,6 +949,27 @@ suspend fun TelegramFlow.importMessages(
   messageFile: InputFile?,
   attachedFiles: Array<InputFile>?
 ) = this.sendFunctionLaunch(TdApi.ImportMessages(chatId, messageFile, attachedFiles))
+
+/**
+ * Suspend function, which loads quick reply messages that can be sent by a given quick reply
+ * shortcut. The loaded messages will be sent through updateQuickReplyShortcutMessages.
+ *
+ * @param shortcutId Unique identifier of the quick reply shortcut.
+ */
+suspend fun TelegramFlow.loadQuickReplyShortcutMessages(shortcutId: Int) =
+    this.sendFunctionLaunch(TdApi.LoadQuickReplyShortcutMessages(shortcutId))
+
+/**
+ * Suspend function, which loads more Saved Messages topics. The loaded topics will be sent through
+ * updateSavedMessagesTopic. Topics are sorted by their topic.order in descending order. Returns a 404
+ * error if all topics have been loaded.
+ *
+ * @param limit The maximum number of topics to be loaded. For optimal performance, the number of
+ * loaded topics is chosen by TDLib and can be smaller than the specified limit, even if the end of the
+ * list is not reached.
+ */
+suspend fun TelegramFlow.loadSavedMessagesTopics(limit: Int) =
+    this.sendFunctionLaunch(TdApi.LoadSavedMessagesTopics(limit))
 
 /**
  * Suspend function, which informs TDLib that the message content has been opened (e.g., the user
@@ -577,6 +983,69 @@ suspend fun TelegramFlow.openMessageContent(chatId: Long, messageId: Long) =
     this.sendFunctionLaunch(TdApi.OpenMessageContent(chatId, messageId))
 
 /**
+ * Suspend function, which marks all mentions in a forum topic as read.
+ *
+ * @param chatId Chat identifier.  
+ * @param messageThreadId Message thread identifier in which mentions are marked as read.
+ */
+suspend fun TelegramFlow.readAllMessageThreadMentions(chatId: Long, messageThreadId: Long) =
+    this.sendFunctionLaunch(TdApi.ReadAllMessageThreadMentions(chatId, messageThreadId))
+
+/**
+ * Suspend function, which marks all reactions in a forum topic as read.
+ *
+ * @param chatId Chat identifier.  
+ * @param messageThreadId Message thread identifier in which reactions are marked as read.
+ */
+suspend fun TelegramFlow.readAllMessageThreadReactions(chatId: Long, messageThreadId: Long) =
+    this.sendFunctionLaunch(TdApi.ReadAllMessageThreadReactions(chatId, messageThreadId))
+
+/**
+ * Suspend function, which readds quick reply messages which failed to add. Can be called only for
+ * messages for which messageSendingStateFailed.canRetry is true and after specified in
+ * messageSendingStateFailed.retryAfter time passed. If a message is readded, the corresponding failed
+ * to send message is deleted. Returns the sent messages in the same order as the message identifiers
+ * passed in messageIds. If a message can't be readded, null will be returned instead of the message.
+ *
+ * @param shortcutName Name of the target shortcut.  
+ * @param messageIds Identifiers of the quick reply messages to readd. Message identifiers must be
+ * in a strictly increasing order.
+ *
+ * @return [QuickReplyMessages] Contains a list of quick reply messages.
+ */
+suspend fun TelegramFlow.readdQuickReplyShortcutMessages(shortcutName: String?,
+    messageIds: LongArray?): QuickReplyMessages =
+    this.sendFunctionAsync(TdApi.ReaddQuickReplyShortcutMessages(shortcutName, messageIds))
+
+/**
+ * Suspend function, which removes a reaction from a message. A chosen reaction can always be
+ * removed.
+ *
+ * @param chatId Identifier of the chat to which the message belongs.  
+ * @param messageId Identifier of the message.  
+ * @param reactionType Type of the reaction to remove.
+ */
+suspend fun TelegramFlow.removeMessageReaction(
+  chatId: Long,
+  messageId: Long,
+  reactionType: ReactionType?
+) = this.sendFunctionLaunch(TdApi.RemoveMessageReaction(chatId, messageId, reactionType))
+
+/**
+ * Suspend function, which reports reactions set on a message to the Telegram moderators. Reactions
+ * on a message can be reported only if message.canReportReactions.
+ *
+ * @param chatId Chat identifier.  
+ * @param messageId Message identifier.  
+ * @param senderId Identifier of the sender, which added the reaction.
+ */
+suspend fun TelegramFlow.reportMessageReactions(
+  chatId: Long,
+  messageId: Long,
+  senderId: MessageSender?
+) = this.sendFunctionLaunch(TdApi.ReportMessageReactions(chatId, messageId, senderId))
+
+/**
  * Suspend function, which resends messages which failed to send. Can be called only for messages
  * for which messageSendingStateFailed.canRetry is true and after specified in
  * messageSendingStateFailed.retryAfter time passed. If a message is re-sent, the corresponding failed
@@ -585,12 +1054,17 @@ suspend fun TelegramFlow.openMessageContent(chatId: Long, messageId: Long) =
  *
  * @param chatId Identifier of the chat to send messages.  
  * @param messageIds Identifiers of the messages to resend. Message identifiers must be in a
- * strictly increasing order.
+ * strictly increasing order.  
+ * @param quote New manually chosen quote from the message to be replied; pass null if none. Ignored
+ * if more than one message is re-sent, or if messageSendingStateFailed.needAnotherReplyQuote == false.
  *
  * @return [Messages] Contains a list of messages.
  */
-suspend fun TelegramFlow.resendMessages(chatId: Long, messageIds: LongArray?): Messages =
-    this.sendFunctionAsync(TdApi.ResendMessages(chatId, messageIds))
+suspend fun TelegramFlow.resendMessages(
+  chatId: Long,
+  messageIds: LongArray?,
+  quote: InputTextQuote?
+): Messages = this.sendFunctionAsync(TdApi.ResendMessages(chatId, messageIds, quote))
 
 /**
  * Suspend function, which searches for messages in all chats except secret chats. Returns the
@@ -600,35 +1074,94 @@ suspend fun TelegramFlow.resendMessages(chatId: Long, messageIds: LongArray?): M
  *
  * @param chatList Chat list in which to search messages; pass null to search in all chats
  * regardless of their chat list. Only Main and Archive chat lists are supported.  
+ * @param onlyInChannels Pass true to search only for messages in channels.  
  * @param query Query to search for.  
- * @param offsetDate The date of the message starting from which the results need to be fetched. Use
- * 0 or any date in the future to get results from the last message.  
- * @param offsetChatId The chat identifier of the last found message, or 0 for the first request.  
- * @param offsetMessageId The message identifier of the last found message, or 0 for the first
- * request.  
+ * @param offset Offset of the first entry to return as received from the previous request; use
+ * empty string to get the first chunk of results.  
  * @param limit The maximum number of messages to be returned; up to 100. For optimal performance,
  * the number of returned messages is chosen by TDLib and can be smaller than the specified limit.  
  * @param filter Additional filter for messages to search; pass null to search for all messages.
- * Filters searchMessagesFilterCall, searchMessagesFilterMissedCall, searchMessagesFilterMention,
- * searchMessagesFilterUnreadMention, searchMessagesFilterFailedToSend and searchMessagesFilterPinned
+ * Filters searchMessagesFilterMention, searchMessagesFilterUnreadMention,
+ * searchMessagesFilterUnreadReaction, searchMessagesFilterFailedToSend, and searchMessagesFilterPinned
  * are unsupported in this function.  
  * @param minDate If not 0, the minimum date of the messages to return.  
  * @param maxDate If not 0, the maximum date of the messages to return.
  *
- * @return [Messages] Contains a list of messages.
+ * @return [FoundMessages] Contains a list of messages found by a search.
  */
 suspend fun TelegramFlow.searchMessages(
   chatList: ChatList?,
+  onlyInChannels: Boolean,
   query: String?,
-  offsetDate: Int,
-  offsetChatId: Long,
-  offsetMessageId: Long,
+  offset: String?,
   limit: Int,
   filter: SearchMessagesFilter?,
   minDate: Int,
   maxDate: Int
-): Messages = this.sendFunctionAsync(TdApi.SearchMessages(chatList, query, offsetDate, offsetChatId,
-    offsetMessageId, limit, filter, minDate, maxDate))
+): FoundMessages = this.sendFunctionAsync(TdApi.SearchMessages(chatList, onlyInChannels, query,
+    offset, limit, filter, minDate, maxDate))
+
+/**
+ * Suspend function, which searches for outgoing messages with content of the type messageDocument
+ * in all chats except secret chats. Returns the results in reverse chronological order.
+ *
+ * @param query Query to search for in document file name and message caption.  
+ * @param limit The maximum number of messages to be returned; up to 100.
+ *
+ * @return [FoundMessages] Contains a list of messages found by a search.
+ */
+suspend fun TelegramFlow.searchOutgoingDocumentMessages(query: String?, limit: Int): FoundMessages =
+    this.sendFunctionAsync(TdApi.SearchOutgoingDocumentMessages(query, limit))
+
+/**
+ * Suspend function, which searches for public channel posts containing the given hashtag or
+ * cashtag. For optimal performance, the number of returned messages is chosen by TDLib and can be
+ * smaller than the specified limit.
+ *
+ * @param tag Hashtag or cashtag to search for.  
+ * @param offset Offset of the first entry to return as received from the previous request; use
+ * empty string to get the first chunk of results.  
+ * @param limit The maximum number of messages to be returned; up to 100. For optimal performance,
+ * the number of returned messages is chosen by TDLib and can be smaller than the specified limit.
+ *
+ * @return [FoundMessages] Contains a list of messages found by a search.
+ */
+suspend fun TelegramFlow.searchPublicMessagesByTag(
+  tag: String?,
+  offset: String?,
+  limit: Int
+): FoundMessages = this.sendFunctionAsync(TdApi.SearchPublicMessagesByTag(tag, offset, limit))
+
+/**
+ * Suspend function, which searches for messages tagged by the given reaction and with the given
+ * words in the Saved Messages chat; for Telegram Premium users only. Returns the results in reverse
+ * chronological order, i.e. in order of decreasing messageId For optimal performance, the number of
+ * returned messages is chosen by TDLib and can be smaller than the specified limit.
+ *
+ * @param savedMessagesTopicId If not 0, only messages in the specified Saved Messages topic will be
+ * considered; pass 0 to consider all messages.  
+ * @param tag Tag to search for; pass null to return all suitable messages.  
+ * @param query Query to search for.  
+ * @param fromMessageId Identifier of the message starting from which messages must be fetched; use
+ * 0 to get results from the last message.  
+ * @param offset Specify 0 to get results from exactly the message fromMessageId or a negative
+ * offset to get the specified message and some newer messages.  
+ * @param limit The maximum number of messages to be returned; must be positive and can't be greater
+ * than 100. If the offset is negative, the limit must be greater than -offset. For optimal
+ * performance, the number of returned messages is chosen by TDLib and can be smaller than the
+ * specified limit.
+ *
+ * @return [FoundChatMessages] Contains a list of messages found by a search in a given chat.
+ */
+suspend fun TelegramFlow.searchSavedMessages(
+  savedMessagesTopicId: Long,
+  tag: ReactionType?,
+  query: String?,
+  fromMessageId: Long,
+  offset: Int,
+  limit: Int
+): FoundChatMessages = this.sendFunctionAsync(TdApi.SearchSavedMessages(savedMessagesTopicId, tag,
+    query, fromMessageId, offset, limit))
 
 /**
  * Suspend function, which searches for messages in secret chats. Returns the results in reverse
@@ -638,7 +1171,7 @@ suspend fun TelegramFlow.searchMessages(
  *  
  * @param query Query to search for. If empty, searchChatMessages must be used instead.  
  * @param offset Offset of the first entry to return as received from the previous request; use
- * empty string to get first chunk of results.  
+ * empty string to get the first chunk of results.  
  * @param limit The maximum number of messages to be returned; up to 100. For optimal performance,
  * the number of returned messages is chosen by TDLib and can be smaller than the specified limit.  
  * @param filter Additional filter for messages to search; pass null to search for all messages.
@@ -656,9 +1189,9 @@ suspend fun TelegramFlow.searchSecretMessages(
 
 /**
  * Suspend function, which invites a bot to a chat (if it is not yet a member) and sends it the
- * /start command. Bots can't be invited to a private chat other than the chat with the bot. Bots can't
- * be invited to channels (although they can be added as admins) and secret chats. Returns the sent
- * message.
+ * /start command; requires canInviteUsers member right. Bots can't be invited to a private chat other
+ * than the chat with the bot. Bots can't be invited to channels (although they can be added as admins)
+ * and secret chats. Returns the sent message.
  *
  * @param botUserId Identifier of the bot.  
  * @param chatId Identifier of the target chat.  
@@ -674,11 +1207,72 @@ suspend fun TelegramFlow.sendBotStartMessage(
 ): Message = this.sendFunctionAsync(TdApi.SendBotStartMessage(botUserId, chatId, parameter))
 
 /**
+ * Suspend function, which sends a message on behalf of a business account; for bots only. Returns
+ * the message after it was sent.
+ *
+ * @param businessConnectionId Unique identifier of business connection on behalf of which to send
+ * the request.  
+ * @param chatId Target chat.  
+ * @param replyTo Information about the message to be replied; pass null if none.  
+ * @param disableNotification Pass true to disable notification for the message.  
+ * @param protectContent Pass true if the content of the message must be protected from forwarding
+ * and saving.  
+ * @param effectId Identifier of the effect to apply to the message.  
+ * @param replyMarkup Markup for replying to the message; pass null if none.  
+ * @param inputMessageContent The content of the message to be sent.
+ *
+ * @return [BusinessMessage] Describes a message from a business account as received by a bot.
+ */
+suspend fun TelegramFlow.sendBusinessMessage(
+  businessConnectionId: String?,
+  chatId: Long,
+  replyTo: InputMessageReplyTo?,
+  disableNotification: Boolean,
+  protectContent: Boolean,
+  effectId: Long,
+  replyMarkup: ReplyMarkup?,
+  inputMessageContent: InputMessageContent?
+): BusinessMessage = this.sendFunctionAsync(TdApi.SendBusinessMessage(businessConnectionId, chatId,
+    replyTo, disableNotification, protectContent, effectId, replyMarkup, inputMessageContent))
+
+/**
+ * Suspend function, which sends 2-10 messages grouped together into an album on behalf of a
+ * business account; for bots only. Currently, only audio, document, photo and video messages can be
+ * grouped into an album. Documents and audio files can be only grouped in an album with messages of
+ * the same type. Returns sent messages.
+ *
+ * @param businessConnectionId Unique identifier of business connection on behalf of which to send
+ * the request.  
+ * @param chatId Target chat.  
+ * @param replyTo Information about the message to be replied; pass null if none.  
+ * @param disableNotification Pass true to disable notification for the message.  
+ * @param protectContent Pass true if the content of the message must be protected from forwarding
+ * and saving.  
+ * @param effectId Identifier of the effect to apply to the message.  
+ * @param inputMessageContents Contents of messages to be sent. At most 10 messages can be added to
+ * an album. All messages must have the same value of showCaptionAboveMedia.
+ *
+ * @return [BusinessMessages] Contains a list of messages from a business account as received by a
+ * bot.
+ */
+suspend fun TelegramFlow.sendBusinessMessageAlbum(
+  businessConnectionId: String?,
+  chatId: Long,
+  replyTo: InputMessageReplyTo?,
+  disableNotification: Boolean,
+  protectContent: Boolean,
+  effectId: Long,
+  inputMessageContents: Array<InputMessageContent>?
+): BusinessMessages = this.sendFunctionAsync(TdApi.SendBusinessMessageAlbum(businessConnectionId,
+    chatId, replyTo, disableNotification, protectContent, effectId, inputMessageContents))
+
+/**
  * Suspend function, which sends a message. Returns the sent message.
  *
  * @param chatId Target chat.  
- * @param messageThreadId If not 0, a message thread identifier in which the message will be sent.  
- * @param replyToMessageId Identifier of the message to reply to or 0.  
+ * @param messageThreadId If not 0, the message thread identifier in which the message will be sent.
+ *  
+ * @param replyTo Information about the message or story to be replied; pass null if none.  
  * @param options Options to be used to send the message; pass null to use default options.  
  * @param replyMarkup Markup for replying to the message; pass null if none; for bots only.  
  * @param inputMessageContent The content of the message to be sent.
@@ -688,50 +1282,199 @@ suspend fun TelegramFlow.sendBotStartMessage(
 suspend fun TelegramFlow.sendMessage(
   chatId: Long,
   messageThreadId: Long,
-  replyToMessageId: Long,
+  replyTo: InputMessageReplyTo?,
   options: MessageSendOptions?,
   replyMarkup: ReplyMarkup?,
   inputMessageContent: InputMessageContent?
-): Message = this.sendFunctionAsync(TdApi.SendMessage(chatId, messageThreadId, replyToMessageId,
-    options, replyMarkup, inputMessageContent))
+): Message = this.sendFunctionAsync(TdApi.SendMessage(chatId, messageThreadId, replyTo, options,
+    replyMarkup, inputMessageContent))
 
 /**
- * Suspend function, which sends 2-10 messages grouped together into an album. Currently only audio,
- * document, photo and video messages can be grouped into an album. Documents and audio files can be
- * only grouped in an album with messages of the same type. Returns sent messages.
+ * Suspend function, which sends 2-10 messages grouped together into an album. Currently, only
+ * audio, document, photo and video messages can be grouped into an album. Documents and audio files
+ * can be only grouped in an album with messages of the same type. Returns sent messages.
  *
  * @param chatId Target chat.  
- * @param messageThreadId If not 0, a message thread identifier in which the messages will be sent. 
- * 
- * @param replyToMessageId Identifier of a message to reply to or 0.  
+ * @param messageThreadId If not 0, the message thread identifier in which the messages will be
+ * sent.  
+ * @param replyTo Information about the message or story to be replied; pass null if none.  
  * @param options Options to be used to send the messages; pass null to use default options.  
  * @param inputMessageContents Contents of messages to be sent. At most 10 messages can be added to
- * an album.
+ * an album. All messages must have the same value of showCaptionAboveMedia.
  *
  * @return [Messages] Contains a list of messages.
  */
 suspend fun TelegramFlow.sendMessageAlbum(
   chatId: Long,
   messageThreadId: Long,
-  replyToMessageId: Long,
+  replyTo: InputMessageReplyTo?,
   options: MessageSendOptions?,
   inputMessageContents: Array<InputMessageContent>?
-): Messages = this.sendFunctionAsync(TdApi.SendMessageAlbum(chatId, messageThreadId,
-    replyToMessageId, options, inputMessageContents))
+): Messages = this.sendFunctionAsync(TdApi.SendMessageAlbum(chatId, messageThreadId, replyTo,
+    options, inputMessageContents))
 
 /**
- * Suspend function, which changes the block state of a message sender. Currently, only users and
+ * Suspend function, which sends messages from a quick reply shortcut. Requires Telegram Business
+ * subscription.
+ *
+ * @param chatId Identifier of the chat to which to send messages. The chat must be a private chat
+ * with a regular user.  
+ * @param shortcutId Unique identifier of the quick reply shortcut.  
+ * @param sendingId Non-persistent identifier, which will be returned back in
+ * messageSendingStatePending object and can be used to match sent messages and corresponding
+ * updateNewMessage updates.
+ *
+ * @return [Messages] Contains a list of messages.
+ */
+suspend fun TelegramFlow.sendQuickReplyShortcutMessages(
+  chatId: Long,
+  shortcutId: Int,
+  sendingId: Int
+): Messages = this.sendFunctionAsync(TdApi.SendQuickReplyShortcutMessages(chatId, shortcutId,
+    sendingId))
+
+/**
+ * Suspend function, which changes the business away message settings of the current user. Requires
+ * Telegram Business subscription.
+ *
+ * @param awayMessageSettings The new settings for the away message of the business; pass null to
+ * disable the away message.
+ */
+suspend
+    fun TelegramFlow.setBusinessAwayMessageSettings(awayMessageSettings: BusinessAwayMessageSettings?)
+    = this.sendFunctionLaunch(TdApi.SetBusinessAwayMessageSettings(awayMessageSettings))
+
+/**
+ * Suspend function, which changes the business greeting message settings of the current user.
+ * Requires Telegram Business subscription.
+ *
+ * @param greetingMessageSettings The new settings for the greeting message of the business; pass
+ * null to disable the greeting message.
+ */
+suspend
+    fun TelegramFlow.setBusinessGreetingMessageSettings(greetingMessageSettings: BusinessGreetingMessageSettings?)
+    = this.sendFunctionLaunch(TdApi.SetBusinessGreetingMessageSettings(greetingMessageSettings))
+
+/**
+ * Suspend function, which changes the default message auto-delete time for new chats.
+ *
+ * @param messageAutoDeleteTime New default message auto-delete time; must be from 0 up to 365 *
+ * 86400 and be divisible by 86400. If 0, then messages aren't deleted automatically.
+ */
+suspend
+    fun TelegramFlow.setDefaultMessageAutoDeleteTime(messageAutoDeleteTime: MessageAutoDeleteTime?)
+    = this.sendFunctionLaunch(TdApi.SetDefaultMessageAutoDeleteTime(messageAutoDeleteTime))
+
+/**
+ * Suspend function, which changes the fact-check of a message. Can be only used if
+ * getOption(&quot;can_edit_fact_check&quot;) == true.
+ *
+ * @param chatId The channel chat the message belongs to.  
+ * @param messageId Identifier of the message. The message must be one of the following types:
+ * messageAnimation, messageAudio, messageDocument, messagePhoto, messageText, messageVideo.  
+ * @param text New text of the fact-check; 0-getOption(&quot;fact_check_length_max&quot;)
+ * characters; pass null to remove it. Only Bold, Italic, and TextUrl entities with https://t.me/ links
+ * are supported.
+ */
+suspend fun TelegramFlow.setMessageFactCheck(
+  chatId: Long,
+  messageId: Long,
+  text: FormattedText?
+) = this.sendFunctionLaunch(TdApi.SetMessageFactCheck(chatId, messageId, text))
+
+/**
+ * Suspend function, which sets reactions on a message; for bots only.
+ *
+ * @param chatId Identifier of the chat to which the message belongs.  
+ * @param messageId Identifier of the message.  
+ * @param reactionTypes Types of the reaction to set.  
+ * @param isBig Pass true if the reactions are added with a big animation.
+ */
+suspend fun TelegramFlow.setMessageReactions(
+  chatId: Long,
+  messageId: Long,
+  reactionTypes: Array<ReactionType>?,
+  isBig: Boolean
+) = this.sendFunctionLaunch(TdApi.SetMessageReactions(chatId, messageId, reactionTypes, isBig))
+
+/**
+ * Suspend function, which changes the block list of a message sender. Currently, only users and
  * supergroup chats can be blocked.
  *
- * @param sender Message Sender.  
- * @param isBlocked New value of isBlocked.
+ * @param senderId Identifier of a message sender to block/unblock.  
+ * @param blockList New block list for the message sender; pass null to unblock the message sender.
  */
-suspend fun TelegramFlow.toggleMessageSenderIsBlocked(sender: MessageSender?, isBlocked: Boolean) =
-    this.sendFunctionLaunch(TdApi.ToggleMessageSenderIsBlocked(sender, isBlocked))
+suspend fun TelegramFlow.setMessageSenderBlockList(senderId: MessageSender?, blockList: BlockList?)
+    = this.sendFunctionLaunch(TdApi.SetMessageSenderBlockList(senderId, blockList))
 
 /**
- * Suspend function, which toggles sender signatures messages sent in a channel; requires
- * canChangeInfo administrator right.
+ * Suspend function, which changes the order of pinned Saved Messages topics.
+ *
+ * @param savedMessagesTopicIds Identifiers of the new pinned Saved Messages topics.
+ */
+suspend fun TelegramFlow.setPinnedSavedMessagesTopics(savedMessagesTopicIds: LongArray?) =
+    this.sendFunctionLaunch(TdApi.SetPinnedSavedMessagesTopics(savedMessagesTopicIds))
+
+/**
+ * Suspend function, which changes label of a Saved Messages tag; for Telegram Premium users only.
+ *
+ * @param tag The tag which label will be changed.  
+ * @param label New label for the tag; 0-12 characters.
+ */
+suspend fun TelegramFlow.setSavedMessagesTagLabel(tag: ReactionType?, label: String?) =
+    this.sendFunctionLaunch(TdApi.SetSavedMessagesTagLabel(tag, label))
+
+/**
+ * Suspend function, which toggles whether the current user has sponsored messages enabled. The
+ * setting has no effect for users without Telegram Premium for which sponsored messages are always
+ * enabled.
+ *
+ * @param hasSponsoredMessagesEnabled Pass true to enable sponsored messages for the current user;
+ * false to disable them.
+ */
+suspend fun TelegramFlow.toggleHasSponsoredMessagesEnabled(hasSponsoredMessagesEnabled: Boolean) =
+    this.sendFunctionLaunch(TdApi.ToggleHasSponsoredMessagesEnabled(hasSponsoredMessagesEnabled))
+
+/**
+ * Suspend function, which changes the pinned state of a Saved Messages topic. There can be up to
+ * getOption(&quot;pinned_saved_messages_topic_count_max&quot;) pinned topics. The limit can be
+ * increased with Telegram Premium.
+ *
+ * @param savedMessagesTopicId Identifier of Saved Messages topic to pin or unpin.  
+ * @param isPinned Pass true to pin the topic; pass false to unpin it.
+ */
+suspend fun TelegramFlow.toggleSavedMessagesTopicIsPinned(savedMessagesTopicId: Long,
+    isPinned: Boolean) =
+    this.sendFunctionLaunch(TdApi.ToggleSavedMessagesTopicIsPinned(savedMessagesTopicId, isPinned))
+
+/**
+ * Suspend function, which toggles whether sponsored messages are shown in the channel chat;
+ * requires owner privileges in the channel. The chat must have at least
+ * chatBoostFeatures.minSponsoredMessageDisableBoostLevel boost level to disable sponsored messages.
+ *
+ * @param supergroupId The identifier of the channel.  
+ * @param canHaveSponsoredMessages The new value of canHaveSponsoredMessages.
+ */
+suspend fun TelegramFlow.toggleSupergroupCanHaveSponsoredMessages(supergroupId: Long,
+    canHaveSponsoredMessages: Boolean) =
+    this.sendFunctionLaunch(TdApi.ToggleSupergroupCanHaveSponsoredMessages(supergroupId,
+    canHaveSponsoredMessages))
+
+/**
+ * Suspend function, which toggles whether joining is mandatory to send messages to a discussion
+ * supergroup; requires canRestrictMembers administrator right.
+ *
+ * @param supergroupId Identifier of the supergroup that isn't a broadcast group.  
+ * @param joinToSendMessages New value of joinToSendMessages.
+ */
+suspend fun TelegramFlow.toggleSupergroupJoinToSendMessages(supergroupId: Long,
+    joinToSendMessages: Boolean) =
+    this.sendFunctionLaunch(TdApi.ToggleSupergroupJoinToSendMessages(supergroupId,
+    joinToSendMessages))
+
+/**
+ * Suspend function, which toggles whether sender signature is added to sent messages in a channel;
+ * requires canChangeInfo member right.
  *
  * @param supergroupId Identifier of the channel.  
  * @param signMessages New value of signMessages.
@@ -740,29 +1483,68 @@ suspend fun TelegramFlow.toggleSupergroupSignMessages(supergroupId: Long, signMe
     this.sendFunctionLaunch(TdApi.ToggleSupergroupSignMessages(supergroupId, signMessages))
 
 /**
- * Suspend function, which informs TDLib that messages are being viewed by the user. Many useful
- * activities depend on whether the messages are currently being viewed or not (e.g., marking messages
- * as read, incrementing a view counter, updating a view counter, removing deleted messages in
- * supergroups and channels).
+ * Suspend function, which extracts text or caption of the given message and translates it to the
+ * given language. If the current user is a Telegram Premium user, then text formatting is preserved.
+ *
+ * @param chatId Identifier of the chat to which the message belongs.  
+ * @param messageId Identifier of the message.  
+ * @param toLanguageCode Language code of the language to which the message is translated. Must be
+ * one of &quot;af&quot;, &quot;sq&quot;, &quot;am&quot;, &quot;ar&quot;, &quot;hy&quot;,
+ * &quot;az&quot;, &quot;eu&quot;, &quot;be&quot;, &quot;bn&quot;, &quot;bs&quot;, &quot;bg&quot;,
+ * &quot;ca&quot;, &quot;ceb&quot;, &quot;zh-CN&quot;, &quot;zh&quot;, &quot;zh-Hans&quot;,
+ * &quot;zh-TW&quot;, &quot;zh-Hant&quot;, &quot;co&quot;, &quot;hr&quot;, &quot;cs&quot;,
+ * &quot;da&quot;, &quot;nl&quot;, &quot;en&quot;, &quot;eo&quot;, &quot;et&quot;, &quot;fi&quot;,
+ * &quot;fr&quot;, &quot;fy&quot;, &quot;gl&quot;, &quot;ka&quot;, &quot;de&quot;, &quot;el&quot;,
+ * &quot;gu&quot;, &quot;ht&quot;, &quot;ha&quot;, &quot;haw&quot;, &quot;he&quot;, &quot;iw&quot;,
+ * &quot;hi&quot;, &quot;hmn&quot;, &quot;hu&quot;, &quot;is&quot;, &quot;ig&quot;, &quot;id&quot;,
+ * &quot;in&quot;, &quot;ga&quot;, &quot;it&quot;, &quot;ja&quot;, &quot;jv&quot;, &quot;kn&quot;,
+ * &quot;kk&quot;, &quot;km&quot;, &quot;rw&quot;, &quot;ko&quot;, &quot;ku&quot;, &quot;ky&quot;,
+ * &quot;lo&quot;, &quot;la&quot;, &quot;lv&quot;, &quot;lt&quot;, &quot;lb&quot;, &quot;mk&quot;,
+ * &quot;mg&quot;, &quot;ms&quot;, &quot;ml&quot;, &quot;mt&quot;, &quot;mi&quot;, &quot;mr&quot;,
+ * &quot;mn&quot;, &quot;my&quot;, &quot;ne&quot;, &quot;no&quot;, &quot;ny&quot;, &quot;or&quot;,
+ * &quot;ps&quot;, &quot;fa&quot;, &quot;pl&quot;, &quot;pt&quot;, &quot;pa&quot;, &quot;ro&quot;,
+ * &quot;ru&quot;, &quot;sm&quot;, &quot;gd&quot;, &quot;sr&quot;, &quot;st&quot;, &quot;sn&quot;,
+ * &quot;sd&quot;, &quot;si&quot;, &quot;sk&quot;, &quot;sl&quot;, &quot;so&quot;, &quot;es&quot;,
+ * &quot;su&quot;, &quot;sw&quot;, &quot;sv&quot;, &quot;tl&quot;, &quot;tg&quot;, &quot;ta&quot;,
+ * &quot;tt&quot;, &quot;te&quot;, &quot;th&quot;, &quot;tr&quot;, &quot;tk&quot;, &quot;uk&quot;,
+ * &quot;ur&quot;, &quot;ug&quot;, &quot;uz&quot;, &quot;vi&quot;, &quot;cy&quot;, &quot;xh&quot;,
+ * &quot;yi&quot;, &quot;ji&quot;, &quot;yo&quot;, &quot;zu&quot;.
+ *
+ * @return [FormattedText] A text with some entities.
+ */
+suspend fun TelegramFlow.translateMessageText(
+  chatId: Long,
+  messageId: Long,
+  toLanguageCode: String?
+): FormattedText = this.sendFunctionAsync(TdApi.TranslateMessageText(chatId, messageId,
+    toLanguageCode))
+
+/**
+ * Suspend function, which removes all pinned messages from a forum topic; requires canPinMessages
+ * member right in the supergroup.
+ *
+ * @param chatId Identifier of the chat.  
+ * @param messageThreadId Message thread identifier in which messages will be unpinned.
+ */
+suspend fun TelegramFlow.unpinAllMessageThreadMessages(chatId: Long, messageThreadId: Long) =
+    this.sendFunctionLaunch(TdApi.UnpinAllMessageThreadMessages(chatId, messageThreadId))
+
+/**
+ * Suspend function, which informs TDLib that messages are being viewed by the user. Sponsored
+ * messages must be marked as viewed only when the entire text of the message is shown on the screen
+ * (excluding the button). Many useful activities depend on whether the messages are currently being
+ * viewed or not (e.g., marking messages as read, incrementing a view counter, updating a view counter,
+ * removing deleted messages in supergroups and channels).
  *
  * @param chatId Chat identifier.  
- * @param messageThreadId If not 0, a message thread identifier in which the messages are being
- * viewed.  
  * @param messageIds The identifiers of the messages being viewed.  
- * @param forceRead True, if messages in closed chats must be marked as read by the request.
+ * @param source Source of the message view; pass null to guess the source based on chat open state.
+ *  
+ * @param forceRead Pass true to mark as read the specified messages even the chat is closed.
  */
 suspend fun TelegramFlow.viewMessages(
   chatId: Long,
-  messageThreadId: Long,
   messageIds: LongArray?,
+  source: MessageSource?,
   forceRead: Boolean
-) = this.sendFunctionLaunch(TdApi.ViewMessages(chatId, messageThreadId, messageIds, forceRead))
-
-/**
- * Suspend function, which informs TDLib that a sponsored message was viewed by the user.
- *
- * @param chatId Identifier of the chat with the sponsored message.  
- * @param sponsoredMessageId The identifier of the sponsored message being viewed.
- */
-suspend fun TelegramFlow.viewSponsoredMessage(chatId: Long, sponsoredMessageId: Int) =
-    this.sendFunctionLaunch(TdApi.ViewSponsoredMessage(chatId, sponsoredMessageId))
+) = this.sendFunctionLaunch(TdApi.ViewMessages(chatId, messageIds, source, forceRead))

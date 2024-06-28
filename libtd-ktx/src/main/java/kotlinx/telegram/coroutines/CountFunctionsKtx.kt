@@ -4,11 +4,13 @@
 //
 package kotlinx.telegram.coroutines
 
+import kotlin.Int
+import kotlin.Long
 import kotlinx.telegram.core.TelegramFlow
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.Count
-import org.drinkless.td.libcore.telegram.TdApi.Countries
-import org.drinkless.td.libcore.telegram.TdApi.Text
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.Count
+import org.drinkless.tdlib.TdApi.Countries
+import org.drinkless.tdlib.TdApi.Text
 
 /**
  * Suspend function, which returns information about existing countries. Can be called before
@@ -33,3 +35,16 @@ suspend fun TelegramFlow.getCountryCode(): Text = this.sendFunctionAsync(TdApi.G
  */
 suspend fun TelegramFlow.getImportedContactCount(): Count =
     this.sendFunctionAsync(TdApi.GetImportedContactCount())
+
+/**
+ * Suspend function, which changes the number of times the supergroup must be boosted by a user to
+ * ignore slow mode and chat permission restrictions; requires canRestrictMembers administrator right.
+ *
+ * @param supergroupId Identifier of the supergroup.  
+ * @param unrestrictBoostCount New value of the unrestrictBoostCount supergroup setting; 0-8. Use 0
+ * to remove the setting.
+ */
+suspend fun TelegramFlow.setSupergroupUnrestrictBoostCount(supergroupId: Long,
+    unrestrictBoostCount: Int) =
+    this.sendFunctionLaunch(TdApi.SetSupergroupUnrestrictBoostCount(supergroupId,
+    unrestrictBoostCount))

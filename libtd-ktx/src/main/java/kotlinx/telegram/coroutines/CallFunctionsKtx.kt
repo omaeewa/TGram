@@ -13,24 +13,25 @@ import kotlin.Long
 import kotlin.LongArray
 import kotlin.String
 import kotlinx.telegram.core.TelegramFlow
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.CallId
-import org.drinkless.td.libcore.telegram.TdApi.CallProblem
-import org.drinkless.td.libcore.telegram.TdApi.CallProtocol
-import org.drinkless.td.libcore.telegram.TdApi.FilePart
-import org.drinkless.td.libcore.telegram.TdApi.GroupCall
-import org.drinkless.td.libcore.telegram.TdApi.GroupCallVideoQuality
-import org.drinkless.td.libcore.telegram.TdApi.HttpUrl
-import org.drinkless.td.libcore.telegram.TdApi.MessageSender
-import org.drinkless.td.libcore.telegram.TdApi.Messages
-import org.drinkless.td.libcore.telegram.TdApi.TestBytes
-import org.drinkless.td.libcore.telegram.TdApi.TestInt
-import org.drinkless.td.libcore.telegram.TdApi.TestString
-import org.drinkless.td.libcore.telegram.TdApi.TestVectorInt
-import org.drinkless.td.libcore.telegram.TdApi.TestVectorIntObject
-import org.drinkless.td.libcore.telegram.TdApi.TestVectorString
-import org.drinkless.td.libcore.telegram.TdApi.TestVectorStringObject
-import org.drinkless.td.libcore.telegram.TdApi.Text
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.CallId
+import org.drinkless.tdlib.TdApi.CallProblem
+import org.drinkless.tdlib.TdApi.CallProtocol
+import org.drinkless.tdlib.TdApi.FilePart
+import org.drinkless.tdlib.TdApi.FoundMessages
+import org.drinkless.tdlib.TdApi.GroupCall
+import org.drinkless.tdlib.TdApi.GroupCallStreams
+import org.drinkless.tdlib.TdApi.GroupCallVideoQuality
+import org.drinkless.tdlib.TdApi.HttpUrl
+import org.drinkless.tdlib.TdApi.MessageSender
+import org.drinkless.tdlib.TdApi.TestBytes
+import org.drinkless.tdlib.TdApi.TestInt
+import org.drinkless.tdlib.TdApi.TestString
+import org.drinkless.tdlib.TdApi.TestVectorInt
+import org.drinkless.tdlib.TdApi.TestVectorIntObject
+import org.drinkless.tdlib.TdApi.TestVectorString
+import org.drinkless.tdlib.TdApi.TestVectorStringObject
+import org.drinkless.tdlib.TdApi.Text
 
 /**
  * Suspend function, which accepts an incoming call.
@@ -46,7 +47,7 @@ suspend fun TelegramFlow.acceptCall(callId: Int, protocol: CallProtocol?) =
  *
  * @param userId Identifier of the user to be called.  
  * @param protocol The call protocols supported by the application.  
- * @param isVideo True, if a video call needs to be created.
+ * @param isVideo Pass true to create a video call.
  *
  * @return [CallId] Contains the call identifier.
  */
@@ -68,9 +69,9 @@ suspend fun TelegramFlow.deleteAllCallMessages(revoke: Boolean) =
  * Suspend function, which discards a call.
  *
  * @param callId Call identifier.  
- * @param isDisconnected True, if the user was disconnected.  
+ * @param isDisconnected Pass true if the user was disconnected.  
  * @param duration The call duration, in seconds.  
- * @param isVideo True, if the call was a video call.  
+ * @param isVideo Pass true if the call was a video call.  
  * @param connectionId Identifier of the connection used during the call.
  */
 suspend fun TelegramFlow.discardCall(
@@ -83,12 +84,12 @@ suspend fun TelegramFlow.discardCall(
     connectionId))
 
 /**
- * Suspend function, which discards a group call. Requires groupCall.canBeManaged.
+ * Suspend function, which ends a group call. Requires groupCall.canBeManaged.
  *
  * @param groupCallId Group call identifier.
  */
-suspend fun TelegramFlow.discardGroupCall(groupCallId: Int) =
-    this.sendFunctionLaunch(TdApi.DiscardGroupCall(groupCallId))
+suspend fun TelegramFlow.endGroupCall(groupCallId: Int) =
+    this.sendFunctionLaunch(TdApi.EndGroupCall(groupCallId))
 
 /**
  * Suspend function, which ends recording of an active group call. Requires groupCall.canBeManaged
@@ -153,8 +154,18 @@ suspend fun TelegramFlow.getGroupCallStreamSegment(
     channelId, videoQuality))
 
 /**
+ * Suspend function, which returns information about available group call streams.
+ *
+ * @param groupCallId Group call identifier.
+ *
+ * @return [GroupCallStreams] Represents a list of group call streams.
+ */
+suspend fun TelegramFlow.getGroupCallStreams(groupCallId: Int): GroupCallStreams =
+    this.sendFunctionAsync(TdApi.GetGroupCallStreams(groupCallId))
+
+/**
  * Suspend function, which invites users to an active group call. Sends a service message of type
- * messageInviteToGroupCall for video chats.
+ * messageInviteVideoChatParticipants for video chats.
  *
  * @param groupCallId Group call identifier.  
  * @param userIds User identifiers. At most 10 users can be invited simultaneously.
@@ -171,8 +182,8 @@ suspend fun TelegramFlow.inviteGroupCallParticipants(groupCallId: Int, userIds: 
  * @param audioSourceId Caller audio channel synchronization source identifier; received from
  * tgcalls.  
  * @param payload Group call join payload; received from tgcalls.  
- * @param isMuted True, if the user's microphone is muted.  
- * @param isMyVideoEnabled True, if the user's video is enabled.  
+ * @param isMuted Pass true to join the call with muted microphone.  
+ * @param isMyVideoEnabled Pass true if the user's video is enabled.  
  * @param inviteHash If non-empty, invite hash to be used to join the group call without being muted
  * by administrators.
  *
@@ -200,7 +211,7 @@ suspend fun TelegramFlow.leaveGroupCall(groupCallId: Int) =
 /**
  * Suspend function, which loads more participants of a group call. The loaded participants will be
  * received through updates. Use the field groupCall.loadedAllParticipants to check whether all
- * participants has already been loaded.
+ * participants have already been loaded.
  *
  * @param groupCallId Group call identifier. The group call must be previously received through
  * getGroupCall and must be joined or being joined.  
@@ -220,25 +231,25 @@ suspend fun TelegramFlow.revokeGroupCallInviteLink(groupCallId: Int) =
 
 /**
  * Suspend function, which searches for call messages. Returns the results in reverse chronological
- * order (i. e., in order of decreasing messageId). For optimal performance, the number of returned
+ * order (i.e., in order of decreasing messageId). For optimal performance, the number of returned
  * messages is chosen by TDLib.
  *
- * @param fromMessageId Identifier of the message from which to search; use 0 to get results from
- * the last message.  
+ * @param offset Offset of the first entry to return as received from the previous request; use
+ * empty string to get the first chunk of results.  
  * @param limit The maximum number of messages to be returned; up to 100. For optimal performance,
  * the number of returned messages is chosen by TDLib and can be smaller than the specified limit.  
- * @param onlyMissed If true, returns only messages with missed calls.
+ * @param onlyMissed Pass true to search only for messages with missed/declined calls.
  *
- * @return [Messages] Contains a list of messages.
+ * @return [FoundMessages] Contains a list of messages found by a search.
  */
 suspend fun TelegramFlow.searchCallMessages(
-  fromMessageId: Long,
+  offset: String?,
   limit: Int,
   onlyMissed: Boolean
-): Messages = this.sendFunctionAsync(TdApi.SearchCallMessages(fromMessageId, limit, onlyMissed))
+): FoundMessages = this.sendFunctionAsync(TdApi.SearchCallMessages(offset, limit, onlyMissed))
 
 /**
- * Suspend function, which sends debug information for a call.
+ * Suspend function, which sends debug information for a call to Telegram servers.
  *
  * @param callId Call identifier.  
  * @param debugInformation Debug information in application-specific format.
@@ -277,7 +288,7 @@ suspend fun TelegramFlow.sendCallSignalingData(callId: Int, data: ByteArray?) =
  * @param groupCallId Group call identifier.  
  * @param audioSource Group call participant's synchronization audio source identifier, or 0 for the
  * current user.  
- * @param isSpeaking True, if the user is speaking.
+ * @param isSpeaking Pass true if the user is speaking.
  */
 suspend fun TelegramFlow.setGroupCallParticipantIsSpeaking(
   groupCallId: Int,
@@ -431,7 +442,7 @@ suspend fun TelegramFlow.testCallVectorStringObject(x: Array<TestString>?): Test
 
 /**
  * Suspend function, which toggles whether the current user will receive a notification when the
- * group call will start; scheduled group calls only.
+ * group call starts; scheduled group calls only.
  *
  * @param groupCallId Group call identifier.  
  * @param enabledStartNotification New value of the enabledStartNotification setting.
@@ -493,7 +504,7 @@ suspend fun TelegramFlow.toggleGroupCallParticipantIsHandRaised(
  *
  * @param groupCallId Group call identifier.  
  * @param participantId Participant identifier.  
- * @param isMuted Pass true if the user must be muted and false otherwise.
+ * @param isMuted Pass true to mute the user; pass false to unmute them.
  */
 suspend fun TelegramFlow.toggleGroupCallParticipantIsMuted(
   groupCallId: Int,
@@ -506,7 +517,17 @@ suspend fun TelegramFlow.toggleGroupCallParticipantIsMuted(
  * Suspend function, which pauses or unpauses screen sharing in a joined group call.
  *
  * @param groupCallId Group call identifier.  
- * @param isPaused True if screen sharing is paused.
+ * @param isPaused Pass true to pause screen sharing; pass false to unpause it.
  */
 suspend fun TelegramFlow.toggleGroupCallScreenSharingIsPaused(groupCallId: Int, isPaused: Boolean) =
     this.sendFunctionLaunch(TdApi.ToggleGroupCallScreenSharingIsPaused(groupCallId, isPaused))
+
+/**
+ * Suspend function, which toggles whether a session can accept incoming calls.
+ *
+ * @param sessionId Session identifier.  
+ * @param canAcceptCalls Pass true to allow accepting incoming calls by the session; pass false
+ * otherwise.
+ */
+suspend fun TelegramFlow.toggleSessionCanAcceptCalls(sessionId: Long, canAcceptCalls: Boolean) =
+    this.sendFunctionLaunch(TdApi.ToggleSessionCanAcceptCalls(sessionId, canAcceptCalls))

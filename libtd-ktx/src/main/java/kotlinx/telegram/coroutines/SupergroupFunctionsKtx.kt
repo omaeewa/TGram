@@ -9,11 +9,11 @@ import kotlin.Int
 import kotlin.Long
 import kotlin.LongArray
 import kotlinx.telegram.core.TelegramFlow
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.ChatMembers
-import org.drinkless.td.libcore.telegram.TdApi.Supergroup
-import org.drinkless.td.libcore.telegram.TdApi.SupergroupFullInfo
-import org.drinkless.td.libcore.telegram.TdApi.SupergroupMembersFilter
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.ChatMembers
+import org.drinkless.tdlib.TdApi.Supergroup
+import org.drinkless.tdlib.TdApi.SupergroupFullInfo
+import org.drinkless.tdlib.TdApi.SupergroupMembersFilter
 
 /**
  * Suspend function, which returns information about a supergroup or a channel by its identifier.
@@ -49,7 +49,7 @@ suspend fun TelegramFlow.getSupergroupFullInfo(supergroupId: Long): SupergroupFu
  * @param supergroupId Identifier of the supergroup or channel.  
  * @param filter The type of users to return; pass null to use supergroupMembersFilterRecent.  
  * @param offset Number of users to skip.  
- * @param limit The maximum number of users be returned; up to 200.
+ * @param limit The maximum number of users to be returned; up to 200.
  *
  * @return [ChatMembers] Contains a list of chat members.
  */
@@ -62,23 +62,53 @@ suspend fun TelegramFlow.getSupergroupMembers(
     limit))
 
 /**
- * Suspend function, which reports some messages from a user in a supergroup as spam; requires
- * administrator rights in the supergroup.
+ * Suspend function, which reports a false deletion of a message by aggressive anti-spam checks;
+ * requires administrator rights in the supergroup. Can be called only for messages from
+ * chatEventMessageDeleted with canReportAntiSpamFalsePositive == true.
  *
  * @param supergroupId Supergroup identifier.  
- * @param userId User identifier.  
- * @param messageIds Identifiers of messages sent in the supergroup by the user. This list must be
- * non-empty.
+ * @param messageId Identifier of the erroneously deleted message.
  */
-suspend fun TelegramFlow.reportSupergroupSpam(
-  supergroupId: Long,
-  userId: Long,
-  messageIds: LongArray?
-) = this.sendFunctionLaunch(TdApi.ReportSupergroupSpam(supergroupId, userId, messageIds))
+suspend fun TelegramFlow.reportSupergroupAntiSpamFalsePositive(supergroupId: Long, messageId: Long)
+    = this.sendFunctionLaunch(TdApi.ReportSupergroupAntiSpamFalsePositive(supergroupId, messageId))
+
+/**
+ * Suspend function, which reports messages in a supergroup as spam; requires administrator rights
+ * in the supergroup.
+ *
+ * @param supergroupId Supergroup identifier.  
+ * @param messageIds Identifiers of messages to report.
+ */
+suspend fun TelegramFlow.reportSupergroupSpam(supergroupId: Long, messageIds: LongArray?) =
+    this.sendFunctionLaunch(TdApi.ReportSupergroupSpam(supergroupId, messageIds))
+
+/**
+ * Suspend function, which toggles whether aggressive anti-spam checks are enabled in the
+ * supergroup. Can be called only if supergroupFullInfo.canToggleAggressiveAntiSpam == true.
+ *
+ * @param supergroupId The identifier of the supergroup, which isn't a broadcast group.  
+ * @param hasAggressiveAntiSpamEnabled The new value of hasAggressiveAntiSpamEnabled.
+ */
+suspend fun TelegramFlow.toggleSupergroupHasAggressiveAntiSpamEnabled(supergroupId: Long,
+    hasAggressiveAntiSpamEnabled: Boolean) =
+    this.sendFunctionLaunch(TdApi.ToggleSupergroupHasAggressiveAntiSpamEnabled(supergroupId,
+    hasAggressiveAntiSpamEnabled))
+
+/**
+ * Suspend function, which toggles whether non-administrators can receive only administrators and
+ * bots using getSupergroupMembers or searchChatMembers. Can be called only if
+ * supergroupFullInfo.canHideMembers == true.
+ *
+ * @param supergroupId Identifier of the supergroup.  
+ * @param hasHiddenMembers New value of hasHiddenMembers.
+ */
+suspend fun TelegramFlow.toggleSupergroupHasHiddenMembers(supergroupId: Long,
+    hasHiddenMembers: Boolean) =
+    this.sendFunctionLaunch(TdApi.ToggleSupergroupHasHiddenMembers(supergroupId, hasHiddenMembers))
 
 /**
  * Suspend function, which toggles whether the message history of a supergroup is available to new
- * members; requires canChangeInfo administrator right.
+ * members; requires canChangeInfo member right.
  *
  * @param supergroupId The identifier of the supergroup.  
  * @param isAllHistoryAvailable The new value of isAllHistoryAvailable.
@@ -96,3 +126,23 @@ suspend fun TelegramFlow.toggleSupergroupIsAllHistoryAvailable(supergroupId: Lon
  */
 suspend fun TelegramFlow.toggleSupergroupIsBroadcastGroup(supergroupId: Long) =
     this.sendFunctionLaunch(TdApi.ToggleSupergroupIsBroadcastGroup(supergroupId))
+
+/**
+ * Suspend function, which toggles whether the supergroup is a forum; requires owner privileges in
+ * the supergroup. Discussion supergroups can't be converted to forums.
+ *
+ * @param supergroupId Identifier of the supergroup.  
+ * @param isForum New value of isForum.
+ */
+suspend fun TelegramFlow.toggleSupergroupIsForum(supergroupId: Long, isForum: Boolean) =
+    this.sendFunctionLaunch(TdApi.ToggleSupergroupIsForum(supergroupId, isForum))
+
+/**
+ * Suspend function, which toggles whether all users directly joining the supergroup need to be
+ * approved by supergroup administrators; requires canRestrictMembers administrator right.
+ *
+ * @param supergroupId Identifier of the supergroup that isn't a broadcast group.  
+ * @param joinByRequest New value of joinByRequest.
+ */
+suspend fun TelegramFlow.toggleSupergroupJoinByRequest(supergroupId: Long, joinByRequest: Boolean) =
+    this.sendFunctionLaunch(TdApi.ToggleSupergroupJoinByRequest(supergroupId, joinByRequest))

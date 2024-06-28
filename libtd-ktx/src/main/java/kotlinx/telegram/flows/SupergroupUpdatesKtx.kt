@@ -7,9 +7,9 @@ package kotlinx.telegram.flows
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.telegram.core.TelegramFlow
-import org.drinkless.td.libcore.telegram.TdApi
-import org.drinkless.td.libcore.telegram.TdApi.Supergroup
-import org.drinkless.td.libcore.telegram.TdApi.UpdateSupergroupFullInfo
+import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.Supergroup
+import org.drinkless.tdlib.TdApi.UpdateSupergroupFullInfo
 
 /**
  * emits [Supergroup] if some data of a supergroup or a channel has changed. This update is
@@ -20,7 +20,7 @@ fun TelegramFlow.supergroupFlow(): Flow<Supergroup> =
     .mapNotNull { it.supergroup }
 
 /**
- * emits [UpdateSupergroupFullInfo] if some data from supergroupFullInfo has been changed.
+ * emits [UpdateSupergroupFullInfo] if some data in supergroupFullInfo has been changed.
  */
 fun TelegramFlow.supergroupFullInfoFlow(): Flow<UpdateSupergroupFullInfo> =
     this.getUpdatesFlowOfType()
