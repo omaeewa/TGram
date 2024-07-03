@@ -17,11 +17,12 @@ import com.miracle.chats.navigation.navigateToChats
 @Composable
 fun TGramNavHost(
     modifier: Modifier = Modifier,
+    startDestination: Any = Authorization,
     navController: NavHostController = rememberNavController(),
 ) {
     NavHost(
         navController = navController,
-        startDestination = Authorization,
+        startDestination = startDestination,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         modifier = modifier

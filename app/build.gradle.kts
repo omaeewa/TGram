@@ -72,7 +72,10 @@ dependencies {
     implementation(project(":feature:authorization"))
     implementation(project(":feature:chats"))
     implementation(project(":core:ui"))
+    implementation(project(":core:data"))
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+
+    implementation (libs.androidx.core.splashscreen)
 }

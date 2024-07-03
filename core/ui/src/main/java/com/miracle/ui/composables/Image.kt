@@ -31,7 +31,6 @@ fun ProfilePhoto(
     userId: Long,
     modifier: Modifier = Modifier,
     placeholderRes: Int? = null
-
 ) {
     if (imageModel == null) ShowInitials(
         modifier = modifier,
@@ -76,7 +75,6 @@ data class ProfilePhotoSize(val imageSize: Dp, val fontSize: TextUnit) {
 }
 
 @Composable
-
 fun ShowProfilePhoto(
     imageModel: Any,
     imageSize: Dp,

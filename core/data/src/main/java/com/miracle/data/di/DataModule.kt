@@ -20,7 +20,7 @@ interface DataModule {
 
     @Singleton
     @Binds
-    fun provideTdLibRepository(impl: AuthRepositoryTdLib): AuthRepository
+    fun provideAuthRepository(impl: AuthRepositoryTdLib): AuthRepository
 
     @Singleton
     @Binds

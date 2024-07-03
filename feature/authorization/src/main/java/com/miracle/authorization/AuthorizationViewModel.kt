@@ -4,14 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.miracle.common.Dispatcher
 import com.miracle.common.TGramDispatchers.IO
-import com.miracle.data.model.AuthState
 import com.miracle.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,11 +25,7 @@ class AuthorizationViewModel @Inject constructor(
     private val _authCode = MutableStateFlow("")
     val authCode: StateFlow<String> = _authCode
 
-    val authState = authRepository.authState.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.Eagerly,
-        initialValue = AuthState.Unexpected
-    )
+    val authState = authRepository.authState
 
     fun onPhoneNumberChange(value: String) = _phoneNumber.update { value }
 

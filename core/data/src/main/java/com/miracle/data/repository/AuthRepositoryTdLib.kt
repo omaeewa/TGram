@@ -2,11 +2,19 @@ package com.miracle.data.repository
 
 import android.content.Context
 import android.os.Build
+import com.miracle.common.Dispatcher
+import com.miracle.common.TGramDispatchers
+import com.miracle.common.di.ApplicationScope
 import com.miracle.data.BuildConfig
 import com.miracle.data.model.AuthState
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.telegram.core.TelegramFlow
 import kotlinx.telegram.coroutines.checkAuthenticationCode
 import kotlinx.telegram.coroutines.checkAuthenticationPassword
@@ -18,11 +26,13 @@ import javax.inject.Inject
 
 class AuthRepositoryTdLib @Inject constructor(
     private val telegramApi: TelegramFlow,
-    @ApplicationContext private val appContext: Context
+    @ApplicationContext private val appContext: Context,
+    @ApplicationScope private val coroutineScope: CoroutineScope
 ) : AuthRepository {
 
     override val authState = telegramApi.authorizationStateFlow()
         .onEach(::checkRequiredParams)
+        .filterNot { it is TdApi.AuthorizationStateWaitTdlibParameters }
         .map {
             when (it) {
                 is TdApi.AuthorizationStateReady -> AuthState.Ready
@@ -31,7 +41,9 @@ class AuthRepositoryTdLib @Inject constructor(
                 is TdApi.AuthorizationStateWaitPhoneNumber -> AuthState.WaitPhoneNumber
                 else -> AuthState.Unexpected
             }
-        }
+        }.stateIn(
+            coroutineScope, SharingStarted.Eagerly, AuthState.Unexpected
+        )
 
     override suspend fun setAuthPhoneNumber(phone: String) {
         telegramApi.setAuthenticationPhoneNumber(phone, null)

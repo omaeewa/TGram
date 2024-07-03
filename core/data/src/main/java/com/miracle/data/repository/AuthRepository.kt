@@ -1,11 +1,10 @@
 package com.miracle.data.repository
 
 import com.miracle.data.model.AuthState
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 interface AuthRepository {
-    val authState: Flow<AuthState>
-
+    val authState: StateFlow<AuthState>
 
     suspend fun setAuthPhoneNumber(phone: String)
     suspend fun setAuthCode(code: String)

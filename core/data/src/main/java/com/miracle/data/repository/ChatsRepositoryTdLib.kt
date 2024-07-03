@@ -5,13 +5,13 @@ import com.miracle.common.TGramDispatchers.IO
 import com.miracle.common.di.ApplicationScope
 import com.miracle.data.mapper.toChatListItem
 import com.miracle.data.repository.ChatsRepositoryTdLib.UpdateHandler
-import com.miracle.model.ChatListItem
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.scan
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.telegram.core.TelegramFlow
@@ -36,7 +36,8 @@ class ChatsRepositoryTdLib @Inject constructor(
     @Dispatcher(IO) private val dispatcherIo: CoroutineDispatcher,
     @ApplicationScope private val coroutineScope: CoroutineScope
 ) : ChatsRepository {
-    override val chats: Flow<List<ChatListItem>> = merge(
+
+    override val chats = merge(
         telegramApi.newChatFlow().map(::handleNewChat),
         telegramApi.chatTitleFlow().map(::handleChatTitleUpdate),
         telegramApi.chatPhotoFlow().map(::handleChatPhotoUpdate),
@@ -47,9 +48,15 @@ class ChatsRepositoryTdLib @Inject constructor(
         chats.toMutableList().apply(updateHandler::invoke)
             .sortedByDescending { it.lastMessage?.date }
     }.map { it.map { chat -> chat.toChatListItem() } }
+        .stateIn(coroutineScope, SharingStarted.Lazily, emptyList())
 
-    override suspend fun loadMore(limit: Int) = withContext(dispatcherIo) {
-        telegramApi.loadChats(null, limit)
+
+    override suspend fun loadMore(limit: Int): Unit = withContext(dispatcherIo) {
+        try {
+            telegramApi.loadChats(null, limit)
+        } catch (e: Throwable) {
+            //All chats were loaded
+        }
     }
 
     private fun handleNewChat(chat: Chat) = UpdateHandler { chats ->

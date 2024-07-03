@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -20,7 +21,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -61,13 +61,14 @@ fun ChatsScreen(chats: List<ChatListItem>, modifier: Modifier = Modifier) {
         },
         modifier = modifier
     ) {
+
         LazyColumn(
             modifier = Modifier
-                .padding()
+                .fillMaxSize()
                 .haze(
                     hazeState,
-                    backgroundColor = MaterialTheme.colorScheme.surfaceContainer,
-                    tint = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.9f),
+                    backgroundColor = mColors.surfaceContainer,
+                    tint = mColors.surfaceContainer.copy(alpha = 0.9f),
                     blurRadius = 30.dp,
                 )
         ) {

@@ -4,8 +4,6 @@
 //
 package kotlinx.telegram.flows
 
-import kotlin.Array
-import kotlin.String
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.telegram.core.TelegramFlow
