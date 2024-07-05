@@ -7,10 +7,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
 fun ChatsRoute(
+    navigateToChat: (chatId: Long) -> Unit,
     viewModel: ChatsViewModel = hiltViewModel()
 ) {
 
     val chats by viewModel.chats.collectAsState()
 
-    ChatsScreen(chats = chats)
+    ChatsScreen(chats = chats, navigateToChat = navigateToChat)
 }

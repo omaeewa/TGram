@@ -30,7 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.miracle.ui.theme.TGramThemeWithBack
+import com.miracle.ui.theme.TGramTheme
 import com.miracle.ui.theme.lSpacing
 import com.miracle.ui.theme.mColors
 import com.miracle.ui.theme.mShapes
@@ -146,7 +146,7 @@ fun InputPhoneNumberScreen(
 @Preview
 @Composable
 private fun InputPhoneNumberScreenPreview() {
-    TGramThemeWithBack {
+    TGramTheme {
         InputPhoneNumberScreen(
             Modifier.padding(lSpacing.medium),
             phoneNumber = "09090909"

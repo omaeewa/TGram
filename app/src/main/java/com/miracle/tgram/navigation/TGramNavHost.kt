@@ -1,8 +1,9 @@
 package com.miracle.tgram.navigation
 
-import android.annotation.SuppressLint
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -10,10 +11,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.miracle.authorization.navigation.Authorization
 import com.miracle.authorization.navigation.authorizationScreen
+import com.miracle.chat.navigation.chatScreen
+import com.miracle.chat.navigation.navigateToChat
 import com.miracle.chats.navigation.chatsScreen
 import com.miracle.chats.navigation.navigateToChats
 
-@SuppressLint("RestrictedApi")
 @Composable
 fun TGramNavHost(
     modifier: Modifier = Modifier,
@@ -23,8 +25,22 @@ fun TGramNavHost(
     NavHost(
         navController = navController,
         startDestination = startDestination,
-        enterTransition = { EnterTransition.None },
-        exitTransition = { ExitTransition.None },
+        enterTransition = {
+            fadeIn() + slideInHorizontally(
+                initialOffsetX = { it / 4 }
+            )
+        },
+        exitTransition = {
+            fadeOut() + slideOutHorizontally(
+                targetOffsetX = { it / 4 }
+            )
+        },
+        popEnterTransition = {
+            fadeIn()
+        },
+        popExitTransition = {
+            fadeOut()
+        },
         modifier = modifier
     ) {
         authorizationScreen(navigateToChats = {
@@ -34,6 +50,7 @@ fun TGramNavHost(
                 }
             }
         })
-        chatsScreen()
+        chatsScreen(navigateToChat = navController::navigateToChat)
+        chatScreen(onBackBtnClick = navController::popBackStack)
     }
 }

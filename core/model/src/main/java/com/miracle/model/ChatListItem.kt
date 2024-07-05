@@ -9,4 +9,17 @@ data class ChatListItem(
     val unreadCount: Int,
     val lastMessage: String?,
     val date: Int? //Timestamp
-)
+) {
+
+    companion object {
+        val empty = ChatListItem(
+            id = 0,
+            title = "",
+            imageModel = null,
+            isMuted = false,
+            unreadCount = 0,
+            lastMessage = null,
+            date = null
+        )
+    }
+}

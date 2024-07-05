@@ -17,6 +17,7 @@
             <option value="$PROJECT_DIR$/core/ui" />
             <option value="$PROJECT_DIR$/feature" />
             <option value="$PROJECT_DIR$/feature/authorization" />
+            <option value="$PROJECT_DIR$/feature/chat" />
             <option value="$PROJECT_DIR$/feature/chats" />
             <option value="$PROJECT_DIR$/libtd" />
             <option value="$PROJECT_DIR$/libtd-ktx" />

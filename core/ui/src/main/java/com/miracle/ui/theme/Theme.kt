@@ -1,15 +1,12 @@
 package com.miracle.ui.theme
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 
 interface ColorScheme {
@@ -80,14 +77,6 @@ fun TGramTheme(
     }
 }
 
-@Composable
-fun TGramThemeWithBack(content: @Composable () -> Unit) {
-    TGramTheme {
-        Box(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
-            content()
-        }
-    }
-}
 
 //Material 3 vars
 //val mColors @Composable get() = MaterialTheme.colorScheme

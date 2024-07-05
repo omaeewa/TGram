@@ -4,7 +4,9 @@ import com.miracle.common.Dispatcher
 import com.miracle.common.TGramDispatchers.IO
 import com.miracle.common.di.ApplicationScope
 import com.miracle.data.mapper.toChatListItem
+import com.miracle.data.mapper.toTextMessage
 import com.miracle.data.repository.ChatsRepositoryTdLib.UpdateHandler
+import com.miracle.model.Message
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,6 +18,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.telegram.core.TelegramFlow
 import kotlinx.telegram.coroutines.downloadFile
+import kotlinx.telegram.coroutines.getChatHistory
 import kotlinx.telegram.coroutines.loadChats
 import kotlinx.telegram.flows.chatLastMessageFlow
 import kotlinx.telegram.flows.chatPhotoFlow
@@ -59,13 +62,20 @@ class ChatsRepositoryTdLib @Inject constructor(
         }
     }
 
+    override suspend fun getMessages(
+        chatId: Long,
+        fromMessageId: Long,
+        offset: Int,
+        limit: Int,
+        onlyLocal: Boolean
+    ) = telegramApi.getChatHistory(
+        chatId, fromMessageId, offset, limit, onlyLocal
+    ).messages.map { Message(id = it.id, message = it.content.toTextMessage())  }
+
     private fun handleNewChat(chat: Chat) = UpdateHandler { chats ->
         chats.add(chat)
 
         chat.photo?.small?.run {
-//            coroutineScope.launch(dispatcherIo) { telegramApi.deleteFile(id) }
-//            return@run
-
             if (local.canBeDownloaded && !local.isDownloadingActive && !local.isDownloadingCompleted)
                 saveImageLocally(id)
         }

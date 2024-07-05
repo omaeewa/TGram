@@ -25,7 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.miracle.ui.theme.TGramThemeWithBack
+import com.miracle.ui.theme.TGramTheme
 import com.miracle.ui.theme.lSpacing
 import com.miracle.ui.theme.mColors
 import com.miracle.ui.theme.mShapes
@@ -108,7 +108,7 @@ fun InputCodeScreen(
 @Preview(showBackground = true)
 @Composable
 private fun InputCodeScreenPreview() {
-    TGramThemeWithBack {
+    TGramTheme {
         InputCodeScreen(code = "232")
     }
 }

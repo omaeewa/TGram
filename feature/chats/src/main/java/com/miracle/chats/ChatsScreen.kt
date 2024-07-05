@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -41,8 +40,8 @@ import com.miracle.common.utils.removeNewlines
 import com.miracle.model.ChatListItem
 import com.miracle.ui.composables.ProfilePhoto
 import com.miracle.ui.composables.ProfilePhotoSize
+import com.miracle.ui.noRippleClickable
 import com.miracle.ui.theme.TGramTheme
-import com.miracle.ui.theme.TGramThemeWithBack
 import com.miracle.ui.theme.lSpacing
 import com.miracle.ui.theme.mColors
 import com.miracle.ui.theme.mTypography
@@ -51,7 +50,11 @@ import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
 
 @Composable
-fun ChatsScreen(chats: List<ChatListItem>, modifier: Modifier = Modifier) {
+fun ChatsScreen(
+    chats: List<ChatListItem>,
+    modifier: Modifier = Modifier,
+    navigateToChat: (chatId: Long) -> Unit = {}
+) {
     val hazeState = remember { HazeState() }
     Scaffold(
         topBar = {
@@ -76,10 +79,13 @@ fun ChatsScreen(chats: List<ChatListItem>, modifier: Modifier = Modifier) {
                 Spacer(modifier = Modifier.height(it.calculateTopPadding()))
             }
 
-            itemsIndexed(items = chats, key = { _, chat -> chat.id }) { index, item ->
+            itemsIndexed(items = chats, key = { _, chat -> chat.id }) { index, chat ->
                 val itemIsNotLast = index != chats.indices.last
 
-                ChatItem(item, showUnderline = itemIsNotLast)
+                ChatItem(
+                    chat,
+                    showUnderline = itemIsNotLast,
+                    modifier = Modifier.noRippleClickable { navigateToChat(chat.id) })
             }
         }
     }
@@ -101,7 +107,7 @@ private fun ChatsScreenPreview() {
 
     val items = (0..100L).map { item.copy(id = it) }
 
-    TGramThemeWithBack {
+    TGramTheme {
         ChatsScreen(items)
     }
 }
@@ -173,8 +179,7 @@ fun ChatItem(
                     top = lSpacing.small,
                     bottom = lSpacing.small,
                     end = 12.dp
-                )
-                .size(55.dp),
+                ),
             profilePhotoSize = ProfilePhotoSize.large,
             placeholderRes = item.placeholderRes
         )
@@ -262,7 +267,7 @@ private fun ChatItemPreview() {
         placeholderRes = com.miracle.common.R.drawable.nikolaj_durov
     )
 
-    TGramThemeWithBack {
+    TGramTheme {
         ChatItem(item)
     }
 }

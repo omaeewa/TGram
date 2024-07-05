@@ -10,8 +10,11 @@ import kotlinx.serialization.Serializable
 @Serializable
 object Chats
 
-fun NavController.navigateToChats(navOptionsBuilder: NavOptionsBuilder.() -> Unit = {}) = navigate(Chats, navOptionsBuilder)
+fun NavController.navigateToChats(navOptionsBuilder: NavOptionsBuilder.() -> Unit = {}) =
+    navigate(Chats, navOptionsBuilder)
 
-fun NavGraphBuilder.chatsScreen() = composable<Chats> {
-    ChatsRoute()
+fun NavGraphBuilder.chatsScreen(
+    navigateToChat: (chatId: Long) -> Unit,
+) = composable<Chats> {
+    ChatsRoute(navigateToChat = navigateToChat)
 }
