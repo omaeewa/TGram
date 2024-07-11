@@ -11,7 +11,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.miracle.authorization.navigation.Authorization
 import com.miracle.chats.navigation.Chats
+import com.miracle.tgram.navigation.Empty
 import com.miracle.ui.theme.TGramTheme
 import com.miracle.ui.theme.mColors
 import dagger.hilt.android.AndroidEntryPoint
@@ -29,9 +31,16 @@ class MainActivity : ComponentActivity() {
             val uiState by viewModel.uiState.collectAsState()
             splashScreen.setKeepOnScreenCondition { uiState is MainActivityUiState.Loading }
 
+            val startDestination: Any = when (val state = uiState) {
+                MainActivityUiState.Loading -> Empty
+                is MainActivityUiState.Success -> {
+                    if (state.isAuthorized) Chats else Authorization
+                }
+            }
+
             TGramTheme {
                 TGramApp(
-                    startDestination = Chats,
+                    startDestination = startDestination,
                     modifier = Modifier
                         .fillMaxSize()
                         .background(mColors.surface)

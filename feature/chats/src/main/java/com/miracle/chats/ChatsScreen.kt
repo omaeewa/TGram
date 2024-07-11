@@ -35,9 +35,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.miracle.chats.model.ChatListItem
 import com.miracle.common.utils.formatTimestamp
 import com.miracle.common.utils.removeNewlines
-import com.miracle.model.ChatListItem
 import com.miracle.ui.composables.ProfilePhoto
 import com.miracle.ui.composables.ProfilePhotoSize
 import com.miracle.ui.noRippleClickable
@@ -94,18 +94,7 @@ fun ChatsScreen(
 @Preview
 @Composable
 private fun ChatsScreenPreview() {
-    val item = ChatListItem(
-        id = 0,
-        title = "Telegram",
-        imageModel = 12,
-        isMuted = false,
-        unreadCount = 4,
-        lastMessage = "Hello there",
-        date = 1376427600,
-        placeholderRes = com.miracle.common.R.drawable.nikolaj_durov
-    )
-
-    val items = (0..100L).map { item.copy(id = it) }
+    val items = (0..100L).map { ChatListItem.dummy.copy(id = it) }
 
     TGramTheme {
         ChatsScreen(items)
@@ -256,18 +245,8 @@ fun ChatItem(
 @Preview
 @Composable
 private fun ChatItemPreview() {
-    val item = ChatListItem(
-        id = 0,
-        title = "Telegram",
-        imageModel = 12,
-        isMuted = false,
-        unreadCount = 4,
-        lastMessage = "Hello there",
-        date = 1376427600,
-        placeholderRes = com.miracle.common.R.drawable.nikolaj_durov
-    )
 
     TGramTheme {
-        ChatItem(item)
+        ChatItem(ChatListItem.dummy)
     }
 }

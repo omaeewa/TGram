@@ -35,15 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -52,11 +44,15 @@ import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
+import com.miracle.chat.model.ChatInfo
+import com.miracle.chat.model.Message
 import com.miracle.chat.navigation.Chat
-import com.miracle.model.ChatListItem
-import com.miracle.model.Message
+import com.miracle.ui.composables.MessageShape
+import com.miracle.ui.composables.MessageType
 import com.miracle.ui.composables.ProfilePhoto
 import com.miracle.ui.composables.ProfilePhotoSize
+import com.miracle.ui.composables.getBottomPadding
+import com.miracle.ui.composables.getMessageType
 import com.miracle.ui.theme.TGramTheme
 import com.miracle.ui.theme.lSpacing
 import com.miracle.ui.theme.mColors
@@ -76,7 +72,7 @@ fun ChatRoute(
     val messages = viewModel.messagesPager.collectAsLazyPagingItems()
 
     ChatScreen(
-        chat = chat,
+        chatInfo = chat,
         messages = messages,
         onBackBtnClick = onBackBtnClick
     )
@@ -85,7 +81,7 @@ fun ChatRoute(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
-    chat: ChatListItem,
+    chatInfo: ChatInfo,
     messages: LazyPagingItems<Message>,
     modifier: Modifier = Modifier,
     onBackBtnClick: () -> Unit = {}
@@ -95,13 +91,12 @@ fun ChatScreen(
     }
     val hazeState = remember { HazeState() }
 
-
     val gradientColors = listOf(Color(164, 81, 166), Color(101, 113, 247))
 
     Scaffold(
         topBar = {
             ChatTopAppBar(
-                item = chat,
+                chatInfo = chatInfo,
                 modifier = Modifier.hazeChild(state = hazeState),
                 onBackBtnClick = onBackBtnClick,
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -137,7 +132,24 @@ fun ChatScreen(
             items(messages.itemCount, key = messages.itemKey { it.id }) {
                 val message = messages[it]!!
 
-                MessageItem(message = message, gradientColors = gradientColors)
+                val messageType = getMessageType(
+                    messages = messages.itemSnapshotList.items,
+                    currentIndex = it,
+                    currentUserId = chatInfo.currentUserId
+                )
+
+                Box(Modifier.fillMaxWidth()) {
+
+                    MessageItem(
+                        message = message,
+                        gradientColors = gradientColors,
+                        modifier = Modifier
+                            .fillMaxWidth(0.8f)
+                            .align(if (messageType.isSenderMe()) Alignment.CenterEnd else Alignment.CenterStart)
+                            .padding(bottom = messageType.getBottomPadding()),
+                        messageType = messageType,
+                    )
+                }
             }
 
             item {
@@ -147,41 +159,40 @@ fun ChatScreen(
     }
 }
 
+private fun Boolean.toType() = if (this) MessageType.Right.Single else MessageType.Left.Single
+
+fun getMessageType(messages: List<Message>, currentIndex: Int, currentUserId: Long): MessageType {
+    val message = messages[currentIndex]
+    val prevMessage = messages.getOrNull(currentIndex + 1)
+    val nextMessage = messages.getOrNull(currentIndex - 1)
+    val isSenderMe = message.userId == currentUserId
+
+    return getMessageType(
+        previousTimestamp = prevMessage?.date,
+        currentTimestamp = message.date,
+        nextTimestamp = nextMessage?.date,
+        previousMessageType = (prevMessage?.userId == currentUserId).toType(),
+        currentMessageType = isSenderMe.toType(),
+        isSameUser = prevMessage?.userId == message.userId
+    )
+}
+
 @Composable
 fun MessageItem(
     message: Message,
     gradientColors: List<Color>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    messageType: MessageType,
 ) {
-    var position by remember { mutableStateOf(Offset.Zero) }
-    val screenHeight =
-        with(LocalDensity.current) { LocalConfiguration.current.screenHeightDp.dp.roundToPx() }
-
-    Box(
-        modifier = modifier
-            .padding(5.dp)
-            .onGloballyPositioned { coordinates ->
-                position = coordinates.positionInRoot()
-            }
-            .drawBehind {
-                val gradientBrush = Brush.verticalGradient(
-                    colors = gradientColors,
-                    startY = -position.y,
-                    endY = screenHeight - position.y
-                )
-
-                drawRoundRect(
-                    brush = gradientBrush,
-                    cornerRadius = CornerRadius(20f, 20f)
-                )
-            }
-            .fillMaxWidth(0.8f),
+    MessageShape(
+        modifier = modifier,
+        gradientColors = gradientColors,
+        messageType = messageType,
     ) {
         Text(
             text = message.message,
-            style = mTypography.bodyMedium,
+            style = mTypography.bodyLarge,
             color = mColors.onSurface,
-            modifier = Modifier.padding(10.dp)
         )
     }
 }
@@ -193,7 +204,11 @@ private fun MessageItemPreview() {
     val gradientColors = listOf(Color(164, 81, 166), Color(101, 113, 247))
 
     TGramTheme {
-        MessageItem(message = Message(1, "Hello brabus"), gradientColors = gradientColors)
+        MessageItem(
+            message = Message.dummy,
+            gradientColors = gradientColors,
+            messageType = MessageType.Left.Single
+        )
     }
 }
 
@@ -201,22 +216,19 @@ private fun MessageItemPreview() {
 @Preview
 @Composable
 private fun ChatScreenPreview() {
-    val item = ChatListItem(
-        id = 0,
-        title = "Telegram",
-        imageModel = 12,
-        isMuted = false,
-        unreadCount = 4,
-        lastMessage = "Hello there",
-        date = 1376427600,
-        placeholderRes = com.miracle.common.R.drawable.nikolaj_durov
-    )
+    val currentUserId = 12L
+    val dummyMessages = (0..30L).map {
 
-    val dummyMessages = (0..30).map { Message(id = it.toLong(), message = "Hello world $it") }
+        val messageId = listOf(currentUserId, 0).random()
+        Message.dummy.copy(id = it, userId = messageId)
+    }
 
     val messages = flowOf(PagingData.from(dummyMessages)).collectAsLazyPagingItems()
     TGramTheme {
-        ChatScreen(chat = item, messages = messages)
+        ChatScreen(
+            chatInfo = ChatInfo.dummy.copy(currentUserId = currentUserId),
+            messages = messages
+        )
     }
 }
 
@@ -224,7 +236,7 @@ private fun ChatScreenPreview() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatTopAppBar(
-    item: ChatListItem,
+    chatInfo: ChatInfo,
     modifier: Modifier = Modifier,
     onBackBtnClick: () -> Unit = {},
     onMoreBtnClick: () -> Unit = {},
@@ -243,18 +255,18 @@ fun ChatTopAppBar(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 ProfilePhoto(
-                    imageModel = item.imageModel,
-                    title = item.title,
-                    userId = item.id,
+                    imageModel = chatInfo.imageModel,
+                    title = chatInfo.title,
+                    userId = chatInfo.id,
                     profilePhotoSize = ProfilePhotoSize.medium,
-                    placeholderRes = item.placeholderRes
+                    placeholderRes = chatInfo.placeholderRes
                 )
 
                 Spacer(modifier = Modifier.width(lSpacing.small))
 
                 Column {
                     Text(
-                        text = item.title,
+                        text = chatInfo.title,
                         style = mTypography.titleMedium,
                         color = mColors.onSurface
                     )
@@ -279,20 +291,8 @@ fun ChatTopAppBar(
 @Preview
 @Composable
 private fun ChatTopAppBarPreview() {
-    val item = ChatListItem(
-        id = 0,
-        title = "Telegram",
-        imageModel = 12,
-        isMuted = false,
-        unreadCount = 4,
-        lastMessage = "Hello there",
-        date = 1376427600,
-        placeholderRes = com.miracle.common.R.drawable.nikolaj_durov
-    )
-
-
     TGramTheme {
-        ChatTopAppBar(item = item)
+        ChatTopAppBar(chatInfo = ChatInfo.dummy)
     }
 }
 

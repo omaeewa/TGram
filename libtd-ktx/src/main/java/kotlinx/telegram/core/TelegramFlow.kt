@@ -1,6 +1,5 @@
 package kotlinx.telegram.core
 
-import android.util.Log
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -47,6 +46,7 @@ class TelegramFlow(
 
         updateEventsFlow = callbackFlow {
             val resultHandler = Client.ResultHandler {
+//                Log.d("kekaboba", "update -> ${it}")
                 trySend(it)
             }
 

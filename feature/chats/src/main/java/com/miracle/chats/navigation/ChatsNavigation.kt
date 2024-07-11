@@ -1,5 +1,7 @@
 package com.miracle.chats.navigation
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptionsBuilder
@@ -15,6 +17,9 @@ fun NavController.navigateToChats(navOptionsBuilder: NavOptionsBuilder.() -> Uni
 
 fun NavGraphBuilder.chatsScreen(
     navigateToChat: (chatId: Long) -> Unit,
-) = composable<Chats> {
+) = composable<Chats>(
+    enterTransition = { EnterTransition.None },
+    exitTransition = { ExitTransition.None }
+) {
     ChatsRoute(navigateToChat = navigateToChat)
 }

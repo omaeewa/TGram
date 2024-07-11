@@ -20,6 +20,7 @@ androidxHiltNavigationCompose = "1.2.0"
 ksp = "2.0.0-1.0.21"
 dokka = "1.4.30"
 pagingCompose = "3.3.0"
+secretsGradlePlugin = "2.0.1"
 td = "1.7.9"
 
 [libraries]
@@ -52,6 +53,7 @@ material = { group = "com.google.android.material", name = "material", version.r
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-android-testing = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
+secrets-gradle-plugin = { module = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin", version.ref = "secretsGradlePlugin" }
 td = { module = "com.github.tdlibx:td", version.ref = "td" }
 
 [plugins]

@@ -2,13 +2,10 @@ package com.miracle.data.repository
 
 import android.content.Context
 import android.os.Build
-import com.miracle.common.Dispatcher
-import com.miracle.common.TGramDispatchers
 import com.miracle.common.di.ApplicationScope
 import com.miracle.data.BuildConfig
 import com.miracle.data.model.AuthState
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.filterNot
@@ -75,7 +72,6 @@ class AuthRepositoryTdLib @Inject constructor(
         useSecretChats = true
         systemLanguageCode = Locale.getDefault().language
         deviceModel = Build.MODEL
-        systemVersion = Build.VERSION.RELEASE
         applicationVersion = "1.0"
     }
 }

@@ -1,7 +1,11 @@
 package com.miracle.data.di
 
+import com.miracle.data.repository.AccountRepository
+import com.miracle.data.repository.AccountRepositoryTdLib
 import com.miracle.data.repository.AuthRepository
 import com.miracle.data.repository.AuthRepositoryTdLib
+import com.miracle.data.repository.ChatRepository
+import com.miracle.data.repository.ChatRepositoryTdLib
 import com.miracle.data.repository.ChatsRepository
 import com.miracle.data.repository.ChatsRepositoryTdLib
 import com.miracle.data.repository.UserRepository
@@ -29,6 +33,14 @@ interface DataModule {
     @Singleton
     @Binds
     fun provideChatsRepository(impl: ChatsRepositoryTdLib): ChatsRepository
+
+    @Singleton
+    @Binds
+    fun provideChatRepository(impl: ChatRepositoryTdLib): ChatRepository
+
+    @Singleton
+    @Binds
+    fun provideAccountRepository(impl: AccountRepositoryTdLib): AccountRepository
 
     companion object {
 

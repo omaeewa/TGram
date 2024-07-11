@@ -3,10 +3,7 @@ package com.miracle.data.repository
 import com.miracle.common.Dispatcher
 import com.miracle.common.TGramDispatchers.IO
 import com.miracle.common.di.ApplicationScope
-import com.miracle.data.mapper.toChatListItem
-import com.miracle.data.mapper.toTextMessage
 import com.miracle.data.repository.ChatsRepositoryTdLib.UpdateHandler
-import com.miracle.model.Message
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
@@ -15,10 +12,8 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.telegram.core.TelegramFlow
 import kotlinx.telegram.coroutines.downloadFile
-import kotlinx.telegram.coroutines.getChatHistory
 import kotlinx.telegram.coroutines.loadChats
 import kotlinx.telegram.flows.chatLastMessageFlow
 import kotlinx.telegram.flows.chatPhotoFlow
@@ -49,28 +44,15 @@ class ChatsRepositoryTdLib @Inject constructor(
         telegramApi.fileFlow().map(::handleFileUpdate)
     ).scan(emptyList<Chat>()) { chats, updateHandler ->
         chats.toMutableList().apply(updateHandler::invoke)
-            .sortedByDescending { it.lastMessage?.date }
-    }.map { it.map { chat -> chat.toChatListItem() } }
+    }
         .stateIn(coroutineScope, SharingStarted.Lazily, emptyList())
 
 
-    override suspend fun loadMore(limit: Int): Unit = withContext(dispatcherIo) {
-        try {
-            telegramApi.loadChats(null, limit)
-        } catch (e: Throwable) {
-            //All chats were loaded
-        }
+    override suspend fun loadMore(limit: Int) = try {
+        telegramApi.loadChats(null, limit)
+    } catch (e: Throwable) {
+        //All chats were loaded
     }
-
-    override suspend fun getMessages(
-        chatId: Long,
-        fromMessageId: Long,
-        offset: Int,
-        limit: Int,
-        onlyLocal: Boolean
-    ) = telegramApi.getChatHistory(
-        chatId, fromMessageId, offset, limit, onlyLocal
-    ).messages.map { Message(id = it.id, message = it.content.toTextMessage())  }
 
     private fun handleNewChat(chat: Chat) = UpdateHandler { chats ->
         chats.add(chat)
