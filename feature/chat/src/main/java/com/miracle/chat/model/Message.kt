@@ -15,7 +15,7 @@ data class Message(
     val date: Int
 ) {
     companion object {
-        val dummy = Message(1, userId = null, message = "Hello brabus", date = 0)
+        val dummy = Message(1, userId = null, message = "Hello brabus", date = 1376427600)
     }
 }
 

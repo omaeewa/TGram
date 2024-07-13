@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.BasicTextField
@@ -29,6 +30,7 @@ import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -51,6 +54,8 @@ import com.miracle.ui.composables.MessageShape
 import com.miracle.ui.composables.MessageType
 import com.miracle.ui.composables.ProfilePhoto
 import com.miracle.ui.composables.ProfilePhotoSize
+import com.miracle.ui.composables.Side
+import com.miracle.ui.composables.dummyGradientColors
 import com.miracle.ui.composables.getBottomPadding
 import com.miracle.ui.composables.getMessageType
 import com.miracle.ui.theme.TGramTheme
@@ -91,7 +96,9 @@ fun ChatScreen(
     }
     val hazeState = remember { HazeState() }
 
-    val gradientColors = listOf(Color(164, 81, 166), Color(101, 113, 247))
+    val gradientColors = dummyGradientColors
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+
 
     Scaffold(
         topBar = {
@@ -112,6 +119,7 @@ fun ChatScreen(
                 onInputTextValueChange = { inputValue = it }
             )
         },
+        containerColor = Color.Black,
         modifier = modifier
     ) { paddingValues ->
 
@@ -132,11 +140,15 @@ fun ChatScreen(
             items(messages.itemCount, key = messages.itemKey { it.id }) {
                 val message = messages[it]!!
 
-                val messageType = getMessageType(
-                    messages = messages.itemSnapshotList.items,
-                    currentIndex = it,
-                    currentUserId = chatInfo.currentUserId
-                )
+                val messageType by remember {
+                    derivedStateOf {
+                        getMessageType(
+                            messages = messages.itemSnapshotList.items,
+                            currentIndex = it,
+                            currentUserId = chatInfo.currentUserId
+                        )
+                    }
+                }
 
                 Box(Modifier.fillMaxWidth()) {
 
@@ -144,8 +156,8 @@ fun ChatScreen(
                         message = message,
                         gradientColors = gradientColors,
                         modifier = Modifier
-                            .fillMaxWidth(0.8f)
-                            .align(if (messageType.isSenderMe()) Alignment.CenterEnd else Alignment.CenterStart)
+                            .widthIn(max = screenWidth * 0.8f)
+                            .align(if (messageType.isRightSide()) Alignment.CenterEnd else Alignment.CenterStart)
                             .padding(bottom = messageType.getBottomPadding()),
                         messageType = messageType,
                     )
@@ -159,41 +171,37 @@ fun ChatScreen(
     }
 }
 
-private fun Boolean.toType() = if (this) MessageType.Right.Single else MessageType.Left.Single
 
 fun getMessageType(messages: List<Message>, currentIndex: Int, currentUserId: Long): MessageType {
     val message = messages[currentIndex]
     val prevMessage = messages.getOrNull(currentIndex + 1)
     val nextMessage = messages.getOrNull(currentIndex - 1)
-    val isSenderMe = message.userId == currentUserId
+    val currentMessageSide = if (message.userId == currentUserId) Side.Right else Side.Left
 
     return getMessageType(
         previousTimestamp = prevMessage?.date,
         currentTimestamp = message.date,
         nextTimestamp = nextMessage?.date,
-        previousMessageType = (prevMessage?.userId == currentUserId).toType(),
-        currentMessageType = isSenderMe.toType(),
-        isSameUser = prevMessage?.userId == message.userId
+        currentMessageSide = currentMessageSide,
+        isPrevSameUser = prevMessage?.userId == message.userId,
+        isNextSameUser = nextMessage?.userId == message.userId,
     )
 }
 
 @Composable
 fun MessageItem(
     message: Message,
+    messageType: MessageType,
     gradientColors: List<Color>,
     modifier: Modifier = Modifier,
-    messageType: MessageType,
 ) {
     MessageShape(
         modifier = modifier,
         gradientColors = gradientColors,
         messageType = messageType,
     ) {
-        Text(
-            text = message.message,
-            style = mTypography.bodyLarge,
-            color = mColors.onSurface,
-        )
+
+        MessageTextContent(message = message, messageType = messageType)
     }
 }
 
@@ -201,13 +209,11 @@ fun MessageItem(
 @Preview
 @Composable
 private fun MessageItemPreview() {
-    val gradientColors = listOf(Color(164, 81, 166), Color(101, 113, 247))
-
     TGramTheme {
         MessageItem(
-            message = Message.dummy,
-            gradientColors = gradientColors,
-            messageType = MessageType.Left.Single
+            message = Message.dummy.copy(message = "Для четкого различия функций форматирования временных меток и чтобы названия лучше в Для четкого различия функций форматированdff"),
+            gradientColors = dummyGradientColors,
+            messageType = MessageType.Single(Side.Left)
         )
     }
 }
@@ -218,9 +224,8 @@ private fun MessageItemPreview() {
 private fun ChatScreenPreview() {
     val currentUserId = 12L
     val dummyMessages = (0..30L).map {
-
-        val messageId = listOf(currentUserId, 0).random()
-        Message.dummy.copy(id = it, userId = messageId)
+        val userId = listOf(currentUserId, 0).random()
+        Message.dummy.copy(id = it, userId = userId)
     }
 
     val messages = flowOf(PagingData.from(dummyMessages)).collectAsLazyPagingItems()

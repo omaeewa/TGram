@@ -25,7 +25,6 @@ import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.miracle.ui.composables.MessageShapePath.leftTailed
 import com.miracle.ui.composables.MessageShapePath.rightTailed
@@ -35,156 +34,155 @@ import com.miracle.ui.theme.mColors
 import com.miracle.ui.theme.mTypography
 
 
-sealed interface MessageType {
-    sealed interface Left : MessageType {
-        data object Start : Left
-        data object Middle : Left
-        data object End : Left
-        data object Single : Left
-    }
-
-    sealed interface Right : MessageType {
-        data object Start : Right
-        data object Middle : Right
-        data object End : Right
-        data object Single : Right
-    }
-
-    fun isSenderMe() = this is Right
-    fun isLeft() = this is Left
+enum class Side {
+    Left, Right
 }
 
 
+sealed class MessageType(val side: Side) {
+    class Start(side: Side) : MessageType(side)
+    class Middle(side: Side) : MessageType(side)
+    class End(side: Side) : MessageType(side)
+    class Single(side: Side) : MessageType(side)
+
+    fun isRightSide() = side == Side.Right
+}
 
 fun getMessageType(
     previousTimestamp: Int?,
     currentTimestamp: Int,
     nextTimestamp: Int?,
-    previousMessageType: MessageType?,
-    currentMessageType: MessageType,
-    isSameUser: Boolean,
+    currentMessageSide: Side,
+    isPrevSameUser: Boolean,
+    isNextSameUser: Boolean,
     timeGap: Int = 6 * 60
 ): MessageType {
 
     val isPreviousInTimeRange =
         previousTimestamp != null && (currentTimestamp - previousTimestamp <= timeGap)
     val isNextInTimeRange = nextTimestamp != null && (nextTimestamp - currentTimestamp <= timeGap)
-    val isPreviousSameSide = previousMessageType == currentMessageType
-    val isGroupContinued = isPreviousInTimeRange && isPreviousSameSide && isSameUser
+    val isGroupContinued = isPreviousInTimeRange && isPrevSameUser
 
     return when {
         !isGroupContinued -> {
-            if (isNextInTimeRange) {
-                if (currentMessageType.isSenderMe()) MessageType.Right.Start else MessageType.Left.Start
-            } else {
-                if (currentMessageType.isSenderMe()) MessageType.Right.Single else MessageType.Left.Single
-            }
+            if (isNextInTimeRange && isNextSameUser) MessageType.Start(currentMessageSide)
+            else MessageType.Single(currentMessageSide)
         }
 
-        isNextInTimeRange -> {
-            if (currentMessageType.isSenderMe()) MessageType.Right.Middle else MessageType.Left.Middle
-        }
-
-        else -> {
-            if (currentMessageType.isSenderMe()) MessageType.Right.End else MessageType.Left.End
-        }
+        isNextInTimeRange && isNextSameUser -> MessageType.Middle(currentMessageSide)
+        else -> MessageType.End(currentMessageSide)
     }
 }
 
-private const val Big_Corner = 50f
+private const val Big_Corner = 40f
 private const val Small_Corner = 15f
 const val Gap_Radius = 20f
 
-fun MessageType.getShapePath(drawScope: DrawScope) = when (this) {
-    MessageType.Left.Start -> drawScope.tailLess(
-        gapRadius = Gap_Radius,
-        corners = MessageShapePath.Corners(
-            topLeftRadius = Big_Corner,
-            topRightRadius = Big_Corner,
-            bottomRightRadius = Big_Corner,
-            bottomLeftRadius = Small_Corner
-        ),
-        isGapLeft = true
-    )
+fun MessageType.getShapePath(drawScope: DrawScope) = when (val type = this) {
+    is MessageType.End -> {
+        when (type.side) {
+            Side.Left -> drawScope.leftTailed(
+                gapRadius = Gap_Radius,
+                corners = MessageShapePath.Corners(
+                    topLeftRadius = Small_Corner,
+                    topRightRadius = Big_Corner,
+                    bottomRightRadius = Big_Corner
+                )
+            )
 
-    MessageType.Left.Middle -> drawScope.tailLess(
-        gapRadius = Gap_Radius,
-        corners = MessageShapePath.Corners(
-            topLeftRadius = Small_Corner,
-            topRightRadius = Big_Corner,
-            bottomRightRadius = Big_Corner,
-            bottomLeftRadius = Small_Corner
-        ),
-        isGapLeft = true
-    )
+            Side.Right -> drawScope.rightTailed(
+                gapRadius = Gap_Radius,
+                corners = MessageShapePath.Corners(
+                    topLeftRadius = Big_Corner,
+                    topRightRadius = Small_Corner,
+                    bottomLeftRadius = Big_Corner
+                )
+            )
+        }
+    }
 
-    MessageType.Left.End -> drawScope.leftTailed(
-        gapRadius = Gap_Radius,
-        corners = MessageShapePath.Corners(
-            topLeftRadius = Small_Corner,
-            topRightRadius = Big_Corner,
-            bottomRightRadius = Big_Corner
-        )
-    )
+    is MessageType.Middle -> {
+        when (type.side) {
+            Side.Left -> drawScope.tailLess(
+                gapRadius = Gap_Radius,
+                corners = MessageShapePath.Corners(
+                    topLeftRadius = Small_Corner,
+                    topRightRadius = Big_Corner,
+                    bottomRightRadius = Big_Corner,
+                    bottomLeftRadius = Small_Corner
+                ),
+                isGapLeft = true
+            )
 
-    MessageType.Left.Single -> drawScope.leftTailed(
-        gapRadius = Gap_Radius,
-        corners = MessageShapePath.Corners(
-            topLeftRadius = Big_Corner,
-            topRightRadius = Big_Corner,
-            bottomRightRadius = Big_Corner
-        )
-    )
+            Side.Right -> drawScope.tailLess(
+                gapRadius = Gap_Radius,
+                corners = MessageShapePath.Corners(
+                    topLeftRadius = Big_Corner,
+                    topRightRadius = Small_Corner,
+                    bottomRightRadius = Small_Corner,
+                    bottomLeftRadius = Big_Corner
+                ),
+                isGapLeft = false
+            )
+        }
+    }
 
-    MessageType.Right.Start -> drawScope.tailLess(
-        gapRadius = Gap_Radius,
-        corners = MessageShapePath.Corners(
-            topLeftRadius = Big_Corner,
-            topRightRadius = Big_Corner,
-            bottomRightRadius = Small_Corner,
-            bottomLeftRadius = Big_Corner
-        ),
-        isGapLeft = false
-    )
+    is MessageType.Single -> {
+        when (type.side) {
+            Side.Left -> drawScope.leftTailed(
+                gapRadius = Gap_Radius,
+                corners = MessageShapePath.Corners(
+                    topLeftRadius = Big_Corner,
+                    topRightRadius = Big_Corner,
+                    bottomRightRadius = Big_Corner
+                )
+            )
 
-    MessageType.Right.Middle -> drawScope.tailLess(
-        gapRadius = Gap_Radius,
-        corners = MessageShapePath.Corners(
-            topLeftRadius = Big_Corner,
-            topRightRadius = Small_Corner,
-            bottomRightRadius = Small_Corner,
-            bottomLeftRadius = Big_Corner
-        ),
-        isGapLeft = false
-    )
+            Side.Right -> drawScope.rightTailed(
+                gapRadius = Gap_Radius,
+                corners = MessageShapePath.Corners(
+                    topLeftRadius = Big_Corner,
+                    topRightRadius = Big_Corner,
+                    bottomLeftRadius = Big_Corner
+                )
+            )
+        }
+    }
 
-    MessageType.Right.End -> drawScope.rightTailed(
-        gapRadius = Gap_Radius,
-        corners = MessageShapePath.Corners(
-            topLeftRadius = Big_Corner,
-            topRightRadius = Small_Corner,
-            bottomLeftRadius = Big_Corner
-        )
-    )
+    is MessageType.Start -> {
+        when (type.side) {
+            Side.Left -> drawScope.tailLess(
+                gapRadius = Gap_Radius,
+                corners = MessageShapePath.Corners(
+                    topLeftRadius = Big_Corner,
+                    topRightRadius = Big_Corner,
+                    bottomRightRadius = Big_Corner,
+                    bottomLeftRadius = Small_Corner
+                ),
+                isGapLeft = true
+            )
 
-    MessageType.Right.Single -> drawScope.rightTailed(
-        gapRadius = Gap_Radius,
-        corners = MessageShapePath.Corners(
-            topLeftRadius = Big_Corner,
-            topRightRadius = Big_Corner,
-            bottomLeftRadius = Big_Corner
-        )
-    )
+            Side.Right -> drawScope.tailLess(
+                gapRadius = Gap_Radius,
+                corners = MessageShapePath.Corners(
+                    topLeftRadius = Big_Corner,
+                    topRightRadius = Big_Corner,
+                    bottomRightRadius = Small_Corner,
+                    bottomLeftRadius = Big_Corner
+                ),
+                isGapLeft = false
+            )
+        }
+    }
 }
 
 private val SmallPadding = 3.dp
 private val BigPadding = 8.dp
 
+
 fun MessageType.getBottomPadding() = when (this) {
-    MessageType.Left.End,
-    MessageType.Left.Single,
-    MessageType.Right.End,
-    MessageType.Right.Single -> BigPadding
+    is MessageType.End,
+    is MessageType.Single -> BigPadding
 
     else -> SmallPadding
 }
@@ -298,12 +296,17 @@ object MessageShapePath {
     }
 }
 
+val dummyGradientColors = listOf(
+    Color(165, 81, 167, 255),
+    Color(126, 70, 193, 255),
+    Color(101, 113, 247, 255)
+)
+
 @Composable
 fun MessageShape(
     gradientColors: List<Color>,
     messageType: MessageType,
     modifier: Modifier = Modifier,
-    innerPadding: Dp = 7.dp,
     content: @Composable BoxScope.() -> Unit
 ) {
     var position by remember { mutableStateOf(Offset.Zero) }
@@ -312,9 +315,9 @@ fun MessageShape(
         with(LocalDensity.current) { LocalConfiguration.current.screenHeightDp.dp.roundToPx() }
 
     val gapDp = with(LocalDensity.current) { Gap_Radius.toDp() }
-    fun Modifier.gapPadding() = when (messageType) {
-        is MessageType.Left -> padding(start = gapDp)
-        is MessageType.Right -> padding(end = gapDp)
+    fun Modifier.gapPadding() = when (messageType.side) {
+        Side.Left -> padding(start = gapDp)
+        Side.Right -> padding(end = gapDp)
     }
 
     fun Modifier.drawGradient() = this
@@ -337,16 +340,15 @@ fun MessageShape(
         drawPath(path = path, color = backColor)
     }
 
-    fun Modifier.drawBackground() = when (messageType) {
-        is MessageType.Left -> drawWithoutGradient()
-        is MessageType.Right -> drawGradient()
+    fun Modifier.drawBackground() = when (messageType.side) {
+        Side.Left -> drawWithoutGradient()
+        Side.Right -> drawGradient()
     }
 
     Box(
         modifier = modifier
             .drawBackground()
-            .gapPadding()
-            .padding(innerPadding),
+            .gapPadding(),
         content = content
     )
 }
@@ -355,30 +357,28 @@ fun MessageShape(
 @Preview
 @Composable
 private fun AllShapesPreview() {
-    val gradientColors = listOf(Color(164, 81, 166), Color(101, 113, 247))
+    val types = Side.entries.flatMap { side ->
+        listOf(
+            MessageType.Start(side),
+            MessageType.Middle(side),
+            MessageType.End(side),
+            MessageType.Single(side)
+        )
+    }
 
-    val types = listOf(
-        MessageType.Left.Start,
-        MessageType.Left.Middle,
-        MessageType.Left.End,
-        MessageType.Left.Single,
-        MessageType.Right.Start,
-        MessageType.Right.Middle,
-        MessageType.Right.End,
-        MessageType.Right.Single,
-    )
     TGramTheme {
         Column {
             types.forEach { type ->
                 MessageShape(
                     modifier = Modifier.padding(bottom = type.getBottomPadding()),
-                    gradientColors = gradientColors,
+                    gradientColors = dummyGradientColors,
                     messageType = type,
                 ) {
                     Text(
                         text = "Hello world, aboba",
                         style = mTypography.bodyMedium,
                         color = mColors.onSurface,
+                        modifier = Modifier.padding(7.dp)
                     )
                 }
             }

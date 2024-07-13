@@ -4,11 +4,11 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-fun Int.formatTimestamp(): String {
+fun Int.formatAsFriendlyDate(): String {
     val locale = Locale.getDefault()
     val currentDate = Calendar.getInstance()
     val timestampDate = Calendar.getInstance().apply {
-        timeInMillis = this@formatTimestamp * 1000L
+        timeInMillis = this@formatAsFriendlyDate * 1000L
     }
 
     return when {
@@ -19,20 +19,28 @@ fun Int.formatTimestamp(): String {
     }
 }
 
-fun isWithin24Hours(currentDate: Calendar, timestampDate: Calendar): Boolean {
+private fun isWithin24Hours(currentDate: Calendar, timestampDate: Calendar): Boolean {
     val difference = currentDate.timeInMillis - timestampDate.timeInMillis
     val millisecondsIn24Hours = 24 * 60 * 60 * 1000
     return difference in 0..millisecondsIn24Hours
 }
 
-fun isWithinLastWeek(currentDate: Calendar, timestampDate: Calendar): Boolean {
+private fun isWithinLastWeek(currentDate: Calendar, timestampDate: Calendar): Boolean {
     val oneWeekAgo = currentDate.clone() as Calendar
     oneWeekAgo.add(Calendar.DAY_OF_YEAR, -7)
     return timestampDate.after(oneWeekAgo) && timestampDate.before(currentDate)
 }
 
-fun isWithinLastYear(currentDate: Calendar, timestampDate: Calendar): Boolean {
+private fun isWithinLastYear(currentDate: Calendar, timestampDate: Calendar): Boolean {
     val oneYearAgo = currentDate.clone() as Calendar
     oneYearAgo.add(Calendar.YEAR, -1)
     return timestampDate.after(oneYearAgo) && timestampDate.before(currentDate)
+}
+
+fun Int.toTimeString(): String {
+    val locale = Locale.getDefault()
+    val timestampDate = Calendar.getInstance().apply {
+        timeInMillis = this@toTimeString * 1000L
+    }
+    return SimpleDateFormat("HH:mm", locale).format(timestampDate.time)
 }

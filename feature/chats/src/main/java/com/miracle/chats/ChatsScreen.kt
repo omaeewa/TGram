@@ -1,6 +1,7 @@
 package com.miracle.chats
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,11 +37,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.miracle.chats.model.ChatListItem
-import com.miracle.common.utils.formatTimestamp
+import com.miracle.common.utils.formatAsFriendlyDate
 import com.miracle.common.utils.removeNewlines
 import com.miracle.ui.composables.ProfilePhoto
 import com.miracle.ui.composables.ProfilePhotoSize
-import com.miracle.ui.noRippleClickable
 import com.miracle.ui.theme.TGramTheme
 import com.miracle.ui.theme.lSpacing
 import com.miracle.ui.theme.mColors
@@ -85,7 +85,7 @@ fun ChatsScreen(
                 ChatItem(
                     chat,
                     showUnderline = itemIsNotLast,
-                    modifier = Modifier.noRippleClickable { navigateToChat(chat.id) })
+                    modifier = Modifier.clickable { navigateToChat(chat.id) })
             }
         }
     }
@@ -192,7 +192,7 @@ fun ChatItem(
                         color = mColors.onSurface
                     )
                     Text(
-                        text = item.date?.formatTimestamp().orEmpty(),
+                        text = item.date?.formatAsFriendlyDate().orEmpty(),
                         style = mTypography.bodyMedium,
                         color = mColors.secondary
                     )
