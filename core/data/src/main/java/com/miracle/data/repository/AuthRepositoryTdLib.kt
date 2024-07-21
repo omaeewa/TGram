@@ -7,11 +7,13 @@ import com.miracle.data.BuildConfig
 import com.miracle.data.model.AuthState
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.filterNot
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.telegram.core.TelegramFlow
 import kotlinx.telegram.coroutines.checkAuthenticationCode
 import kotlinx.telegram.coroutines.checkAuthenticationPassword
@@ -29,7 +31,6 @@ class AuthRepositoryTdLib @Inject constructor(
 
     override val authState = telegramApi.authorizationStateFlow()
         .onEach(::checkRequiredParams)
-        .filterNot { it is TdApi.AuthorizationStateWaitTdlibParameters }
         .map {
             when (it) {
                 is TdApi.AuthorizationStateReady -> AuthState.Ready
@@ -41,6 +42,9 @@ class AuthRepositoryTdLib @Inject constructor(
         }.stateIn(
             coroutineScope, SharingStarted.Eagerly, AuthState.Unexpected
         )
+
+    private val _firstScreenLoaded = MutableStateFlow(false)
+    override val firstScreenLoaded: StateFlow<Boolean> = _firstScreenLoaded
 
     override suspend fun setAuthPhoneNumber(phone: String) {
         telegramApi.setAuthenticationPhoneNumber(phone, null)
@@ -54,6 +58,11 @@ class AuthRepositoryTdLib @Inject constructor(
         telegramApi.checkAuthenticationPassword(password)
     }
 
+    override fun setFirstScreenLoaded() {
+        if (!_firstScreenLoaded.value)
+            _firstScreenLoaded.update { true }
+    }
+
     private suspend fun checkRequiredParams(state: TdApi.AuthorizationState?) {
         when (state) {
             is TdApi.AuthorizationStateWaitTdlibParameters ->
@@ -65,6 +74,7 @@ class AuthRepositoryTdLib @Inject constructor(
     //Replace with your personal telegram credentials
     // Go to https://my.telegram.org to obtain api id (integer) and api hash (string).
     private val tgCredentials = TdApi.SetTdlibParameters().apply {
+        useTestDc = false
         databaseDirectory = appContext.filesDir.absolutePath
         apiId = BuildConfig.apiId.toInt()
         apiHash = BuildConfig.apiHash

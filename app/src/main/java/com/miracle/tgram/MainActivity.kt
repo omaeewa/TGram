@@ -11,9 +11,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.miracle.authorization.navigation.Authorization
-import com.miracle.chats.navigation.Chats
-import com.miracle.tgram.navigation.Empty
+import cafe.adriel.voyager.core.screen.Screen
+import com.miracle.tgram.navigation.AuthorizationScreen
+import com.miracle.tgram.navigation.ChatsScreen
+import com.miracle.tgram.navigation.PlaceholderScreen
 import com.miracle.ui.theme.TGramTheme
 import com.miracle.ui.theme.mColors
 import dagger.hilt.android.AndroidEntryPoint
@@ -29,12 +30,14 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val uiState by viewModel.uiState.collectAsState()
-            splashScreen.setKeepOnScreenCondition { uiState is MainActivityUiState.Loading }
+            val isFirstScreenLoaded by viewModel.isFirstScreenLoaded.collectAsState()
 
-            val startDestination: Any = when (val state = uiState) {
-                MainActivityUiState.Loading -> Empty
+            splashScreen.setKeepOnScreenCondition { !isFirstScreenLoaded }
+
+            val startDestination: Screen = when (val state = uiState) {
+                MainActivityUiState.Loading -> PlaceholderScreen()
                 is MainActivityUiState.Success -> {
-                    if (state.isAuthorized) Chats else Authorization
+                    if (state.isAuthorized) ChatsScreen() else AuthorizationScreen()
                 }
             }
 

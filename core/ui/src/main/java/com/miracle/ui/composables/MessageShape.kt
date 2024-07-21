@@ -32,6 +32,7 @@ import com.miracle.ui.composables.MessageShapePath.tailLess
 import com.miracle.ui.theme.TGramTheme
 import com.miracle.ui.theme.mColors
 import com.miracle.ui.theme.mTypography
+import okhttp3.internal.immutableListOf
 
 
 enum class Side {
@@ -296,7 +297,7 @@ object MessageShapePath {
     }
 }
 
-val dummyGradientColors = listOf(
+val dummyGradientColors = immutableListOf(
     Color(165, 81, 167, 255),
     Color(126, 70, 193, 255),
     Color(101, 113, 247, 255)
@@ -375,7 +376,7 @@ private fun AllShapesPreview() {
                     messageType = type,
                 ) {
                     Text(
-                        text = "Hello world, aboba",
+                        text = "Hello world, aaaaa",
                         style = mTypography.bodyMedium,
                         color = mColors.onSurface,
                         modifier = Modifier.padding(7.dp)

@@ -4,6 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.miracle.data.model.AuthState
 
@@ -21,7 +24,20 @@ fun AuthorizationRoute(
             navigateToChats()
     }
 
-    when (authState) {
+    LaunchedEffect(key1 = Unit) {
+        viewModel.updateFirstScreenLoaded()
+    }
+
+    var screenState by remember {
+        mutableStateOf(AuthState.Unexpected)
+    }
+
+    LaunchedEffect(key1 = authState) {
+        if (authState in listOf(AuthState.WaitPhoneNumber, AuthState.WaitCode))
+            screenState = authState
+    }
+
+    when (screenState) {
         AuthState.WaitPhoneNumber -> InputPhoneNumberScreen(
             phoneNumber = phoneNumber,
             onPhoneNumberChange = viewModel::onPhoneNumberChange,
@@ -31,7 +47,7 @@ fun AuthorizationRoute(
         AuthState.WaitCode -> InputCodeScreen(
             code = code,
             onCodeChange = viewModel::onAuthCodeChange,
-            setCode = viewModel::setAuthCode
+            setCode = viewModel::setAuthCode,
         )
 
         else -> {}

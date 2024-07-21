@@ -38,4 +38,8 @@ class AuthorizationViewModel @Inject constructor(
     fun setAuthCode() = viewModelScope.launch(dispatcherIo) {
         authRepository.setAuthCode(authCode.value)
     }
+
+    fun updateFirstScreenLoaded() {
+        authRepository.setFirstScreenLoaded()
+    }
 }

@@ -1,5 +1,6 @@
 package com.miracle.tgram
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.miracle.data.model.AuthState
@@ -15,15 +16,21 @@ import javax.inject.Inject
 @HiltViewModel
 class MainActivityViewModel @Inject constructor(
     authRepository: AuthRepository
-): ViewModel() {
+) : ViewModel() {
 
     val uiState = authRepository.authState.map {
-        Success(it == AuthState.Ready)
+        when (it) {
+            AuthState.Ready -> Success(true)
+            AuthState.WaitPhoneNumber, AuthState.WaitCode -> Success(false)
+            else -> Loading
+        }
     }.stateIn(
         scope = viewModelScope,
         initialValue = Loading,
-        started = SharingStarted.WhileSubscribed(5_000),
+        started = SharingStarted.Eagerly,
     )
+
+    val isFirstScreenLoaded = authRepository.firstScreenLoaded
 }
 
 sealed interface MainActivityUiState {

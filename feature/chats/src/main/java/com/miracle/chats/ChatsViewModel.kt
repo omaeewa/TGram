@@ -3,6 +3,7 @@ package com.miracle.chats
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.miracle.chats.model.toChatListItem
+import com.miracle.data.repository.AuthRepository
 import com.miracle.data.repository.ChatsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -13,7 +14,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ChatsViewModel @Inject constructor(
-    private val chatsRepository: ChatsRepository
+    private val chatsRepository: ChatsRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
     val chats = chatsRepository.chats
         .map {
@@ -30,6 +32,10 @@ class ChatsViewModel @Inject constructor(
         viewModelScope.launch {
             chatsRepository.loadMore(20)
         }
+    }
+
+    fun updateFirstScreenLoaded() {
+        authRepository.setFirstScreenLoaded()
     }
 }
 

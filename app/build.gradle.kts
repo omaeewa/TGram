@@ -82,4 +82,8 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     implementation (libs.androidx.core.splashscreen)
+
+    implementation(libs.voyager.navigator)
+    implementation(libs.voyager.transitions)
+    implementation(libs.voyager.hilt)
 }

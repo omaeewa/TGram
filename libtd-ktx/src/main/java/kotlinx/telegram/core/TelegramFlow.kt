@@ -23,7 +23,7 @@ import kotlin.coroutines.resumeWithException
 class TelegramFlow(
     val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val flowScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-)  {
+) {
 
     /**
      * Telegram [Client] instance. Null if instance is not attached
@@ -46,7 +46,8 @@ class TelegramFlow(
 
         updateEventsFlow = callbackFlow {
             val resultHandler = Client.ResultHandler {
-//                Log.d("kekaboba", "update -> ${it}")
+//                if (it.constructor == TdApi.UpdateAuthorizationState.CONSTRUCTOR)
+//                    Log.d("kekaboba", "UpdateAuthorizationState flow -> ${it}")
                 trySend(it)
             }
 
