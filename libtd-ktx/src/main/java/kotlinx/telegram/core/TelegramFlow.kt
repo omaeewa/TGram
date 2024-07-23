@@ -1,5 +1,6 @@
 package kotlinx.telegram.core
 
+import android.util.Log
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import org.drinkless.tdlib.Client
@@ -48,7 +50,9 @@ class TelegramFlow(
             val resultHandler = Client.ResultHandler {
 //                if (it.constructor == TdApi.UpdateAuthorizationState.CONSTRUCTOR)
 //                    Log.d("kekaboba", "UpdateAuthorizationState flow -> ${it}")
-                trySend(it)
+                flowScope.launch {
+                    send(it)
+                }
             }
 
             client = existingClient
@@ -63,9 +67,8 @@ class TelegramFlow(
             .shareIn(
                 scope = flowScope,
                 replay = 1,
-                started = SharingStarted.Eagerly
+                started = SharingStarted.Lazily
             )
-
     }
 
     /**
