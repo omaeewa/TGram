@@ -10,3 +10,4 @@ val SkyBlue = Color(0xFF6BB2E7) // Primary
 val LightSkyBlue = Color(0xFF5EA3DE) // PrimaryContainer
 val LightSlateGray = Color(0xFF7D8B98) // Secondary
 val SteelBlue = Color(0xFF3E5262) // SecondaryContainer
+val StormDust = Color(0xFF4B5C40) // SecondaryContainer

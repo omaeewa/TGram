@@ -1,4 +1,4 @@
-package com.miracle.chat
+package com.miracle.chat.composables
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background

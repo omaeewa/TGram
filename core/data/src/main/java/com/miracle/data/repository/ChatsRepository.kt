@@ -1,7 +1,7 @@
 package com.miracle.data.repository
 
+import com.miracle.data.model.Chat
 import kotlinx.coroutines.flow.StateFlow
-import org.drinkless.tdlib.TdApi.Chat
 
 interface ChatsRepository {
 

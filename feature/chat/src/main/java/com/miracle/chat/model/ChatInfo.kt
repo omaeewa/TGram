@@ -1,6 +1,6 @@
 package com.miracle.chat.model
 
-import org.drinkless.tdlib.TdApi.Chat
+import com.miracle.data.model.Chat
 import org.drinkless.tdlib.TdApi.ChatPhotoInfo
 
 data class ChatInfo(

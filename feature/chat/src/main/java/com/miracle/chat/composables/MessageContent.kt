@@ -1,4 +1,4 @@
-package com.miracle.chat
+package com.miracle.chat.composables
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.offset
@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.miracle.chat.R
 import com.miracle.chat.model.Message
 import com.miracle.common.utils.toTimeString
 import com.miracle.ui.composables.MessageShape

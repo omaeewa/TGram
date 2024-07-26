@@ -48,8 +48,8 @@ class TelegramFlow(
 
         updateEventsFlow = callbackFlow {
             val resultHandler = Client.ResultHandler {
-//                if (it.constructor == TdApi.UpdateAuthorizationState.CONSTRUCTOR)
-//                    Log.d("kekaboba", "UpdateAuthorizationState flow -> ${it}")
+//                if (it.constructor == TdApi.UpdateChatTitle.CONSTRUCTOR)
+//                    Log.d("kekaboba", "UpdateChatDraftMessage flow -> ${it}")
                 flowScope.launch {
                     send(it)
                 }

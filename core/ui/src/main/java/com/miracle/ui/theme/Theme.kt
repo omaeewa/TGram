@@ -9,25 +9,11 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 
-interface ColorScheme {
-    val surface: Color
-    val onSurface: Color
-    val surfaceContainer: Color
-    val background: Color
-    val primary: Color
-    val primaryContainer: Color
-    val secondary: Color
-    val secondaryContainer: Color
+interface ColorSchemeLocal {
+    val chatDateBackground: Color
 
-    object DarkColorScheme : ColorScheme {
-        override val surface = DarkBlueGray
-        override val onSurface = White
-        override val surfaceContainer = DarkSlateGray
-        override val background = DarkBlueGray
-        override val primary = SkyBlue
-        override val primaryContainer = LightSkyBlue
-        override val secondary = LightSlateGray
-        override val secondaryContainer = SteelBlue
+    object DarkColorScheme : ColorSchemeLocal {
+        override val chatDateBackground = StormDust
     }
 //
 //    object LightColorScheme : ColorScheme {
@@ -63,9 +49,11 @@ fun TGramTheme(
 //        dynamicColor && !darkTheme -> dynamicLightColorScheme(LocalContext.current)
 //        else -> darkColorScheme
 //    }
+    val localColorScheme = ColorSchemeLocal.DarkColorScheme
 
     CompositionLocalProvider(
         LocalSpacing provides spacing,
+        LocalColorScheme provides localColorScheme
     ) {
         MaterialTheme(
             typography = Typography,
@@ -86,7 +74,8 @@ val mColors @Composable get() = MaterialTheme.colorScheme
 
 //Local vars
 val lSpacing @Composable get() = LocalSpacing.current
+val lColors @Composable get() = LocalColorScheme.current
 
 
 val LocalSpacing = compositionLocalOf<Spacing> { error("LocalSpacing not found!") }
-val LocalColorScheme = compositionLocalOf<ColorScheme> { error("LocalColorScheme not found!") }
+val LocalColorScheme = compositionLocalOf<ColorSchemeLocal> { error("LocalColorScheme not found!") }

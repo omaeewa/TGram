@@ -236,7 +236,7 @@ fun BackStackParallax(navigator: Navigator) {
                     }
 
                     //if dragging block screen interaction
-                    if (offset > 0)
+                    if (offset > 0 && !anchoredDraggableState.isAnimationRunning)
                         Box(Modifier.fillMaxSize().pointerInput(Unit) {})
                 }
             }
@@ -287,8 +287,8 @@ abstract class NavigatorScreenTransition {
         this.isDragging = isDragging
 
         val (initial, target) = when {
-            isAnimatingIn -> 0.65f to 1f
-            isAnimatingAway -> 0f to 0.35f
+            isAnimatingIn -> 0.6f to 1f
+            isAnimatingAway -> 0f to 0.4f
             else -> 0f to 1f
         }
 
@@ -322,7 +322,7 @@ private class SlideTransition : NavigatorScreenTransition() {
             if (isAnimatingAway) {
                 modifier = if (isPop) {
                     val alphaFraction =
-                        (1 - scaleValue(start = 0f, end = 0.3f, currentValue = transitionFraction)).pow(5)
+                        (1 - scaleValue(start = 0f, end = 0.4f, currentValue = transitionFraction)).pow(5)
                     val alpha = if (!isDragging) Modifier.alpha(alphaFraction) else Modifier
 
                     modifier
@@ -348,7 +348,7 @@ private class SlideTransition : NavigatorScreenTransition() {
                         }
                 } else {
                     val alphaFraction =
-                        scaleValue(start = 0.7f, end = 1f, currentValue = transitionFraction, exponent = 5)
+                        scaleValue(start = 0.6f, end = 1f, currentValue = transitionFraction, exponent = 5)
 
                     val alpha = if (!isDragging) Modifier.alpha(alphaFraction) else Modifier
 

@@ -34,7 +34,6 @@ interface DataModule {
     @Binds
     fun provideChatsRepository(impl: ChatsRepositoryTdLib): ChatsRepository
 
-    @Singleton
     @Binds
     fun provideChatRepository(impl: ChatRepositoryTdLib): ChatRepository
 
