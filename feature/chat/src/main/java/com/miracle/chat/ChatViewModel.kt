@@ -1,6 +1,5 @@
 package com.miracle.chat
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.miracle.chat.model.ChatInfo
@@ -39,11 +38,11 @@ class ChatViewModel @AssistedInject constructor(
 
     init {
         viewModelScope.launch {
-            chatRepository.loadMessagesFirstTime(chatId)
+            chatRepository.initializeMessages(chatId)
         }
     }
 
-    private val currentUserIdFlow = flow { emit(accountRepository.getMe().id) }
+    private val currentUserIdFlow = accountRepository.me.map { it.id }
         .stateIn(viewModelScope, SharingStarted.Eagerly, -1)
 
     val messages = chatRepository.messages.map { it.map { it.toMessage() } }.stateIn(

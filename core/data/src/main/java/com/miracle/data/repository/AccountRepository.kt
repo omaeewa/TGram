@@ -1,7 +1,8 @@
 package com.miracle.data.repository
 
-import org.drinkless.tdlib.TdApi.User
+import com.miracle.data.model.User
+import kotlinx.coroutines.flow.Flow
 
 interface AccountRepository {
-    suspend fun getMe(): User
+    val me: Flow<User>
 }

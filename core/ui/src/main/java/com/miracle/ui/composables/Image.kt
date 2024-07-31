@@ -34,7 +34,7 @@ fun ProfilePhoto(
 ) {
     if (imageModel == null) ShowInitials(
         modifier = modifier,
-        initials = title.first().uppercase(),
+        initials = title.firstOrNull()?.uppercase().orEmpty(),
         gradientColors = userId.getGradientColors(),
         profilePhotoSize = profilePhotoSize
     )

@@ -16,6 +16,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import org.drinkless.tdlib.Client
 import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.UpdateUser
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -48,8 +49,8 @@ class TelegramFlow(
 
         updateEventsFlow = callbackFlow {
             val resultHandler = Client.ResultHandler {
-//                if (it.constructor == TdApi.UpdateChatTitle.CONSTRUCTOR)
-//                    Log.d("kekaboba", "UpdateChatDraftMessage flow -> ${it}")
+//                if (it.constructor in listOf(UpdateUser.CONSTRUCTOR, TdApi.UpdateFile.CONSTRUCTOR))
+//                    Log.d("kekaboba", "Update -> ${it}")
                 flowScope.launch {
                     send(it)
                 }

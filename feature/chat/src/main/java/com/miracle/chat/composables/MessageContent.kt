@@ -13,8 +13,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.miracle.chat.R
-import com.miracle.chat.model.Message
+import com.miracle.chat.model.MessageUi
+import com.miracle.chat.model.MessageSendStatus
 import com.miracle.common.utils.toTimeString
+import com.miracle.data.model.FormattedText
+import com.miracle.data.model.MessageText
 import com.miracle.ui.composables.MessageShape
 import com.miracle.ui.composables.MessageType
 import com.miracle.ui.composables.Side
@@ -25,13 +28,15 @@ import com.miracle.ui.theme.mTypography
 
 @Composable
 fun MessageTextContent(
-    message: Message,
+    date: Int,
+    content: MessageText,
     messageType: MessageType,
+    sendStatus: MessageSendStatus,
     modifier: Modifier = Modifier
 ) {
     TextWithItemInTheEnd(
         modifier = modifier.padding(7.dp),
-        text = message.message,
+        text = content.text.text,
         textStyle = mTypography.bodyLarge,
         textColor = mColors.onSurface,
         endItem = {
@@ -42,23 +47,38 @@ fun MessageTextContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = message.date.toTimeString(),
+                    text = date.toTimeString(),
                     style = mTypography.bodyMedium,
                     color = if (messageType.isRightSide()) mColors.onSurface else mColors.secondary,
                     modifier = Modifier.align(Alignment.Bottom)
                 )
 
                 if (messageType.isRightSide())
-                    Icon(
-                        painter = painterResource(id = R.drawable.msg_mini_checks),
-                        contentDescription = null,
-                        modifier = Modifier
+                    SendStatusIcon(
+                        sendStatus = sendStatus, Modifier
                             .padding(start = 4.dp)
-                            .size(18.dp),
-                        tint = mColors.onSurface
+                            .size(18.dp)
                     )
             }
         }
+    )
+}
+
+
+@Composable
+private fun SendStatusIcon(sendStatus: MessageSendStatus, modifier: Modifier = Modifier) {
+    val iconRes = when (sendStatus) {
+        MessageSendStatus.SENDING -> R.drawable.msg_recent
+        MessageSendStatus.SENT_UNREAD -> R.drawable.msg_text_check
+        MessageSendStatus.SENT_READ -> R.drawable.msg_seen
+        MessageSendStatus.SEND_ERROR -> R.drawable.msg_warning
+    }
+
+    Icon(
+        painter = painterResource(id = iconRes),
+        contentDescription = null,
+        modifier = modifier,
+        tint = mColors.onSurface
     )
 }
 
@@ -72,7 +92,12 @@ private fun MessageTextContentPreview() {
             messageType = messageType,
         ) {
 
-            MessageTextContent(message = Message.dummy, messageType = messageType)
+            MessageTextContent(
+                date = MessageUi.dummy.date,
+                content = MessageText(text = FormattedText(text = "Hello world")),
+                messageType = messageType,
+                sendStatus = MessageSendStatus.SENT_READ
+            )
         }
     }
 }

@@ -21,6 +21,7 @@ import kotlinx.telegram.flows.chatDraftMessageFlow
 import kotlinx.telegram.flows.chatLastMessageFlow
 import kotlinx.telegram.flows.chatPhotoFlow
 import kotlinx.telegram.flows.chatPositionFlow
+import kotlinx.telegram.flows.chatReadOutboxFlow
 import kotlinx.telegram.flows.chatTitleFlow
 import kotlinx.telegram.flows.fileFlow
 import kotlinx.telegram.flows.newChatFlow
@@ -30,6 +31,7 @@ import org.drinkless.tdlib.TdApi.UpdateChatDraftMessage
 import org.drinkless.tdlib.TdApi.UpdateChatLastMessage
 import org.drinkless.tdlib.TdApi.UpdateChatPhoto
 import org.drinkless.tdlib.TdApi.UpdateChatPosition
+import org.drinkless.tdlib.TdApi.UpdateChatReadOutbox
 import org.drinkless.tdlib.TdApi.UpdateChatTitle
 import javax.inject.Inject
 
@@ -46,7 +48,8 @@ class ChatsRepositoryTdLib @Inject constructor(
         telegramApi.chatPositionFlow().map(::handleChatPositions),
         telegramApi.chatLastMessageFlow().map(::handleChatLastMessage),
         telegramApi.fileFlow().map(::handleFileUpdate),
-        telegramApi.chatDraftMessageFlow().map(::handleChatDraftMessage)
+        telegramApi.chatDraftMessageFlow().map(::handleChatDraftMessage),
+        telegramApi.chatReadOutboxFlow().map(::handleChatReadOutbox)
     ).scan(emptyList<Chat>()) { chats, updateHandler ->
         updateHandler(chats.toMutableList())
     }
@@ -64,16 +67,20 @@ class ChatsRepositoryTdLib @Inject constructor(
     }
 
     private fun handleNewChat(chat: TdApi.Chat) = UpdateHandler { chats ->
-        chat.photo?.small?.run {
-            if (local.canBeDownloaded && !local.isDownloadingActive && !local.isDownloadingCompleted)
-                saveImageLocally(id)
+        coroutineScope.launch {
+            telegramApi.downloadFile(chat.photo?.small)
         }
 
         chats + chat.toChat()
     }
 
-    private fun saveImageLocally(fileId: Int) = coroutineScope.launch(dispatcherIo) {
-        telegramApi.downloadFile(fileId, 1, 0, 0, true)
+
+    private fun handleChatReadOutbox(update: UpdateChatReadOutbox) = UpdateHandler { chats ->
+        chats.updateChat(update.chatId) { chat ->
+            chat.copy(
+                lastReadOutboxMessageId = update.lastReadOutboxMessageId
+            )
+        }
     }
 
     private fun handleChatTitleUpdate(update: UpdateChatTitle) = UpdateHandler { chats ->
@@ -136,3 +143,11 @@ class ChatsRepositoryTdLib @Inject constructor(
         operator fun invoke(chats: MutableList<Chat>): List<Chat>
     }
 }
+
+suspend fun TelegramFlow.downloadFile(file: File?) {
+    file ?: return
+
+    if (file.local.canBeDownloaded && !file.local.isDownloadingActive && !file.local.isDownloadingCompleted)
+        this.downloadFile(file.id, 1, 0, 0, true)
+}
+

@@ -48,18 +48,21 @@ import com.miracle.ui.theme.mTypography
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
+import kotlin.random.Random
 
 @Composable
 fun ChatsScreen(
     chats: List<ChatListItem>,
     modifier: Modifier = Modifier,
+    changeDrawerState: () -> Unit = {},
     navigateToChat: (chatId: Long) -> Unit = {}
 ) {
     val hazeState = remember { HazeState() }
     Scaffold(
         topBar = {
             ChatsTopAppBar(
-                modifier = Modifier.hazeChild(state = hazeState)
+                modifier = Modifier.hazeChild(state = hazeState),
+                onOpenDrawerIconClick = changeDrawerState
             )
         },
         modifier = modifier
@@ -94,7 +97,7 @@ fun ChatsScreen(
 @Preview
 @Composable
 private fun ChatsScreenPreview() {
-    val items = (0..100L).map { ChatListItem.dummy.copy(id = it) }
+    val items = (0..100L).map { ChatListItem.dummy.copy(id = it, isMuted = Random.nextBoolean()) }
 
     TGramTheme {
         ChatsScreen(items)
@@ -106,6 +109,7 @@ private fun ChatsScreenPreview() {
 @Composable
 fun ChatsTopAppBar(
     modifier: Modifier = Modifier,
+    onOpenDrawerIconClick: () -> Unit = {},
     onNavIconClick: () -> Unit = {}
 ) {
 
@@ -120,7 +124,7 @@ fun ChatsTopAppBar(
             )
         },
         navigationIcon = {
-            IconButton(onClick = onNavIconClick) {
+            IconButton(onClick = onOpenDrawerIconClick) {
                 Icon(
                     imageVector = Icons.Filled.Menu,
                     contentDescription = null,
@@ -212,10 +216,13 @@ fun ChatItem(
 
                     Spacer(modifier = Modifier.width(lSpacing.medium))
 
+                    val unreadMessagesBackColor = if (item.isMuted) mColors.secondaryContainer
+                    else mColors.primary
+
                     if (item.unreadCount > 0)
                         Surface(
                             shape = RoundedCornerShape(50),
-                            color = mColors.secondaryContainer
+                            color = unreadMessagesBackColor
                         ) {
 
                             Text(
@@ -247,6 +254,8 @@ fun ChatItem(
 private fun ChatItemPreview() {
 
     TGramTheme {
-        ChatItem(ChatListItem.dummy)
+        Surface {
+            ChatItem(ChatListItem.dummy.copy(isMuted = Random.nextBoolean()))
+        }
     }
 }

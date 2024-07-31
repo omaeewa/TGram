@@ -1,5 +1,6 @@
 package com.miracle.data.repository
 
+import com.miracle.data.model.Message
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import org.drinkless.tdlib.TdApi
@@ -20,11 +21,10 @@ interface ChatRepository {
         draftMessage: DraftMessage?
     )
 
-    val messages: StateFlow<List<TdApi.Message>>
+    val messages: StateFlow<List<Message>>
 
     suspend fun loadMoreMessages(chatId: Long)
-    suspend fun loadMessagesFirstTime(chatId: Long)
-
+    suspend fun initializeMessages(chatId: Long)
 
     suspend fun sendMessage(
         chatId: Long,
@@ -34,4 +34,5 @@ interface ChatRepository {
         replyMarkup: ReplyMarkup? = null,
         inputMessageContent: InputMessageContent?
     )
+
 }

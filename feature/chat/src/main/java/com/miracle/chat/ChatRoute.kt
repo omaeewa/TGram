@@ -1,8 +1,8 @@
 package com.miracle.chat
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -39,8 +40,15 @@ import com.miracle.chat.composables.ChatBottomAppBar
 import com.miracle.chat.composables.ChatTopAppBar
 import com.miracle.chat.composables.MessageTextContent
 import com.miracle.chat.model.ChatInfo
-import com.miracle.chat.model.Message
+import com.miracle.chat.model.MessageUi
+import com.miracle.chat.model.MessageSendStatus
 import com.miracle.chat.navigation.Chat
+import com.miracle.data.model.FormattedText
+import com.miracle.data.model.MessageDocument
+import com.miracle.data.model.MessagePhoto
+import com.miracle.data.model.MessageText
+import com.miracle.data.model.MessageUnsupported
+import com.miracle.data.model.MessageVideo
 import com.miracle.ui.composables.MessageShape
 import com.miracle.ui.composables.MessageType
 import com.miracle.ui.composables.Side
@@ -71,7 +79,7 @@ fun ChatRoute(
 
     ChatScreen(
         chatInfo = chat,
-        messages = messages,
+        messageUis = messages,
         onBackBtnClick = onBackBtnClick,
         inputMessageContent = inputMessageContent,
         onInputMessageContentChange = viewModel::onDraftMessageChange,
@@ -85,7 +93,7 @@ fun ChatRoute(
 @Composable
 fun ChatScreen(
     chatInfo: ChatInfo,
-    messages: List<Message>,
+    messageUis: List<MessageUi>,
     modifier: Modifier = Modifier,
     onSendMessageClick: () -> Unit = {},
     inputMessageContent: String = "",
@@ -112,15 +120,33 @@ fun ChatScreen(
             )
         },
         bottomBar = {
-            ChatBottomAppBar(
-                modifier = Modifier
-                    .hazeChild(state = hazeState)
-                    .imePadding()
-                    .windowInsetsPadding(BottomAppBarDefaults.windowInsets),
-                inputTextValue = inputMessageContent,
-                onInputTextValueChange = onInputMessageContentChange,
-                onSendMessageClick = onSendMessageClick
-            )
+            if (chatInfo.canSendMessages)
+                ChatBottomAppBar(
+                    modifier = Modifier
+                        .hazeChild(state = hazeState)
+                        .imePadding()
+                        .windowInsetsPadding(BottomAppBarDefaults.windowInsets),
+                    inputTextValue = inputMessageContent,
+                    onInputTextValueChange = onInputMessageContentChange,
+                    onSendMessageClick = onSendMessageClick
+                )
+            else {
+                Surface {
+                    Box(
+                        contentAlignment = Alignment.Center, modifier = Modifier
+                            .clickable {  }
+                            .fillMaxWidth()
+                            .height(50.dp)
+                    ) {
+                        Text(
+                            text = "MUTE",
+                            color = mColors.primary,
+                            style = mTypography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
         },
         containerColor = Color.Black,
         modifier = modifier
@@ -136,32 +162,36 @@ fun ChatScreen(
                 ),
             reverseLayout = true,
             state = lazyColumnState,
-            contentPadding = PaddingValues(horizontal = lSpacing.tiny, vertical = lSpacing.small)
+            contentPadding = PaddingValues(
+                horizontal = lSpacing.tiny,
+                vertical = lSpacing.small
+            )
         ) {
             item {
                 Spacer(modifier = Modifier.height(paddingValues.calculateBottomPadding() - lSpacing.small))
             }
 
-            messages.groupBy { message ->
+            messageUis.groupBy { message ->
                 val date = Date(message.date.toLong() * 1000)
                 sdf.format(date)
             }.forEach { (date, groupMessages) ->
 
                 itemsIndexed(groupMessages, key = { _, item -> item.id }) { index, message ->
-                    val indexInList by remember(messages) {
+                    val indexInList by remember(messageUis) {
                         derivedStateOf {
-                            messages.indexOfFirst { it.id == message.id }
+                            messageUis.indexOfFirst { it.id == message.id }
                         }
                     }
 
                     val messageType by remember(groupMessages) {
                         derivedStateOf {
-                            getMessageType(
-                                messages = groupMessages,
-                                currentIndex = index,
-                                currentUserId = chatInfo.currentUserId
-                            )
+                            getMessageType(messageUis = groupMessages, currentIndex = index)
                         }
+                    }
+
+                    val sendStatus = when {
+                        message.id <= chatInfo.lastReadOutboxMessageId -> MessageSendStatus.SENT_READ
+                        else -> MessageSendStatus.SENT_UNREAD
                     }
 
                     Box(Modifier.fillMaxWidth()) {
@@ -173,11 +203,12 @@ fun ChatScreen(
                                 .align(if (messageType.isRightSide()) Alignment.CenterEnd else Alignment.CenterStart)
                                 .padding(bottom = messageType.getBottomPadding()),
                             messageType = messageType,
+                            sendStatus = sendStatus
                         )
                     }
 
                     LaunchedEffect(key1 = Unit) {
-                        if (indexInList == messages.lastIndex - 30 && messages.lastIndex >= 30)
+                        if (indexInList == messageUis.lastIndex - 30 && messageUis.lastIndex >= 30)
                             loadMoreMessages()
                     }
                 }
@@ -222,11 +253,11 @@ private fun DateItem(modifier: Modifier = Modifier, formattedDate: String) {
 }
 
 
-fun getMessageType(messages: List<Message>, currentIndex: Int, currentUserId: Long): MessageType {
-    val message = messages[currentIndex]
-    val prevMessage = messages.getOrNull(currentIndex + 1)
-    val nextMessage = messages.getOrNull(currentIndex - 1)
-    val currentMessageSide = if (message.userId == currentUserId) Side.Right else Side.Left
+fun getMessageType(messageUis: List<MessageUi>, currentIndex: Int): MessageType {
+    val message = messageUis[currentIndex]
+    val prevMessage = messageUis.getOrNull(currentIndex + 1)
+    val nextMessage = messageUis.getOrNull(currentIndex - 1)
+    val currentMessageSide = if (message.isOutgoing) Side.Right else Side.Left
 
     return getMessageType(
         previousTimestamp = prevMessage?.date,
@@ -240,7 +271,8 @@ fun getMessageType(messages: List<Message>, currentIndex: Int, currentUserId: Lo
 
 @Composable
 fun MessageItem(
-    message: Message,
+    message: MessageUi,
+    sendStatus: MessageSendStatus,
     messageType: MessageType,
     gradientColors: List<Color>,
     modifier: Modifier = Modifier,
@@ -251,7 +283,43 @@ fun MessageItem(
         messageType = messageType,
     ) {
 
-        MessageTextContent(message = message, messageType = messageType)
+        when (val content = message.messageContent) {
+            is MessageText -> MessageTextContent(
+                date = message.date,
+                content = content,
+                messageType = messageType,
+                sendStatus = sendStatus
+            )
+
+            is MessagePhoto -> MessageTextContent(
+                date = message.date,
+                content = MessageText(content.caption.copy(text = "Photo ${content.caption.text}")),
+                messageType = messageType,
+                sendStatus = sendStatus
+            )
+
+            is MessageVideo -> MessageTextContent(
+                date = message.date,
+                content = MessageText(content.caption.copy(text = "Video ${content.caption.text}")),
+                messageType = messageType,
+                sendStatus = sendStatus
+            )
+
+            is MessageDocument -> MessageTextContent(
+                date = message.date,
+                content = MessageText(content.caption.copy(text = "Document ${content.caption.text}")),
+                messageType = messageType,
+                sendStatus = sendStatus
+            )
+
+            else -> MessageTextContent(
+                date = message.date,
+                content = MessageText(FormattedText("Unsupported Message")),
+                messageType = messageType,
+                sendStatus = sendStatus
+            )
+        }
+
     }
 }
 
@@ -261,9 +329,10 @@ fun MessageItem(
 private fun MessageItemPreview() {
     TGramTheme {
         MessageItem(
-            message = Message.dummy.copy(message = "Для четкого различия функций форматирования временных меток и чтобы названия лучше в Для четкого различия функций форматированdff"),
+            message = MessageUi.dummy.copy(messageContent = MessageText(text = FormattedText("Hello world"))),
             gradientColors = dummyGradientColors,
-            messageType = MessageType.Single(Side.Left)
+            messageType = MessageType.Single(Side.Left),
+            sendStatus = MessageSendStatus.SENT_READ
         )
     }
 }
@@ -273,15 +342,15 @@ private fun MessageItemPreview() {
 @Composable
 private fun ChatScreenPreview() {
     val currentUserId = 12L
-    val dummyMessages = (0..30L).map {
+    val dummyMessageUis = (0..30L).map {
         val userId = listOf(currentUserId, 0).random()
-        Message.dummy.copy(id = it, userId = userId)
+        MessageUi.dummy.copy(id = it, userId = userId)
     }
 
     TGramTheme {
         ChatScreen(
             chatInfo = ChatInfo.dummy.copy(currentUserId = currentUserId),
-            messages = dummyMessages
+            messageUis = dummyMessageUis
         )
     }
 }
