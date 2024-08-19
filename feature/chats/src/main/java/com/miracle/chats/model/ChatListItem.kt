@@ -62,5 +62,6 @@ fun MessageContent?.toTextMessage(): String = when(this) {
     is MessageUnsupported -> "Message..."
     is MessageVideo -> caption.text.takeIf { it.isNotEmpty() } ?: "Video"
     is MessageDocument -> document.fileName
-    else -> ""
+    null -> "null"
+    else -> "Message..."
 }

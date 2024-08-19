@@ -14,7 +14,6 @@ import org.drinkless.tdlib.TdApi.UpdateChatDraftMessage
 
 interface ChatRepository {
 
-    val draftMessageUpdate: Flow<UpdateChatDraftMessage?>
     suspend fun setChatDraftMessage(
         chatId: Long,
         messageThreadId: Long = 0,

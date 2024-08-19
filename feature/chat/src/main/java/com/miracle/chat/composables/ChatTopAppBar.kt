@@ -1,8 +1,10 @@
 package com.miracle.chat.composables
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -17,10 +19,14 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.miracle.chat.R
 import com.miracle.chat.model.ChatInfo
 import com.miracle.ui.composables.ProfilePhoto
 import com.miracle.ui.composables.ProfilePhotoSize
+import com.miracle.ui.noRippleClickable
 import com.miracle.ui.theme.TGramTheme
 import com.miracle.ui.theme.lSpacing
 import com.miracle.ui.theme.mColors
@@ -33,7 +39,9 @@ fun ChatTopAppBar(
     modifier: Modifier = Modifier,
     onBackBtnClick: () -> Unit = {},
     onMoreBtnClick: () -> Unit = {},
-    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors()
+    onCallBtnClick: () -> Unit = {},
+    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
+    onProfileClick: () -> Unit = {},
 ) {
     TopAppBar(
         modifier = modifier,
@@ -41,12 +49,17 @@ fun ChatTopAppBar(
             IconButton(onClick = onBackBtnClick) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = null
+                    contentDescription = null,
+                    tint = mColors.onSurface,
+                    modifier = Modifier.size(26.dp)
                 )
             }
         },
         title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.noRippleClickable(onClick = onProfileClick)
+            ) {
                 ProfilePhoto(
                     imageModel = chatInfo.imageModel,
                     title = chatInfo.title,
@@ -73,7 +86,11 @@ fun ChatTopAppBar(
         },
         actions = {
             IconButton(onClick = onMoreBtnClick) {
-                Icon(imageVector = Icons.Filled.MoreVert, contentDescription = null)
+                Icon(
+                    imageVector = Icons.Filled.MoreVert,
+                    contentDescription = null,
+                    tint = mColors.onSurface
+                )
             }
         },
         colors = colors

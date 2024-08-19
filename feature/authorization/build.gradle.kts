@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
-    id("org.jetbrains.kotlin.plugin.serialization")
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
@@ -9,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.miracle.authorization"
-    compileSdk = 34
+    compileSdk = 35
 
 
     compileOptions {
@@ -41,7 +40,6 @@ dependencies {
 
 
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.kotlinx.serialization.json)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.ui.tooling.preview)

@@ -44,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.miracle.chats.model.AccountItem
+import com.miracle.common.utils.formatPhoneNumber
 import com.miracle.ui.composables.ProfilePhoto
 import com.miracle.ui.composables.ProfilePhotoSize
 import com.miracle.ui.theme.TGramTheme
@@ -160,7 +161,7 @@ fun DrawerContent(
                     Spacer(modifier = Modifier.height(lSpacing.small))
 
                     Text(
-                        text = currentAccount.phoneNumber,
+                        text = currentAccount.phoneNumber.formatPhoneNumber(),
                         style = mTypography.bodyMedium,
                         color = mColors.secondary,
                         fontWeight = FontWeight.Normal

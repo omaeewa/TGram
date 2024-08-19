@@ -11,9 +11,11 @@ import androidx.compose.ui.graphics.Color
 
 interface ColorSchemeLocal {
     val chatDateBackground: Color
+    val darkerBackground: Color
 
     object DarkColorScheme : ColorSchemeLocal {
         override val chatDateBackground = StormDust
+        override val darkerBackground = MidnightBlue
     }
 //
 //    object LightColorScheme : ColorScheme {

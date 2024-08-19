@@ -13,7 +13,8 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.miracle.authorization.AuthorizationRoute
 import com.miracle.chat.ChatRoute
 import com.miracle.chat.ChatViewModel
-import com.miracle.chat.navigation.Chat
+import com.miracle.chatinfo.ChatInfoRoute
+import com.miracle.chatinfo.ChatInfoViewModel
 import com.miracle.chats.ChatsRoute
 import com.miracle.chats.ChatsViewModel
 import com.miracle.ui.theme.mColors
@@ -21,7 +22,11 @@ import com.miracle.ui.theme.mColors
 class PlaceholderScreen : Screen {
     @Composable
     override fun Content() {
-        Box(Modifier.background(mColors.surface).fillMaxSize())
+        Box(
+            Modifier
+                .background(mColors.surface)
+                .fillMaxSize()
+        )
     }
 }
 
@@ -43,14 +48,17 @@ data class ChatScreen(val chatId: Long) : Screen {
         }
 
         ChatRoute(
-            chatData = Chat(chatId = chatId),
             onBackBtnClick = navigator::pop,
-            viewModel = viewModel
+            viewModel = viewModel,
+            navigateToChatInfo = { chatId ->
+                navigator.push(ChatInfoScreen(chatId))
+            }
         )
     }
 }
 
 class ChatsScreen : Screen {
+
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -58,10 +66,23 @@ class ChatsScreen : Screen {
 
         ChatsRoute(
             navigateToChat = { chatId ->
-                val chatData = Chat(chatId)
                 navigator.push(ChatScreen(chatId))
             },
             viewModel = viewModel
         )
     }
+}
+
+data class ChatInfoScreen(val chatId: Long) : Screen {
+    @OptIn(ExperimentalVoyagerApi::class)
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        val viewModel = getViewModel<ChatInfoViewModel, ChatInfoViewModel.Factory> { factory ->
+            factory.create(chatId)
+        }
+
+        ChatInfoRoute(onBackBtnClick = navigator::pop, viewModel = viewModel)
+    }
+
 }

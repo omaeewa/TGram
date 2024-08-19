@@ -2,9 +2,11 @@ package com.miracle.chat
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,21 +15,29 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomAppBarDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,16 +48,17 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.miracle.chat.composables.ChatBottomAppBar
 import com.miracle.chat.composables.ChatTopAppBar
-import com.miracle.chat.composables.MessageTextContent
+import com.miracle.chat.composables.messagecontent.MessagePhotoContent
+import com.miracle.chat.composables.messagecontent.MessagePhotoGroupContent
+import com.miracle.chat.composables.messagecontent.MessageTextContent
 import com.miracle.chat.model.ChatInfo
-import com.miracle.chat.model.MessageUi
 import com.miracle.chat.model.MessageSendStatus
-import com.miracle.chat.navigation.Chat
+import com.miracle.chat.model.MessageUi
 import com.miracle.data.model.FormattedText
 import com.miracle.data.model.MessageDocument
 import com.miracle.data.model.MessagePhoto
+import com.miracle.data.model.MessagePhotoGroup
 import com.miracle.data.model.MessageText
-import com.miracle.data.model.MessageUnsupported
 import com.miracle.data.model.MessageVideo
 import com.miracle.ui.composables.MessageShape
 import com.miracle.ui.composables.MessageType
@@ -63,19 +74,23 @@ import com.miracle.ui.theme.mTypography
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatRoute(
-    chatData: Chat,
     onBackBtnClick: () -> Unit,
-    viewModel: ChatViewModel = hiltViewModel()
+    viewModel: ChatViewModel = hiltViewModel(),
+    navigateToChatInfo: (Long) -> Unit
 ) {
     val chat by viewModel.chatInfo.collectAsState()
     val messages by viewModel.messages.collectAsState()
     val inputMessageContent by viewModel.draftMessage.collectAsState()
+    val sheetState = rememberModalBottomSheetState()
+    var showBottomSheet by remember { mutableStateOf(false) }
 
     ChatScreen(
         chatInfo = chat,
@@ -85,8 +100,37 @@ fun ChatRoute(
         onInputMessageContentChange = viewModel::onDraftMessageChange,
         onSendMessageClick = viewModel::sendMessage,
         modifier = Modifier.fillMaxSize(),
-        loadMoreMessages = viewModel::loadMoreMessages
+        loadMoreMessages = viewModel::loadMoreMessages,
+        navigateToChatInfo = navigateToChatInfo,
+        onAttachIconClick = {
+            showBottomSheet = true
+        }
     )
+
+
+    if (showBottomSheet)
+        ModalBottomSheet(
+            onDismissRequest = {
+                showBottomSheet = false
+            },
+            sheetState = sheetState,
+            shape = RoundedCornerShape(15.dp)
+        ) {
+            LazyVerticalGrid(
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                columns = GridCells.Fixed(3)
+            ) {
+                items(100) {
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .aspectRatio(1f)
+                            .background(mColors.secondary.copy(alpha = 0.3f))
+                    )
+                }
+            }
+        }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,15 +143,18 @@ fun ChatScreen(
     inputMessageContent: String = "",
     onInputMessageContentChange: (String) -> Unit = {},
     onBackBtnClick: () -> Unit = {},
-    loadMoreMessages: () -> Unit = {}
-) {
+    loadMoreMessages: () -> Unit = {},
+    navigateToChatInfo: (Long) -> Unit = {},
+    onAttachIconClick: () -> Unit = {},
+
+    ) {
     val hazeState = remember { HazeState() }
 
     val gradientColors = dummyGradientColors
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val lazyColumnState = rememberLazyListState()
     val sdf = remember {
-        SimpleDateFormat("MMMM dd", Locale.getDefault())
+        SimpleDateFormat("MMMM d", Locale.getDefault())
     }
 
     Scaffold(
@@ -116,7 +163,8 @@ fun ChatScreen(
                 chatInfo = chatInfo,
                 modifier = Modifier.hazeChild(state = hazeState),
                 onBackBtnClick = onBackBtnClick,
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                onProfileClick = { navigateToChatInfo(chatInfo.id) }
             )
         },
         bottomBar = {
@@ -128,13 +176,14 @@ fun ChatScreen(
                         .windowInsetsPadding(BottomAppBarDefaults.windowInsets),
                     inputTextValue = inputMessageContent,
                     onInputTextValueChange = onInputMessageContentChange,
-                    onSendMessageClick = onSendMessageClick
+                    onSendMessageClick = onSendMessageClick,
+                    onAttachIconClick = onAttachIconClick
                 )
             else {
                 Surface {
                     Box(
                         contentAlignment = Alignment.Center, modifier = Modifier
-                            .clickable {  }
+                            .clickable { }
                             .fillMaxWidth()
                             .height(50.dp)
                     ) {
@@ -291,9 +340,9 @@ fun MessageItem(
                 sendStatus = sendStatus
             )
 
-            is MessagePhoto -> MessageTextContent(
+            is MessagePhoto -> MessagePhotoContent(
+                content = content,
                 date = message.date,
-                content = MessageText(content.caption.copy(text = "Photo ${content.caption.text}")),
                 messageType = messageType,
                 sendStatus = sendStatus
             )
@@ -308,6 +357,13 @@ fun MessageItem(
             is MessageDocument -> MessageTextContent(
                 date = message.date,
                 content = MessageText(content.caption.copy(text = "Document ${content.caption.text}")),
+                messageType = messageType,
+                sendStatus = sendStatus
+            )
+
+            is MessagePhotoGroup -> MessagePhotoGroupContent(
+                content = content,
+                date = message.date,
                 messageType = messageType,
                 sendStatus = sendStatus
             )
@@ -349,7 +405,7 @@ private fun ChatScreenPreview() {
 
     TGramTheme {
         ChatScreen(
-            chatInfo = ChatInfo.dummy.copy(currentUserId = currentUserId),
+            chatInfo = ChatInfo.dummy,
             messageUis = dummyMessageUis
         )
     }

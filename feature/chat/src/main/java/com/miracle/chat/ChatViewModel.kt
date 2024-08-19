@@ -1,5 +1,7 @@
 package com.miracle.chat
 
+import android.util.Log
+import androidx.compose.ui.util.fastDistinctBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.miracle.chat.model.ChatInfo
@@ -26,7 +28,6 @@ import org.drinkless.tdlib.TdApi.InputMessageText
 @HiltViewModel(assistedFactory = ChatViewModel.Factory::class)
 class ChatViewModel @AssistedInject constructor(
     @Assisted val chatId: Long,
-    private val accountRepository: AccountRepository,
     private val chatsRepository: ChatsRepository,
     private val chatRepository: ChatRepository,
 ) : ViewModel() {
@@ -42,10 +43,11 @@ class ChatViewModel @AssistedInject constructor(
         }
     }
 
-    private val currentUserIdFlow = accountRepository.me.map { it.id }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, -1)
+    val messages = chatRepository.messages.map { it.toMessage().fastDistinctBy { it.id }.also { list ->
+        Log.d("kekaboba", "${list.any { c-> list.count { it.id == c.id } > 1 }} ids ${list.map { it.id }}")
+    }
 
-    val messages = chatRepository.messages.map { it.map { it.toMessage() } }.stateIn(
+    }.stateIn(
         viewModelScope, SharingStarted.Eagerly, emptyList()
     )
 
@@ -53,9 +55,8 @@ class ChatViewModel @AssistedInject constructor(
         .mapNotNull { it.find { it.id == chatId } }
 
 
-    val chatInfo = combine(currentChatFlow, currentUserIdFlow) { currentChat, currentUserId ->
-        currentChat.toChatInfo(currentUserId)
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, ChatInfo.empty)
+    val chatInfo = currentChatFlow.map { it.toChatInfo() }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ChatInfo.empty)
 
 
     val draftMessage = currentChatFlow.map { it.draftMessage }

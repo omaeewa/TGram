@@ -8,7 +8,6 @@ data class ChatInfo(
     val title: String,
     val imageModel: Any?,
     val placeholderRes: Int? = null,
-    val currentUserId: Long,
     val canSendMessages: Boolean,
     val lastReadOutboxMessageId: Long = 0
 ) {
@@ -17,7 +16,6 @@ data class ChatInfo(
             id = 0,
             title = "",
             imageModel = null,
-            currentUserId = 0,
             canSendMessages = true
         )
 
@@ -26,18 +24,16 @@ data class ChatInfo(
             title = "Telegram",
             imageModel = 12,
             placeholderRes = com.miracle.common.R.drawable.nikolaj_durov,
-            currentUserId = 0,
             canSendMessages = true
         )
     }
 }
 
 
-fun Chat.toChatInfo(currentUserId: Long) = ChatInfo(
+fun Chat.toChatInfo() = ChatInfo(
     id = id,
     title = title,
     imageModel = photo?.takePhoto(),
-    currentUserId = currentUserId,
     lastReadOutboxMessageId = lastReadOutboxMessageId,
     canSendMessages = permissions.canSendBasicMessages
 )

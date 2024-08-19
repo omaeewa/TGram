@@ -1,6 +1,7 @@
 package com.miracle.data.model
 
 import org.drinkless.tdlib.TdApi
+import org.drinkless.tdlib.TdApi.Minithumbnail
 
 sealed interface MessageContent
 
@@ -36,19 +37,47 @@ fun TdApi.FormattedText.toFormattedText() = FormattedText(
 
 
 data class MessagePhoto(
-    val photo: TdApi.Photo,
+    val photo: Photo = Photo(),
     val caption: FormattedText = FormattedText(),
     val showCaptionAboveMedia: Boolean = false,
     val hasSpoiler: Boolean = false,
     val isSecret: Boolean = false
 ) : MessageContent
 
+data class MessagePhotoGroup(
+    val messagePhoto: List<MessagePhoto>
+) : MessageContent
+
 fun TdApi.MessagePhoto.toMessagePhoto() = MessagePhoto(
-    photo = photo,
+    photo = photo.toPhoto(),
     caption = caption.toFormattedText(),
     showCaptionAboveMedia = showCaptionAboveMedia,
     hasSpoiler = hasSpoiler,
     isSecret = isSecret
+)
+
+data class Photo(
+    val hasStickers: Boolean = false,
+    val minithumbnail: Minithumbnail? = null,
+    val sizes: List<PhotoSize> = emptyList(),
+)
+
+fun TdApi.Photo.toPhoto() = Photo(
+    hasStickers = hasStickers,
+    minithumbnail = minithumbnail,
+    sizes = sizes.map { it.toPhotoSize() }
+)
+
+data class PhotoSize(
+    val type: String,
+    val photo: TdApi.File,
+    val width: Int,
+    val height: Int,
+    val progressiveSizes: List<Int>
+)
+
+fun TdApi.PhotoSize.toPhotoSize() = PhotoSize(
+    type, photo, width, height, progressiveSizes.toList()
 )
 
 data object MessageUnsupported : MessageContent

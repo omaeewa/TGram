@@ -17,7 +17,7 @@ data class AccountItem(
             imageModel = com.miracle.common.R.drawable.titarenko,
             placeHolderRes = com.miracle.common.R.drawable.titarenko,
             title = "Anastasia Titarenko",
-            phoneNumber = "+480 (63) 287 12 43"
+            phoneNumber = "480632871243"
         )
 
         val empty = AccountItem(

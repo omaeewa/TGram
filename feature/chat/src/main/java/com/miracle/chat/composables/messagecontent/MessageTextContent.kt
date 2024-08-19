@@ -1,4 +1,4 @@
-package com.miracle.chat.composables
+package com.miracle.chat.composables.messagecontent
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.offset
@@ -9,12 +9,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.miracle.chat.R
-import com.miracle.chat.model.MessageUi
+import com.miracle.chat.composables.TextWithItemInTheEnd
 import com.miracle.chat.model.MessageSendStatus
+import com.miracle.chat.model.MessageUi
 import com.miracle.common.utils.toTimeString
 import com.miracle.data.model.FormattedText
 import com.miracle.data.model.MessageText
@@ -32,35 +34,70 @@ fun MessageTextContent(
     content: MessageText,
     messageType: MessageType,
     sendStatus: MessageSendStatus,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    fillParentWidth: Boolean = false
 ) {
     TextWithItemInTheEnd(
         modifier = modifier.padding(7.dp),
         text = content.text.text,
         textStyle = mTypography.bodyLarge,
         textColor = mColors.onSurface,
+        fillParentWidth = fillParentWidth,
         endItem = {
-            Row(
+            DateWithSendStatus(
+                date = date,
+                messageType = messageType,
+                sendStatus = sendStatus,
                 modifier = Modifier
                     .offset(2.dp, 3.dp)
-                    .padding(start = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = date.toTimeString(),
-                    style = mTypography.bodyMedium,
-                    color = if (messageType.isRightSide()) mColors.onSurface else mColors.secondary,
-                    modifier = Modifier.align(Alignment.Bottom)
-                )
-
-                if (messageType.isRightSide())
-                    SendStatusIcon(
-                        sendStatus = sendStatus, Modifier
-                            .padding(start = 4.dp)
-                            .size(18.dp)
-                    )
-            }
+                    .padding(start = 6.dp)
+            )
         }
+    )
+}
+
+@Composable
+fun DateWithSendStatus(
+    date: Int,
+    dateTextColor: Color,
+    showSendStatusIcon: Boolean,
+    sendStatus: MessageSendStatus,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = date.toTimeString(),
+            style = mTypography.bodyMedium,
+            color = dateTextColor,
+            modifier = Modifier.align(Alignment.Bottom)
+        )
+
+        if (showSendStatusIcon)
+            SendStatusIcon(
+                sendStatus = sendStatus, Modifier
+                    .padding(start = 4.dp)
+                    .size(18.dp)
+            )
+    }
+}
+
+@Composable
+fun DateWithSendStatus(
+    date: Int,
+    messageType: MessageType,
+    sendStatus: MessageSendStatus,
+    modifier: Modifier = Modifier
+) {
+
+    DateWithSendStatus(
+        date = date,
+        dateTextColor = if (messageType.isRightSide()) mColors.onSurface else mColors.secondary,
+        showSendStatusIcon = messageType.isRightSide(),
+        sendStatus = sendStatus,
+        modifier = modifier
     )
 }
 
@@ -85,7 +122,7 @@ private fun SendStatusIcon(sendStatus: MessageSendStatus, modifier: Modifier = M
 @Preview
 @Composable
 private fun MessageTextContentPreview() {
-    val messageType = MessageType.Single(Side.Left)
+    val messageType = MessageType.Single(Side.Right)
     TGramTheme {
         MessageShape(
             gradientColors = dummyGradientColors,

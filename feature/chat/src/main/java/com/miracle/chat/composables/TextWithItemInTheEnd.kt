@@ -3,10 +3,13 @@ package com.miracle.chat.composables
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
@@ -29,6 +32,7 @@ fun TextWithItemInTheEnd(
     text: String,
     textColor: Color,
     modifier: Modifier = Modifier,
+    fillParentWidth: Boolean = false,
     textStyle: TextStyle = LocalTextStyle.current,
     endItem: @Composable () -> Unit
 ) {
@@ -69,13 +73,11 @@ fun TextWithItemInTheEnd(
                 lastLineIndex
             )).roundToInt()
 
-
         val singleLine = textMeasurementResult.lineCount == 1
-        val endItemFitsInSingleLine =
-            singleLine && (textMeasurementResult.size.width + endItemWidth <= constraints.maxWidth)
-
 
         val width = when {
+            fillParentWidth -> constraints.maxWidth
+
             singleLine -> {
                 if (lastLineWidth + endItemWidth <= constraints.maxWidth)
                     lastLineWidth + endItemWidth
@@ -92,17 +94,10 @@ fun TextWithItemInTheEnd(
         layout(width, height) {
             textPlaceable.place(0, 0)
 
-            if (endItemFitsInSingleLine) {
-                endItemPlaceable?.place(
-                    x = lastLineWidth,
-                    y = height - endItemHeight
-                )
-            } else {
-                endItemPlaceable?.place(
-                    x = width - endItemWidth,
-                    y = height - endItemHeight
-                )
-            }
+            endItemPlaceable?.place(
+                x = width - endItemWidth,
+                y = height - endItemHeight
+            )
         }
     }
 }
@@ -114,13 +109,13 @@ private fun TextWithItemInTheEndPreview() {
         "Если бы я стал утверждать, что между Землёй и Марсом вокруг Солнца по эллиптической орбите вращается фарфоровый чайник, никто не смог бы опровергнуть моё утверждение, добавь я предусмотрительно, что чайник слишком мал, чтобы обнаружить его даже при помощи самых мощных телескопов. "
 
     val samples = listOf(
-        sampleText.take(30),
+        sampleText.take(10),
         sampleText.take(66),
         sampleText.take(137),
     )
     TGramTheme {
 
-        Column {
+        Column(Modifier.width(300.dp)) {
             samples.forEach { sample ->
                 Box(
                     Modifier
@@ -129,8 +124,7 @@ private fun TextWithItemInTheEndPreview() {
                 ) {
                     TextWithItemInTheEnd(
                         modifier = Modifier
-                            .padding(7.dp)
-                            .sizeIn(maxWidth = 300.dp),
+                            .padding(7.dp),
                         text = sample,
                         textColor = mColors.onSurface
                     ) {

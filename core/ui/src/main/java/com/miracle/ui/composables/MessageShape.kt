@@ -47,6 +47,12 @@ sealed class MessageType(val side: Side) {
     class Single(side: Side) : MessageType(side)
 
     fun isRightSide() = side == Side.Right
+
+    companion object {
+        val allTypes = Side.entries.flatMap { side ->
+            listOf(Start(side), Middle(side), End(side), Single(side))
+        }
+    }
 }
 
 fun getMessageType(
@@ -358,18 +364,9 @@ fun MessageShape(
 @Preview
 @Composable
 private fun AllShapesPreview() {
-    val types = Side.entries.flatMap { side ->
-        listOf(
-            MessageType.Start(side),
-            MessageType.Middle(side),
-            MessageType.End(side),
-            MessageType.Single(side)
-        )
-    }
-
     TGramTheme {
         Column {
-            types.forEach { type ->
+            MessageType.allTypes.forEach { type ->
                 MessageShape(
                     modifier = Modifier.padding(bottom = type.getBottomPadding()),
                     gradientColors = dummyGradientColors,

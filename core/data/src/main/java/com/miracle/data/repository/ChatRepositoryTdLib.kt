@@ -4,30 +4,29 @@ import com.miracle.common.Dispatcher
 import com.miracle.common.TGramDispatchers.IO
 import com.miracle.common.di.ApplicationScope
 import com.miracle.data.model.Message
+import com.miracle.data.model.MessagePhoto
 import com.miracle.data.model.toMessage
+import com.miracle.data.updateshandler.MessagesUpdateHandler
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.telegram.core.TelegramFlow
 import kotlinx.telegram.coroutines.getChatHistory
 import kotlinx.telegram.coroutines.sendMessage
 import kotlinx.telegram.coroutines.setChatDraftMessage
-import kotlinx.telegram.flows.chatDraftMessageFlow
-import kotlinx.telegram.flows.chatReadOutboxFlow
-import kotlinx.telegram.flows.newMessageFlow
 import org.drinkless.tdlib.TdApi
 import javax.inject.Inject
 
 class ChatRepositoryTdLib @Inject constructor(
     private val telegramApi: TelegramFlow,
-    @Dispatcher(IO) private val dispatcherIo: CoroutineDispatcher,
-    @ApplicationScope private val coroutineScope: CoroutineScope
+    private val messagesUpdateHandler: MessagesUpdateHandler
 ) : ChatRepository {
 
 
-    override val draftMessageUpdate = telegramApi.chatDraftMessageFlow()
     override suspend fun setChatDraftMessage(
         chatId: Long,
         messageThreadId: Long,
@@ -53,6 +52,7 @@ class ChatRepositoryTdLib @Inject constructor(
         ).messages.map { it.toMessage() }
 
         _messages.update { it + messages }
+
     }
 
     override suspend fun initializeMessages(chatId: Long) {
@@ -61,13 +61,15 @@ class ChatRepositoryTdLib @Inject constructor(
         handleMessageUpdates(chatId)
     }
 
-    private suspend fun handleMessageUpdates(chatId: Long) {
-        telegramApi.newMessageFlow().collect { newMessage ->
-            if (newMessage.chatId == chatId && _messages.value.none { it.id == newMessage.id }) {
-                _messages.update { listOf(newMessage.toMessage()) + it }
+    private suspend fun handleMessageUpdates(chatId: Long) = coroutineScope {
+        launch {
+            messagesUpdateHandler.handleMessageUpdates(chatId).collect { handler ->
+                _messages.update { handler(it.toMutableList()) }
             }
         }
+        launch { downloadImages() }
     }
+
 
     override suspend fun sendMessage(
         chatId: Long,
@@ -86,8 +88,27 @@ class ChatRepositoryTdLib @Inject constructor(
             inputMessageContent = inputMessageContent
         )
 
-        _messages.update { listOf(sentMessage.toMessage()) + it  }
+        _messages.update { sentMessage.toMessage() withList  it }
     }
 
+    private infix fun Message.withList(messages: List<Message>) =
+        if (messages.any { it.id == id }) {
+            messages.map { if (it.id == id) this else it }
+        } else {
+            listOf(this) + messages
+        }
 
+
+    private suspend fun downloadImages() {
+        messages.collect { messageList ->
+            messageList.map { it.content }.forEach { content ->
+                if (content is MessagePhoto) {
+                    val file = content.photo.sizes.lastOrNull()?.photo
+                    if (file != null) {
+                        telegramApi.downloadFile(file)
+                    }
+                }
+            }
+        }
+    }
 }

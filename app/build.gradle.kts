@@ -10,12 +10,12 @@ plugins {
 
 android {
     namespace = "com.miracle.tgram"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.miracle.tgram"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -75,6 +75,7 @@ dependencies {
     implementation(project(":feature:authorization"))
     implementation(project(":feature:chats"))
     implementation(project(":feature:chat"))
+    implementation(project(":feature:chatinfo"))
     implementation(project(":core:ui"))
     implementation(project(":core:data"))
 

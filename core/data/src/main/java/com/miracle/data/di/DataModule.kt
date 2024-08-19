@@ -10,6 +10,10 @@ import com.miracle.data.repository.ChatsRepository
 import com.miracle.data.repository.ChatsRepositoryTdLib
 import com.miracle.data.repository.UserRepository
 import com.miracle.data.repository.UserRepositoryTdLib
+import com.miracle.data.updateshandler.ChatsUpdateHandler
+import com.miracle.data.updateshandler.ChatsUpdateHandlerTdLib
+import com.miracle.data.updateshandler.MessagesUpdateHandler
+import com.miracle.data.updateshandler.MessagesUpdateHandlerTdLib
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -40,6 +44,12 @@ interface DataModule {
     @Singleton
     @Binds
     fun provideAccountRepository(impl: AccountRepositoryTdLib): AccountRepository
+
+    @Binds
+    fun provideChatsUpdateHandler(impl: ChatsUpdateHandlerTdLib): ChatsUpdateHandler
+
+    @Binds
+    fun provideMessagesUpdateHandler(impl: MessagesUpdateHandlerTdLib): MessagesUpdateHandler
 
     companion object {
 
