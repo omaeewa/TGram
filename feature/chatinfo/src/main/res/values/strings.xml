@@ -1,0 +1,7 @@
+<resources>
+    <string name="notifications">Notifications</string>
+    <string name="mobile">Mobile</string>
+    <string name="on">On</string>
+    <string name="off">Off</string>
+    <string name="info">Info</string>
+</resources>
