@@ -1,5 +1,6 @@
 package com.miracle.data.updateshandler
 
+import android.util.Log
 import com.miracle.common.di.ApplicationScope
 import com.miracle.data.model.Chat
 import com.miracle.data.model.Message
@@ -71,7 +72,7 @@ class MessagesUpdateHandlerTdLib @Inject constructor(
 
     private fun handleDeletedMessagesUpdate(update: UpdateDeleteMessages, chatId: Long) =
         MessagesUpdateHandler { messages ->
-            if (update.chatId == chatId) {
+            if (update.chatId == chatId && !update.fromCache) {
                 messages.filterNot { it.id in update.messageIds }
             } else messages
         }

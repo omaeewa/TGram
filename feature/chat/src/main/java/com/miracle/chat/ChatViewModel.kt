@@ -43,13 +43,10 @@ class ChatViewModel @AssistedInject constructor(
         }
     }
 
-    val messages = chatRepository.messages.map { it.toMessage().fastDistinctBy { it.id }.also { list ->
-        Log.d("kekaboba", "${list.any { c-> list.count { it.id == c.id } > 1 }} ids ${list.map { it.id }}")
-    }
-
-    }.stateIn(
-        viewModelScope, SharingStarted.Eagerly, emptyList()
-    )
+    val messages = chatRepository.messages.map { it.toMessage().fastDistinctBy { it.id } }
+        .stateIn(
+            viewModelScope, SharingStarted.Eagerly, emptyList()
+        )
 
     private val currentChatFlow = chatsRepository.chats
         .mapNotNull { it.find { it.id == chatId } }

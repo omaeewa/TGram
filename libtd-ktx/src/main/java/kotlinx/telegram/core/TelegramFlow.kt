@@ -50,7 +50,7 @@ class TelegramFlow(
         updateEventsFlow = callbackFlow {
             val resultHandler = Client.ResultHandler {
 //                if (it.constructor in listOf(UpdateUser.CONSTRUCTOR, TdApi.UpdateFile.CONSTRUCTOR))
-//                    Log.d("kekaboba", "Update -> ${it}")
+                    Log.d("kekaboba", "Update -> ${it.javaClass.name}")
                 flowScope.launch {
                     send(it)
                 }
