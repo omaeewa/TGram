@@ -38,9 +38,7 @@ interface ChatsUpdateHandler {
 class ChatsUpdateHandlerTdLib @Inject constructor(
     @ApplicationScope private val coroutineScope: CoroutineScope,
     private val telegramApi: TelegramFlow,
-
-
-    ) : ChatsUpdateHandler {
+) : ChatsUpdateHandler {
     override val chatsWithUpdates = merge(
         telegramApi.newChatFlow().map(::handleNewChat),
         telegramApi.chatTitleFlow().map(::handleChatTitleUpdate),

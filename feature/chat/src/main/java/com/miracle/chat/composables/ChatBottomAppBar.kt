@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
@@ -115,7 +116,10 @@ fun ChatBottomAppBar(
                         scaleOut(animationSpec = spring(stiffness = stiffness)) +
                         shrinkHorizontally(animationSpec = spring(stiffness = stiffness))
             ) {
-                IconButton(onClick = onSendMessageClick) {
+                IconButton(
+                    onClick = onSendMessageClick,
+                    modifier = Modifier.testTag(stringResource(id = R.string.chat_screen_send_icon_test_tag))
+                ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_send),
                         contentDescription = null,
@@ -125,7 +129,9 @@ fun ChatBottomAppBar(
                 }
             }
         },
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag(stringResource(id = R.string.chat_screen_bottom_app_bar_test_tag)),
         placeholder = {
             Text(
                 text = stringResource(id = R.string.message),

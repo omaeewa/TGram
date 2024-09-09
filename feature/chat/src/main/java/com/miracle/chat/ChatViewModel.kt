@@ -28,7 +28,6 @@ import org.drinkless.tdlib.TdApi.InputMessageText
 @HiltViewModel(assistedFactory = ChatViewModel.Factory::class)
 class ChatViewModel @AssistedInject constructor(
     @Assisted val chatId: Long,
-    private val chatsRepository: ChatsRepository,
     private val chatRepository: ChatRepository,
 ) : ViewModel() {
 
@@ -48,9 +47,7 @@ class ChatViewModel @AssistedInject constructor(
             viewModelScope, SharingStarted.Eagerly, emptyList()
         )
 
-    private val currentChatFlow = chatsRepository.chats
-        .mapNotNull { it.find { it.id == chatId } }
-
+    private val currentChatFlow = chatRepository.currentChatFlow(chatId)
 
     val chatInfo = currentChatFlow.map { it.toChatInfo() }
         .stateIn(viewModelScope, SharingStarted.Eagerly, ChatInfo.empty)

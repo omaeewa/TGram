@@ -1,17 +1,13 @@
 package com.miracle.data.repository
 
-import com.miracle.common.Dispatcher
-import com.miracle.common.TGramDispatchers.IO
-import com.miracle.common.di.ApplicationScope
 import com.miracle.data.model.Message
 import com.miracle.data.model.MessagePhoto
 import com.miracle.data.model.toMessage
 import com.miracle.data.updateshandler.MessagesUpdateHandler
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.telegram.core.TelegramFlow
@@ -23,6 +19,7 @@ import javax.inject.Inject
 
 class ChatRepositoryTdLib @Inject constructor(
     private val telegramApi: TelegramFlow,
+    private val chatsRepository: ChatsRepository,
     private val messagesUpdateHandler: MessagesUpdateHandler
 ) : ChatRepository {
 
@@ -41,6 +38,9 @@ class ChatRepositoryTdLib @Inject constructor(
 
     private val _messages = MutableStateFlow(emptyList<Message>())
     override val messages: StateFlow<List<Message>> = _messages
+
+    override fun currentChatFlow(chatId: Long) = chatsRepository.chats
+        .mapNotNull { it.find { it.id == chatId } }
 
     override suspend fun loadMoreMessages(chatId: Long) {
         val messages = telegramApi.getChatHistory(
