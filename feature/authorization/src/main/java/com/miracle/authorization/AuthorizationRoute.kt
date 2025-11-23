@@ -18,6 +18,8 @@ fun AuthorizationRoute(
     val phoneNumber by viewModel.phoneNumber.collectAsState()
     val authState by viewModel.authState.collectAsState()
     val code by viewModel.authCode.collectAsState()
+    val password by viewModel.authPassword.collectAsState()
+
 
     LaunchedEffect(authState) {
         if (authState == AuthState.Ready)
@@ -33,7 +35,12 @@ fun AuthorizationRoute(
     }
 
     LaunchedEffect(key1 = authState) {
-        if (authState in listOf(AuthState.WaitPhoneNumber, AuthState.WaitCode))
+        if (authState in listOf(
+                AuthState.WaitPhoneNumber,
+                AuthState.WaitCode,
+                AuthState.WaitPassword
+            )
+        )
             screenState = authState
     }
 
@@ -48,6 +55,12 @@ fun AuthorizationRoute(
             code = code,
             onCodeChange = viewModel::onAuthCodeChange,
             setCode = viewModel::setAuthCode,
+        )
+
+        AuthState.WaitPassword -> InputPasswordScreen(
+            password = password,
+            onPasswordChange = viewModel::onPasswordChange,
+            setAuthPassword = viewModel::checkAuthPassword,
         )
 
         else -> {}
