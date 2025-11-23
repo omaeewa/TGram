@@ -22,6 +22,9 @@ class AuthorizationViewModel @Inject constructor(
     private val _phoneNumber = MutableStateFlow("")
     val phoneNumber: StateFlow<String> = _phoneNumber
 
+    private val _authPassword = MutableStateFlow("")
+    val authPassword : StateFlow<String> = _authPassword
+
     private val _authCode = MutableStateFlow("")
     val authCode: StateFlow<String> = _authCode
 
@@ -35,10 +38,15 @@ class AuthorizationViewModel @Inject constructor(
 
     fun onAuthCodeChange(value: String) = _authCode.update { value }
 
+    fun onPasswordChange(value: String) = _authPassword.update { value }
+
     fun setAuthCode() = viewModelScope.launch(dispatcherIo) {
         authRepository.setAuthCode(authCode.value)
     }
 
+    fun checkAuthPassword() = viewModelScope.launch(){
+        authRepository.checkAuthPassword(authPassword.value)
+    }
     fun updateFirstScreenLoaded() {
         authRepository.setFirstScreenLoaded()
     }

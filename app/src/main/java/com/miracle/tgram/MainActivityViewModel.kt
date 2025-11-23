@@ -21,7 +21,7 @@ class MainActivityViewModel @Inject constructor(
     val uiState = authRepository.authState.map {
         when (it) {
             AuthState.Ready -> Success(true)
-            AuthState.WaitPhoneNumber, AuthState.WaitCode -> Success(false)
+            AuthState.WaitPhoneNumber, AuthState.WaitPassword, AuthState.WaitCode -> Success(false)
             else -> Loading
         }
     }.stateIn(

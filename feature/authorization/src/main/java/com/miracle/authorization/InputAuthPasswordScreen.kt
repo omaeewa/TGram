@@ -32,16 +32,16 @@ import com.miracle.ui.theme.mShapes
 import com.miracle.ui.theme.mTypography
 
 @Composable
-fun InputCodeScreen(
+fun InputPasswordScreen(
     modifier: Modifier = Modifier,
-    code: String,
-    onCodeChange: (String) -> Unit = {},
-    setCode: () -> Unit = {}
+    password: String,
+    onPasswordChange :(String) -> Unit = {},
+    setAuthPassword : () -> Unit = {}
 ) {
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
-                onClick = setCode,
+                onClick = setAuthPassword,
                 shape = CircleShape
             ) {
                 Icon(
@@ -62,7 +62,7 @@ fun InputCodeScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = stringResource(id = R.string.check_your_code),
+                text = stringResource(id = R.string.enter_your_two_factor_password),
                 style = mTypography.titleMedium,
                 fontWeight = FontWeight.Medium,
                 color = mColors.onSurface,
@@ -71,7 +71,7 @@ fun InputCodeScreen(
             Spacer(Modifier.height(lSpacing.small))
 
             Text(
-                text = stringResource(id = R.string.please_enter_code),
+                text = stringResource(id = R.string.please_enter_two_factor),
                 style = mTypography.titleSmall,
                 color = mColors.secondary,
                 textAlign = TextAlign.Center,
@@ -82,8 +82,8 @@ fun InputCodeScreen(
 
 
             OutlinedTextField(
-                value = code,
-                onValueChange = onCodeChange,
+                value = password,
+                onValueChange = onPasswordChange,
                 shape = mShapes.medium,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = mColors.primary,
